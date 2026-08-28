@@ -27,7 +27,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Megaphone,
-  Zap
+  Zap,
+  Store
 } from "lucide-react";
 import { AppService, SUPER_APP_SERVICES } from "@/constants/services";
 import { LOCAL_MERCHANTS_SURAKARTA } from "@/constants/merchants";
@@ -147,6 +148,25 @@ export default function CustomerHome() {
 
           {/* Super-App Services Grid */}
           <ServicesGrid onSelectService={handleSelectService} />
+
+          {/* Pasar Murah / Sinergi Pemkot Widget */}
+          <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-400/5 to-white dark:via-emerald-900/10 dark:to-zinc-900 border border-emerald-500/30 rounded-3xl p-4 shadow-sm flex items-center justify-between cursor-pointer hover:bg-emerald-500/5 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <Store className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  Program Pasar Murah
+                  <Badge variant="emerald" className="h-4 text-[9px] px-1.5 py-0 bg-emerald-500 hover:bg-emerald-500 text-white border-0">Pemkot</Badge>
+                </h3>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-tight">
+                  Sembako & bahan pokok subsidi khusus warga Solo terdaftar.
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-emerald-500 shrink-0 opacity-50" />
+          </div>
 
           {/* Promo & News Carousel */}
           <PromoBanner />

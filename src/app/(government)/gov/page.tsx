@@ -34,9 +34,22 @@ export default function GovernmentDashboard() {
   const [announcementText, setAnnouncementText] = useState("");
   const [targetRole, setTargetRole] = useState<BroadcastTarget>("all");
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [isToggling, setIsToggling] = useState<string | null>(null);
 
   // Real-time civic broadcasts listener
   const { broadcasts, loading: loadingBroadcasts } = useBroadcasts();
+
+  const handleDeactivate = async (id: string) => {
+    if (!confirm("Akhiri siaran ini sekarang? Siaran akan ditarik dari semua aplikasi warga.")) return;
+    setIsToggling(id);
+    try {
+      await broadcastService.toggleBroadcastStatus(id, false);
+    } catch (err) {
+      alert("Gagal mengakhiri siaran.");
+    } finally {
+      setIsToggling(null);
+    }
+  };
 
   const handleSendBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,7 +217,18 @@ export default function GovernmentDashboard() {
                   <p className="text-[11px] text-slate-600 dark:text-zinc-300">{b.body}</p>
                   <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 border-t border-slate-200 dark:border-zinc-800/80 pt-2">
                     <span>Wilayah: {b.geofence?.areaName || "Surakarta"}</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Aktif Mengudara</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Aktif Mengudara</span>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        className="h-6 text-[9px] px-2"
+                        disabled={isToggling === b.id}
+                        onClick={() => b.id && handleDeactivate(b.id)}
+                      >
+                        {isToggling === b.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Akhiri"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -7,6 +7,7 @@ import { broadcastService } from "@/services/broadcast.service";
 import { merchantService } from "@/services/merchant.service";
 import { orderService } from "@/services/order.service";
 import { useMerchantMenu } from "@/hooks/useMerchantMenu";
+import { useBroadcasts } from "@/hooks/useBroadcasts";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AdminImpersonationBar } from "@/components/admin/AdminImpersonationBar";
 import { authService } from "@/services/auth.service";
@@ -29,6 +30,7 @@ import {
   ArrowRight,
   Sparkles,
   Loader2,
+  Megaphone,
   X,
   Trash2,
   Edit2
@@ -72,6 +74,9 @@ export default function MerchantDashboard() {
 
   // Real-time menu items from Firestore
   const { menuItems, loading: loadingMenu } = useMerchantMenu(user?.uid);
+
+  // Civic Broadcasts from Government
+  const { broadcasts } = useBroadcasts("merchant");
 
   // Fallback initial products if Firestore has no menu yet
   const defaultProducts: MenuItemDocument[] = [
@@ -217,6 +222,26 @@ export default function MerchantDashboard() {
       <AppHeader onOpenProfile={() => setIsProfileOpen(true)} />
 
       <main className="pt-20 px-4 max-w-lg w-full mx-auto space-y-5 flex-1">
+        {/* Active Civic Broadcast Ticker if available */}
+        {broadcasts.length > 0 && (
+          <div className="p-3 rounded-2xl bg-teal-500/10 dark:bg-teal-950/30 border border-teal-500/30 flex items-start gap-2.5 shadow-sm">
+            <Megaphone className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5 animate-bounce" />
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-teal-700 dark:text-teal-300 leading-tight">
+                  {broadcasts[0].title}
+                </span>
+                <span className="text-[9px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/20 px-1.5 py-0.2 rounded">
+                  Pemda
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-600 dark:text-zinc-300 line-clamp-2">
+                {broadcasts[0].body}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Store Profile Card */}
         <div className="sg-card p-5 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-gradient-to-tr dark:from-orange-950/30 dark:via-zinc-900 dark:to-zinc-900 space-y-4 shadow-sm">
           <div className="flex justify-between items-start">

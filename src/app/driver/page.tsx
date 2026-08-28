@@ -6,6 +6,7 @@ import { useAuthContext } from "@/components/AuthProvider";
 import { useDriverWallet } from "@/hooks/useDriverWallet";
 import { usePendingOrders } from "@/hooks/usePendingOrders";
 import { useLiveGPS } from "@/hooks/useLiveGPS";
+import { useBroadcasts } from "@/hooks/useBroadcasts";
 import { authService } from "@/services/auth.service";
 import { walletService } from "@/services/wallet.service";
 import { orderService } from "@/services/order.service";
@@ -41,7 +42,8 @@ import {
   PlusCircle,
   FileCheck,
   X,
-  CreditCard
+  CreditCard,
+  Megaphone
 } from "lucide-react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -89,6 +91,9 @@ export default function DriverDashboard() {
   // Hook wallet & pending orders with filter
   const { activeKarcis, walletBalance, ledger, loading: walletLoading } = useDriverWallet(user?.uid);
   const { orders: pendingOrders, loading: ordersLoading } = usePendingOrders(activeServiceTypes);
+
+  // Civic Broadcasts from Government
+  const { broadcasts } = useBroadcasts("driver");
 
   // Completed driver trips
   const [driverTrips, setDriverTrips] = useState<OrderDocument[]>([]);
@@ -245,6 +250,26 @@ export default function DriverDashboard() {
       {/* Main Tab: Radar Order */}
       {activeTab === "radar" && (
         <main className="pt-20 px-4 space-y-5 max-w-lg w-full mx-auto flex-1">
+          {/* Active Civic Broadcast Ticker if available */}
+          {broadcasts.length > 0 && (
+            <div className="p-3 rounded-2xl bg-teal-500/10 dark:bg-teal-950/30 border border-teal-500/30 flex items-start gap-2.5 shadow-sm">
+              <Megaphone className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5 animate-bounce" />
+              <div className="flex-1 min-w-0 space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-teal-700 dark:text-teal-300 leading-tight">
+                    {broadcasts[0].title}
+                  </span>
+                  <span className="text-[9px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/20 px-1.5 py-0.2 rounded">
+                    Pemda
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-600 dark:text-zinc-300 line-clamp-2">
+                  {broadcasts[0].body}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* KYC Status Verification Banner */}
           <div className="flex items-center justify-between p-3 rounded-2xl bg-white/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 shadow-sm">
             <div className="flex items-center gap-2.5">
