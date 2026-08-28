@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ride-Solo — Smart Hub & Ekosistem Lokal Surakarta",
   description: "Platform kolaborasi komunitas lokal, ojek bebas komisi, mitra UMKM, logistik industri, dan layanan publik Surakarta.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
