@@ -151,13 +151,9 @@ export default function DriverDashboard() {
     if (!user) return;
     setIsProcessingTopUp(true);
     try {
-      const result = await walletService.topUpWallet(user.uid, topUpAmount, `Top-Up Dompet QRIS Koperasi (Rp ${topUpAmount.toLocaleString("id-ID")})`);
+      await walletService.devTopUpWallet(topUpAmount);
       setIsTopUpOpen(false);
-      if (result.paymentLink) {
-        window.location.href = result.paymentLink; // Redirect ke Mayar Payment Page
-      } else {
-        alert("Gagal mendapatkan link pembayaran.");
-      }
+      alert(`Top-Up Rp ${topUpAmount.toLocaleString("id-ID")} berhasil ditambahkan ke saldo Anda!`);
     } catch (err: any) {
       alert(err.message || "Gagal melakukan top-up.");
     } finally {

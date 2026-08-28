@@ -68,6 +68,19 @@ export const walletService = {
       throw new Error(err.message || `Gagal mengisi saldo dompet`);
     }
   },
+
+  // DEV ONLY: Direct Top-Up without Mayar Link
+  devTopUpWallet: async (amount: number): Promise<void> => {
+    try {
+      const { httpsCallable } = await import("firebase/functions");
+      const { functions } = await import("../lib/firebase");
+      const fn = httpsCallable(functions, "devTopUpWallet");
+      
+      await fn({ amount });
+    } catch (err: any) {
+      throw new Error(err.message || `Gagal auto top-up saldo`);
+    }
+  },
   
   // Get wallet balance
   getWalletBalance: async (userId: string): Promise<number> => {

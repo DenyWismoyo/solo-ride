@@ -139,3 +139,44 @@ export const generateTopUpPayment = onCall(
     }
   }
 );
+
+// ============================================================================
+// DEV ONLY: AUTO TOP-UP WALLET (For testing phase)
+// ============================================================================
+export const devTopUpWallet = onCall(
+  { region: "asia-southeast1", cors: true },
+  async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Akses ditolak.");
+    const userId = request.auth.uid;
+    const { amount } = request.data;
+    
+    if (!amount) {
+      throw new HttpsError("invalid-argument", "Amount dibutuhkan");
+    }
+
+    try {
+      return await db.runTransaction(async (transaction) => {
+        const walletRef = db.collection("wallets").doc(userId);
+        
+        transaction.set(walletRef, {
+          userId: userId,
+          balance: FieldValue.increment(amount),
+          updatedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        const ledgerRef = db.collection("ledger").doc();
+        transaction.set(ledgerRef, {
+          userId: userId,
+          amount: amount,
+          type: "top_up",
+          description: "Top-Up Otomatis (Mode Development)",
+          createdAt: FieldValue.serverTimestamp()
+        });
+
+        return { success: true, amountAdded: amount };
+      });
+    } catch (err: any) {
+      throw new HttpsError("internal", err.message || "Gagal auto top-up.");
+    }
+  }
+);
