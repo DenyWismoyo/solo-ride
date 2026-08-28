@@ -1,0 +1,214 @@
+/* --- LIGHT MODE (CRISP ENTERPRISE CANVAS) --- */
+:root {
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    
+    --primary: #10b981;
+    --primary-foreground: #ffffff;
+    
+    --header-height: 60px;
+    --bottom-nav-height: calc(64px + env(safe-area-inset-bottom, 0px));
+    
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    
+    --accent: #10b981;
+    --accent-foreground: #ffffff;
+    
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #10b981;
+    
+    --radius: 1rem;
+
+    --sg-glass: rgba(255, 255, 255, 0.92);
+    --sg-glass-border: rgba(226, 232, 240, 0.9);
+    --sg-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --sg-shadow-bento: 0 8px 30px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+}
+
+/* --- DARK MODE (STEALTH OBSIDIAN & CYBER-GLASS) --- */
+.dark, [data-theme="dark"] {
+    --background: #030712;
+    --foreground: #f8fafc;
+    --card: #0b0f19;
+    --card-foreground: #f8fafc;
+    --popover: #0b0f19;
+    --popover-foreground: #f8fafc;
+    
+    --primary: #10b981;
+    --primary-foreground: #ffffff;
+    
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    
+    --accent: #10b981;
+    --accent-foreground: #ffffff;
+    
+    --destructive: #f43f5e;
+    --destructive-foreground: #ffffff;
+    
+    --border: rgba(255, 255, 255, 0.08);
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: #10b981;
+
+    --sg-glass: rgba(11, 15, 25, 0.85);
+    --sg-glass-border: rgba(255, 255, 255, 0.08);
+    --sg-shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    --sg-shadow-bento: 0 12px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Background Atmosphere Grid */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+}
+
+.dark .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Ambient Radial Glow Lighting */
+.ambient-glow {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.12;
+}
+
+.dark .ambient-glow {
+  opacity: 0.22;
+}
+
+/* Luxury Card Class */
+.sg-card {
+  background: var(--sg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--sg-glass-border);
+  box-shadow: var(--sg-shadow-card);
+  border-radius: var(--radius);
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.sg-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Bento Card Style */
+.sg-bento-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--sg-shadow-bento);
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .sg-bento-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 15, 25, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sg-bento-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Section Title Editorial Line */
+.sg-editorial-title {
+  position: relative;
+  padding-left: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.sg-editorial-title::before {
+  content: '';
+  position: absolute;
+  left: 0; 
+  top: 15%; 
+  bottom: 15%;
+  width: 3.5px;
+  background: linear-gradient(to bottom, #10b981, #06b6d4);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+/* Text Gradient */
+.sg-text-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+/* Micro Hover Lift */
+.sg-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+.sg-hover-lift:hover {
+  transform: translateY(-3px) scale(1.008);
+}
+
+/* Standarisasi Tombol Aksi */
+.sg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sg-btn:hover {
+  transform: translateY(-2px);
+}
+
+.sg-btn:active {
+  transform: scale(0.97);
+}
+
+.sg-btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+}
+
+.sg-btn-primary:hover {
+  box-shadow: 0 6px 28px -2px rgba(16, 185, 129, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Glass Panel */
+.sg-glass-panel {
+  background: var(--sg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--sg-glass-border);
+  box-shadow: var(--sg-shadow-card);
+}

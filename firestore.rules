@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || (isAuthenticated() && request.auth.token.role == 'admin');
+    }
+
+    // 2. Orders Collection
+    match /orders/{orderId} {
+      allow read: if isAuthenticated(); 
+      allow create: if isAuthenticated(); 
+      allow update: if isAuthenticated();
+    }
+
+    // 3. Wallets Collection
+    match /wallets/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isAuthenticated();
+    }
+
+    // 4. Karcis Collection
+    match /karcis/{karcisId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated(); 
+    }
+
+    // 5. Ledger Collection
+    match /ledger/{ledgerId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isAuthenticated();
+      allow update: if false;
+    }
+
+    // 6. Notifications Collection
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 7. Broadcasts Collection
+    match /broadcasts/{broadcastId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+    }
+
+    // 8. Contracts Collection
+    match /contracts/{contractId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+    }
+
+    // 9. Reviews Collection
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.reviewerId == request.auth.uid;
+    }
+
+    // 10. Menu Items Collection
+    match /menu_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated();
+    }
+
+    // 11. Drivers GPS Collection
+    match /drivers/{driverId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(driverId) || isAuthenticated();
+    }
+
+    // 12. KYC Requests Collection
+    match /kyc_requests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+  }
+}
