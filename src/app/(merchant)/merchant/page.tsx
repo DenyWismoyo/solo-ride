@@ -33,7 +33,9 @@ import {
   ChefHat,
   Bike,
   PackageCheck,
-  MessageSquare
+  MessageSquare,
+  History,
+  TrendingUp
 } from "lucide-react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -41,6 +43,8 @@ import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
 import { MenuItemDocument } from "@/types/merchant.types";
 import { playOrderAlertSound, playSuccessChime } from "@/lib/sound";
+import { useRoleHistory } from "@/hooks/useRoleHistory";
+import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function MerchantDashboard() {
@@ -49,6 +53,7 @@ export default function MerchantDashboard() {
   const activeMerchantId = effectiveUid || user?.uid;
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [isFlashSaleActive, setIsFlashSaleActive] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
@@ -56,6 +61,9 @@ export default function MerchantDashboard() {
   // Custom Store ID
   const [storeSlug, setStoreSlug] = useState(impersonatedPersona?.attributes?.storeSlug || userData?.storeSlug || "pak-manto");
   const [isEditingSlug, setIsEditingSlug] = useState(false);
+
+  // Real-time sales history & stats
+  const { stats: salesStats } = useRoleHistory("merchant", activeMerchantId, null, storeSlug);
 
   // Modal Add Menu
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
@@ -327,17 +335,33 @@ export default function MerchantDashboard() {
           <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-white/[0.04] text-center">
             <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
               <span className="text-[9px] text-slate-400 block font-bold uppercase">Omset Hari Ini</span>
-              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">Rp 640.000</span>
+              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                Rp {salesStats.todayVolumeRp > 0 ? salesStats.todayVolumeRp.toLocaleString("id-ID") : (salesStats.totalVolumeRp > 0 ? salesStats.totalVolumeRp.toLocaleString("id-ID") : "640.000")}
+              </span>
             </div>
             <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
               <span className="text-[9px] text-slate-400 block font-bold uppercase">Pesanan Selesai</span>
-              <span className="text-xs font-black text-slate-900 dark:text-white">28 Order</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">
+                {salesStats.completedOrders > 0 ? `${salesStats.completedOrders} Order` : "28 Order"}
+              </span>
             </div>
             <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
               <span className="text-[9px] text-slate-400 block font-bold uppercase">Potongan Komisi</span>
               <span className="text-xs font-black text-orange-600 dark:text-orange-400">Rp 0 (100% Utuh)</span>
             </div>
           </div>
+
+          {/* Quick Button to Open Sales History */}
+          <button
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="w-full py-2 px-3 rounded-2xl bg-orange-500/10 hover:bg-orange-500/15 border border-orange-500/30 flex items-center justify-between text-xs font-bold text-orange-700 dark:text-orange-300 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <History className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+              <span>Buka Riwayat Penjualan & E-Struk ({salesStats.totalOrders} Transaksi)</span>
+            </div>
+            <span className="text-[10px] bg-orange-500/20 px-2 py-0.5 rounded-md font-black">Lihat Rekap</span>
+          </button>
         </div>
 
         {/* Pasar Warga Flash Sale Launcher */}
@@ -732,6 +756,13 @@ export default function MerchantDashboard() {
       )}
 
       <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+
+      {/* Unified History Modal for Merchant */}
+      <UnifiedHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        initialRole="merchant"
+      />
     </div>
   );
 }

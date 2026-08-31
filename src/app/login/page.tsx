@@ -51,7 +51,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden transition-colors duration-200">
       {/* Ambient glow backgrounds */}
       <div className="absolute top-1/4 -left-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -62,28 +62,28 @@ export default function LoginPage() {
           variant="ghost" 
           size="sm" 
           onClick={() => router.push("/")}
-          className="text-zinc-400 hover:text-white gap-1.5 pl-0"
+          className="text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white gap-1.5 pl-0"
         >
           <ArrowLeft className="h-4 w-4" />
           Beranda
         </Button>
       </div>
 
-      <Card className="w-full max-w-md bg-zinc-900/90 border-zinc-800/90 shadow-2xl backdrop-blur-xl rounded-3xl z-10">
+      <Card className="w-full max-w-md bg-white/95 dark:bg-[#0c1220]/95 border-slate-200/80 dark:border-white/[0.08] shadow-2xl backdrop-blur-xl rounded-3xl z-10">
         <CardContent className="p-7 space-y-6">
           {/* Logo & Headline */}
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
               <span className="font-black text-xl text-white tracking-tighter">RS</span>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight">Selamat Datang</h2>
-            <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Selamat Datang</h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mx-auto">
               Masuk ke ekosistem ojek lokal berbasis komunitas tanpa potongan komisi.
             </p>
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 text-center font-medium">
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 text-center font-medium">
               {errorMsg}
             </div>
           )}
@@ -91,9 +91,9 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-3.5">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-zinc-300">Email</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Email</label>
               <div className="relative">
-                <div className="absolute left-3.5 top-3.5 text-zinc-500">
+                <div className="absolute left-3.5 top-3.5 text-slate-400 dark:text-zinc-500">
                   <Mail className="h-4 w-4" />
                 </div>
                 <Input 
@@ -101,7 +101,7 @@ export default function LoginPage() {
                   placeholder="nama@email.com" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 bg-zinc-800/80 border-zinc-700/80 rounded-xl text-sm"
+                  className="pl-10 h-12 text-sm"
                   required
                 />
               </div>
@@ -109,10 +109,10 @@ export default function LoginPage() {
 
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-semibold text-zinc-300">Kata Sandi</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Kata Sandi</label>
               </div>
               <div className="relative">
-                <div className="absolute left-3.5 top-3.5 text-zinc-500">
+                <div className="absolute left-3.5 top-3.5 text-slate-400 dark:text-zinc-500">
                   <Lock className="h-4 w-4" />
                 </div>
                 <Input 
@@ -120,7 +120,7 @@ export default function LoginPage() {
                   placeholder="••••••••" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 bg-zinc-800/80 border-zinc-700/80 rounded-xl text-sm"
+                  className="pl-10 h-12 text-sm"
                   required
                 />
               </div>
@@ -128,7 +128,7 @@ export default function LoginPage() {
 
             <Button 
               type="submit" 
-              className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 text-sm mt-2" 
+              className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 text-sm mt-2 cursor-pointer" 
               disabled={loading}
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Masuk Sekarang"}
@@ -137,15 +137,15 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-zinc-800"></div>
-            <span className="flex-shrink mx-3 text-[11px] font-semibold text-zinc-500 uppercase">Atau</span>
-            <div className="flex-grow border-t border-zinc-800"></div>
+            <div className="flex-grow border-t border-slate-200 dark:border-white/[0.08]"></div>
+            <span className="flex-shrink mx-3 text-[11px] font-semibold text-slate-400 dark:text-zinc-500 uppercase">Atau</span>
+            <div className="flex-grow border-t border-slate-200 dark:border-white/[0.08]"></div>
           </div>
 
           {/* Google Sign-in */}
           <Button 
             variant="outline" 
-            className="w-full h-12 bg-zinc-800/50 hover:bg-zinc-800 border-zinc-700/70 text-zinc-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2" 
+            className="w-full h-12 border-slate-200 dark:border-white/[0.1] bg-white dark:bg-white/[0.04] text-slate-800 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-white/[0.08] rounded-2xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer" 
             onClick={handleGoogleLogin}
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -159,9 +159,9 @@ export default function LoginPage() {
 
           {/* Footer link */}
           <div className="pt-2 text-center">
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
               Belum memiliki akun?{" "}
-              <Link href="/register" className="text-emerald-400 font-bold hover:underline">
+              <Link href="/register" className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">
                 Daftar Gratis
               </Link>
             </p>

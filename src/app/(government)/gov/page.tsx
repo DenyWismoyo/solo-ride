@@ -36,13 +36,15 @@ import {
   Inbox,
   Truck,
   Clock,
-  Layers
+  Layers,
+  History
 } from "lucide-react";
 import { BroadcastTarget } from "@/types/notification.types";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
+import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 
 // Dedicated Dinas Workspaces
 import { GovDukcapilWorkspace } from "@/components/government/GovDukcapilWorkspace";
@@ -56,6 +58,7 @@ export default function GovernmentDashboard() {
   const router = useRouter();
   const { user, userData, impersonatedPersona, isImpersonating } = useAuthContext();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   // Active Dinas Selection (Defaults to impersonated persona's additional role or user data or gov_dukcapil)
   const defaultSectorId = impersonatedPersona?.additionalRole || userData?.additionalRole || "gov_dukcapil";
@@ -214,6 +217,17 @@ export default function GovernmentDashboard() {
           <div className="p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-2xl border border-slate-100 dark:border-zinc-700/60 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
             {activeSector.description}
           </div>
+
+          <button
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="w-full py-2.5 px-3.5 rounded-2xl bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/30 flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-300 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+              <span>Audit Log Riwayat Berkas & Bansos ({activeSector.name})</span>
+            </div>
+            <span className="text-[10px] bg-teal-500/20 px-2 py-0.5 rounded-md font-black">Buka Log</span>
+          </button>
         </div>
 
         {/* ========================================================================= */}
@@ -401,6 +415,13 @@ export default function GovernmentDashboard() {
       <ProfileDrawer 
         isOpen={isProfileOpen} 
         onClose={() => setIsProfileOpen(false)} 
+      />
+
+      {/* Unified History Modal for Government */}
+      <UnifiedHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        initialRole="government"
       />
     </div>
   );

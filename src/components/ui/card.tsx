@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("sg-card rounded-2xl border border-zinc-800/80 bg-zinc-900/90 text-zinc-100 shadow-sm backdrop-blur-md", className)} {...props} />
+  <div ref={ref} className={cn("sg-card rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c1220]/95 text-slate-900 dark:text-slate-100 shadow-sm backdrop-blur-md", className)} {...props} />
 ));
 Card.displayName = "Card";
 
@@ -12,12 +12,12 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(({ className, ...props }, ref) => (
-  <h3 ref={ref} className={cn("font-bold leading-none tracking-tight text-white", className)} {...props} />
+  <h3 ref={ref} className={cn("font-bold leading-none tracking-tight text-slate-900 dark:text-white", className)} {...props} />
 ));
 CardTitle.displayName = "CardTitle";
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn("text-xs text-zinc-400", className)} {...props} />
+  <p ref={ref} className={cn("text-xs text-slate-500 dark:text-zinc-400", className)} {...props} />
 ));
 CardDescription.displayName = "CardDescription";
 

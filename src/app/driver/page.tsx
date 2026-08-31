@@ -48,7 +48,8 @@ import {
   AlertTriangle,
   LogOut,
   Clock,
-  Car
+  Car,
+  ChevronRight
 } from "lucide-react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -56,6 +57,8 @@ import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument, ServiceType } from "@/types/order.types";
 import { DEMAND_HOTSPOTS_SURAKARTA } from "@/constants/merchants";
 import { IncomingOrderModal } from "@/components/driver/IncomingOrderModal";
+import { HistoryDetailReceiptModal } from "@/components/history/HistoryDetailReceiptModal";
+import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 import { playSuccessChime } from "@/lib/sound";
 
 export default function DriverDashboard() {
@@ -66,6 +69,8 @@ export default function DriverDashboard() {
 
   const [activeTab, setActiveTab] = useState<"radar" | "income" | "performance" | "partner">("radar");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [selectedTripForReceipt, setSelectedTripForReceipt] = useState<OrderDocument | null>(null);
   const [isBuying, setIsBuying] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
   const [hasInitializedOnline, setHasInitializedOnline] = useState(false);
@@ -1074,7 +1079,13 @@ export default function DriverDashboard() {
               <h3 className="text-sm font-bold text-slate-900 dark:text-white sg-editorial-title flex items-center gap-2">
                 <History className="h-4 w-4 text-emerald-500" /> Riwayat Perjalanan
               </h3>
-              <span className="text-[11px] text-slate-400">{driverTrips.length} Total</span>
+              <button
+                onClick={() => setIsHistoryModalOpen(true)}
+                className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+              >
+                <span>Buka Detail ({driverTrips.length})</span>
+                <ChevronRight className="h-3 w-3" />
+              </button>
             </div>
 
             {driverTrips.length === 0 ? (
@@ -1090,7 +1101,7 @@ export default function DriverDashboard() {
                 {driverTrips.map((trip) => (
                   <div 
                     key={trip.id} 
-                    onClick={() => router.push(`/driver/active-trip/${trip.id}`)}
+                    onClick={() => setSelectedTripForReceipt(trip)}
                     className="sg-card p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 space-y-2 cursor-pointer hover:border-emerald-500/40 transition-colors shadow-sm"
                   >
                     <div className="flex justify-between items-center">
@@ -1105,6 +1116,11 @@ export default function DriverDashboard() {
                     <div className="text-xs space-y-1 text-slate-600 dark:text-zinc-300 pt-1">
                       <p className="truncate text-slate-500 dark:text-zinc-400">🟢 <span className="text-slate-800 dark:text-zinc-200">{trip.pickupLocation?.address}</span></p>
                       <p className="truncate text-slate-500 dark:text-zinc-400">🔴 <span className="text-slate-800 dark:text-zinc-200">{trip.dropoffLocation?.address}</span></p>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100 dark:border-white/[0.04]">
+                      <span>ID: #{trip.id?.slice(0, 8).toUpperCase()}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Buka E-Struk & Rincian →</span>
                     </div>
                   </div>
                 ))}
@@ -1410,6 +1426,21 @@ export default function DriverDashboard() {
       <ProfileDrawer 
         isOpen={isProfileOpen} 
         onClose={() => setIsProfileOpen(false)} 
+      />
+
+      {/* History Detail Digital Receipt Modal */}
+      <HistoryDetailReceiptModal
+        isOpen={!!selectedTripForReceipt}
+        onClose={() => setSelectedTripForReceipt(null)}
+        order={selectedTripForReceipt}
+        currentRole="driver"
+      />
+
+      {/* Dedicated Unified History Modal */}
+      <UnifiedHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        initialRole="driver"
       />
     </div>
   );

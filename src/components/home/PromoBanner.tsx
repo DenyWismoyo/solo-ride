@@ -10,7 +10,7 @@ export function PromoBanner() {
       tag: "Gerakan Lokal",
       title: "100% Bebas Potongan Komisi",
       subtitle: "Setiap rupiah ongkir diterima utuh oleh mitra driver & UMKM warga Solo.",
-      gradient: "from-emerald-500/10 via-white to-white dark:from-emerald-900/60 dark:via-zinc-900 dark:to-zinc-900",
+      gradient: "from-emerald-500/10 via-white to-white dark:from-emerald-950/40 dark:via-[#0c1220] dark:to-[#0c1220]",
       border: "border-emerald-500/30",
       accent: "text-emerald-600 dark:text-emerald-400",
       icon: ShieldCheck
@@ -20,7 +20,7 @@ export function PromoBanner() {
       tag: "Fitur Unggulan",
       title: "Titip Tetangga Searah Rute",
       subtitle: "Tumpangkan pesanan Anda pada driver yang sedang mengarah ke titik yang sama.",
-      gradient: "from-amber-500/10 via-white to-white dark:from-amber-900/60 dark:via-zinc-900 dark:to-zinc-900",
+      gradient: "from-amber-500/10 via-white to-white dark:from-amber-950/40 dark:via-[#0c1220] dark:to-[#0c1220]",
       border: "border-amber-500/30",
       accent: "text-amber-600 dark:text-amber-400",
       icon: Zap
@@ -42,11 +42,11 @@ export function PromoBanner() {
           return (
             <div
               key={p.id}
-              className={`sg-card sg-hover-lift min-w-[280px] max-w-[320px] p-4 rounded-3xl border ${p.border} bg-gradient-to-tr ${p.gradient} shrink-0 snap-start space-y-2 flex flex-col justify-between`}
+              className={`sg-card sg-hover-lift min-w-[280px] max-w-[320px] p-4 rounded-3xl border ${p.border} bg-gradient-to-tr ${p.gradient} shrink-0 snap-start space-y-2 flex flex-col justify-between shadow-sm`}
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded-full text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700/50">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-white/[0.08]">
                     {p.tag}
                   </span>
                 </div>
@@ -58,7 +58,7 @@ export function PromoBanner() {
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-zinc-800/80 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-white/[0.06] text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 <span>Pelajari Selengkapnya</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </div>

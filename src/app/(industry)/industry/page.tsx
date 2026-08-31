@@ -31,12 +31,14 @@ import {
   Bus,
   Hotel,
   Wheat,
-  Inbox
+  Inbox,
+  History
 } from "lucide-react";
 import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
+import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 
 export default function IndustryDashboard() {
   const router = useRouter();
@@ -44,6 +46,7 @@ export default function IndustryDashboard() {
   const activeIndustryId = effectiveUid || user?.uid;
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -255,6 +258,17 @@ export default function IndustryDashboard() {
           <div className="p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-2xl border border-slate-100 dark:border-zinc-700/60 text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
             {activeSector.description}
           </div>
+
+          <button
+            onClick={() => setIsHistoryModalOpen(true)}
+            className="w-full py-2.5 px-3.5 rounded-2xl bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/30 flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-300 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>Riwayat Pengantaran & Kontrak Logistik Selesai</span>
+            </div>
+            <span className="text-[10px] bg-blue-500/20 px-2 py-0.5 rounded-md font-black">Buka Arsip</span>
+          </button>
         </div>
 
         {/* ========================================================================= */}
@@ -517,6 +531,13 @@ export default function IndustryDashboard() {
       <ProfileDrawer 
         isOpen={isProfileOpen} 
         onClose={() => setIsProfileOpen(false)} 
+      />
+
+      {/* Unified History Modal for Industry */}
+      <UnifiedHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        initialRole="industry"
       />
     </div>
   );

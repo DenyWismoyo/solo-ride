@@ -29,10 +29,10 @@ export function MerchantSpotlight({ onSelectMerchant }: MerchantSpotlightProps) 
           <div
             key={merchant.id}
             onClick={() => onSelectMerchant?.(merchant)}
-            className="sg-card sg-hover-lift p-3.5 rounded-3xl border border-slate-200 dark:border-zinc-800/80 bg-white/90 dark:bg-zinc-900/90 hover:border-emerald-500/40 transition-all space-y-3 cursor-pointer shadow-sm"
+            className="sg-card sg-hover-lift p-3.5 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c1220]/95 hover:border-emerald-500/40 transition-all space-y-3 cursor-pointer shadow-sm"
           >
             <div className="flex gap-3">
-              <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-700/60 relative">
+              <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-white/[0.04] overflow-hidden shrink-0 border border-slate-200/80 dark:border-white/[0.08] relative">
                 <img 
                   src={merchant.imageUrl} 
                   alt={merchant.name} 
@@ -74,12 +74,12 @@ export function MerchantSpotlight({ onSelectMerchant }: MerchantSpotlightProps) 
             </div>
 
             {/* Popular Items Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-1 border-t border-slate-200 dark:border-zinc-800/80">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-1 border-t border-slate-100 dark:border-white/[0.06]">
               <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold shrink-0">Menu:</span>
               {merchant.popularItems.map((item, idx) => (
                 <span 
                   key={idx}
-                  className="text-[10px] bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded-lg shrink-0 border border-slate-200 dark:border-zinc-700/50"
+                  className="text-[10px] bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded-lg shrink-0 border border-slate-200/80 dark:border-white/[0.06]"
                 >
                   {item}
                 </span>

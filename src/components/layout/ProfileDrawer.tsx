@@ -36,10 +36,12 @@ import {
   Phone,
   CheckCircle2,
   Lock,
-  Layers
+  Layers,
+  History
 } from "lucide-react";
 import { GOVERNMENT_SECTORS, INDUSTRY_SECTORS } from "@/constants/ecosystemSectors";
 import { SavedAddressesModal } from "@/components/profile/SavedAddressesModal";
+import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -53,6 +55,8 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
   // Saved Addresses Modal State
   const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
+  // Unified History Modal State
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await authService.logout();
@@ -221,6 +225,22 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               {activeRole === "customer" && (
                 <div className="space-y-1.5">
                   <button
+                    onClick={() => { onClose(); setIsHistoryModalOpen(true); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/30 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                        <History className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Riwayat Pesanan & Transaksi</p>
+                        <p className="text-[10px] text-slate-500">Ojek, kuliner, kirim kilat & layanan dinas</p>
+                      </div>
+                    </div>
+                    <Badge variant="emerald" size="sm">Aktivitas</Badge>
+                  </button>
+
+                  <button
                     onClick={() => { onClose(); router.push("/services/more"); }}
                     className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
                   >
@@ -274,8 +294,24 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               {activeRole === "driver" && (
                 <div className="space-y-1.5">
                   <button
+                    onClick={() => { onClose(); setIsHistoryModalOpen(true); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/30 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <History className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Riwayat Trip & Pendapatan</p>
+                        <p className="text-[10px] text-slate-500">Semua order selesai & penerimaan bersih 100%</p>
+                      </div>
+                    </div>
+                    <Badge variant="amber" size="sm">Catatan</Badge>
+                  </button>
+
+                  <button
                     onClick={() => { onClose(); router.push("/driver"); }}
-                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
@@ -286,7 +322,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                         <p className="text-[10px] text-slate-500">Peta hotspot keramaian & pesanan masuk</p>
                       </div>
                     </div>
-                    <Badge variant="amber" size="sm">Utama</Badge>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
                   </button>
 
                   <button
@@ -327,8 +363,24 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               {activeRole === "merchant" && (
                 <div className="space-y-1.5">
                   <button
+                    onClick={() => { onClose(); setIsHistoryModalOpen(true); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-500/10 hover:bg-orange-500/15 border border-orange-500/30 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                        <History className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Riwayat Penjualan & Omset</p>
+                        <p className="text-[10px] text-slate-500">Semua pesanan makanan selesai & rekap kasir</p>
+                      </div>
+                    </div>
+                    <Badge variant="orange" size="sm">Omset</Badge>
+                  </button>
+
+                  <button
                     onClick={() => { onClose(); router.push("/merchant"); }}
-                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-orange-500/20 text-orange-600 dark:text-orange-400">
@@ -339,7 +391,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                         <p className="text-[10px] text-slate-500">Pesanan makanan, stok & Flash Sale</p>
                       </div>
                     </div>
-                    <Badge variant="orange" size="sm">Buka Kios</Badge>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
                   </button>
 
                   <button
@@ -364,8 +416,24 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               {activeRole === "government" && (
                 <div className="space-y-1.5">
                   <button
+                    onClick={() => { onClose(); setIsHistoryModalOpen(true); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/30 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400">
+                        <History className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Riwayat Berkas & Bansos Dinas</p>
+                        <p className="text-[10px] text-slate-500">Log audit layanan KTP, bansos & resep tuntas</p>
+                      </div>
+                    </div>
+                    <Badge variant="teal" size="sm">Audit Log</Badge>
+                  </button>
+
+                  <button
                     onClick={() => { onClose(); router.push("/gov"); }}
-                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400">
@@ -385,8 +453,24 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               {activeRole === "industry" && (
                 <div className="space-y-1.5">
                   <button
+                    onClick={() => { onClose(); setIsHistoryModalOpen(true); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/30 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                        <History className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Riwayat Pengantaran Kargo B2B</p>
+                        <p className="text-[10px] text-slate-500">Arsip surat jalan pengiriman & lab selesai</p>
+                      </div>
+                    </div>
+                    <Badge variant="blue" size="sm">Arsip</Badge>
+                  </button>
+
+                  <button
                     onClick={() => { onClose(); router.push("/industry"); }}
-                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400">
@@ -416,7 +500,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 onClick={() => setTheme("light")}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   theme === "light"
-                    ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                    ? "bg-white text-slate-900 shadow-sm border border-slate-200/80"
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                 }`}
               >
@@ -428,7 +512,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 onClick={() => setTheme("dark")}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   theme === "dark"
-                    ? "bg-zinc-800 text-white shadow-sm border border-zinc-700"
+                    ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-white/[0.15]"
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                 }`}
               >
@@ -440,7 +524,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                 onClick={() => setTheme("system")}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   theme === "system"
-                    ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-zinc-700"
+                    ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-white/[0.15]"
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                 }`}
               >
@@ -556,6 +640,12 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
       <SavedAddressesModal 
         isOpen={isAddressesModalOpen} 
         onClose={() => setIsAddressesModalOpen(false)} 
+      />
+
+      {/* Dedicated Unified History Modal */}
+      <UnifiedHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
       />
     </>
   );

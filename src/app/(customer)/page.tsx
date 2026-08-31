@@ -42,7 +42,12 @@ import {
   Moon,
   Laptop,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  History,
+  XCircle,
+  Car,
+  UtensilsCrossed,
+  FileText
 } from "lucide-react";
 import { AppService } from "@/constants/services";
 import { Merchant } from "@/types/merchant.types";
@@ -52,6 +57,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
+import { HistoryDetailReceiptModal } from "@/components/history/HistoryDetailReceiptModal";
 
 export default function CustomerHome() {
   const router = useRouter();
@@ -60,6 +66,8 @@ export default function CustomerHome() {
   const [activeTab, setActiveTab] = useState("home");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
+  const [selectedOrderForReceipt, setSelectedOrderForReceipt] = useState<OrderDocument | null>(null);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<"all" | "active" | "completed" | "cancelled">("all");
 
   // Real-time broadcasts for customers
   const { broadcasts } = useBroadcasts("customer");
@@ -232,71 +240,153 @@ export default function CustomerHome() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="pt-20 px-4 max-w-lg w-full mx-auto flex-1 space-y-4 relative z-10"
+            className="pt-20 px-4 max-w-lg w-full mx-auto flex-1 space-y-4 relative z-10 pb-24"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight sg-editorial-title">
-                Pesanan & Aktivitas
-              </h2>
-              <span className="text-xs text-slate-500 dark:text-zinc-400 font-semibold bg-slate-200/80 dark:bg-zinc-800 px-2.5 py-1 rounded-full">
-                {customerOrders.length} Riwayat
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight sg-editorial-title">
+                  Pesanan & Aktivitas
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-zinc-400">Riwayat mobilitas, kuliner & pengantaran</p>
+              </div>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                {customerOrders.length} Total
               </span>
             </div>
 
-            {customerOrders.length === 0 ? (
-              <div className="sg-card p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 text-center space-y-3 shadow-sm">
-                <Clock className="h-10 w-10 text-slate-400 dark:text-zinc-500 mx-auto" />
-                <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Belum Ada Pesanan Aktif</h3>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mx-auto">
-                  Pesan ojek, makanan, atau kebutuhan harian Anda untuk melihat riwayat aktivitas di sini.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {customerOrders.map((order) => (
-                  <motion.div
-                    key={order.id}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => order.id && router.push(`/order/${order.id}`)}
-                    className="sg-card p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 space-y-3 shadow-sm hover:border-emerald-500/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                            {(order as any).serviceTitle || order.serviceType}
-                          </span>
-                          <Badge 
-                            variant={
-                              order.status === "completed" ? "emerald" :
-                              order.status === "cancelled" ? "rose" :
-                              order.status === "pending_verification" ? "rose" : "amber"
-                            }
-                            size="sm"
-                          >
-                            {order.status}
-                          </Badge>
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => setOrderStatusFilter("all")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  orderStatusFilter === "all"
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+                    : "bg-white dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-white/[0.06]"
+                }`}
+              >
+                Semua ({customerOrders.length})
+              </button>
+
+              <button
+                onClick={() => setOrderStatusFilter("active")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  orderStatusFilter === "active"
+                    ? "bg-amber-600 text-white shadow-sm"
+                    : "bg-white dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-white/[0.06]"
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" />
+                Dalam Proses ({customerOrders.filter(o => o.status !== "completed" && o.status !== "cancelled").length})
+              </button>
+
+              <button
+                onClick={() => setOrderStatusFilter("completed")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  orderStatusFilter === "completed"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-white dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-white/[0.06]"
+                }`}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Selesai ({customerOrders.filter(o => o.status === "completed").length})
+              </button>
+
+              <button
+                onClick={() => setOrderStatusFilter("cancelled")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+                  orderStatusFilter === "cancelled"
+                    ? "bg-rose-600 text-white shadow-sm"
+                    : "bg-white dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-white/[0.06]"
+                }`}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                Dibatalkan ({customerOrders.filter(o => o.status === "cancelled").length})
+              </button>
+            </div>
+
+            {/* Filtered Order Feed */}
+            {(() => {
+              const filtered = customerOrders.filter((order) => {
+                if (orderStatusFilter === "completed") return order.status === "completed";
+                if (orderStatusFilter === "cancelled") return order.status === "cancelled";
+                if (orderStatusFilter === "active") return order.status !== "completed" && order.status !== "cancelled";
+                return true;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="sg-card p-8 rounded-3xl border border-slate-200 dark:border-zinc-800 text-center space-y-3 shadow-sm bg-white/95 dark:bg-zinc-900/95">
+                    <Clock className="h-10 w-10 text-slate-400 dark:text-zinc-500 mx-auto" />
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">Tidak Ada Riwayat</h3>
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mx-auto">
+                      {orderStatusFilter === "active" 
+                        ? "Tidak ada pesanan yang sedang berlangsung." 
+                        : "Pesan ojek, makanan, atau kebutuhan harian Anda untuk melihat riwayat aktivitas di sini."}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-3">
+                  {filtered.map((order) => (
+                    <motion.div
+                      key={order.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setSelectedOrderForReceipt(order)}
+                      className="sg-card p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-zinc-900/95 space-y-3 shadow-sm hover:border-emerald-500/50 transition-all cursor-pointer"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                              {(order as any).serviceTitle || order.serviceType}
+                            </span>
+                            <Badge 
+                              variant={
+                                order.status === "completed" ? "emerald" :
+                                order.status === "cancelled" ? "rose" :
+                                order.status === "in_progress" ? "blue" : "amber"
+                              }
+                              size="sm"
+                            >
+                              {order.status === "completed" ? "Selesai" : order.status === "cancelled" ? "Batal" : order.status}
+                            </Badge>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                            ID: #{order.id?.slice(0, 8).toUpperCase()}
+                          </p>
                         </div>
-                        <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">
-                          ID: {order.id?.slice(0, 10)}...
-                        </p>
+
+                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                          Rp {Number(order.price || 0).toLocaleString("id-ID")}
+                        </span>
                       </div>
 
-                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                        Rp {order.price.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-
-                    <div className="p-2.5 bg-slate-50 dark:bg-zinc-800/60 rounded-xl space-y-1 text-xs text-slate-600 dark:text-zinc-300 border border-slate-100 dark:border-zinc-700/60">
-                      <div className="flex justify-between">
-                        <span className="text-[10px] text-slate-400">Tujuan:</span>
-                        <span className="font-medium text-slate-800 dark:text-zinc-200 truncate max-w-[200px]">{order.dropoffLocation.address}</span>
+                      <div className="p-2.5 bg-slate-50 dark:bg-zinc-800/60 rounded-xl space-y-1 text-xs text-slate-600 dark:text-zinc-300 border border-slate-100 dark:border-zinc-700/60">
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-[10px] text-slate-400 shrink-0">Jemput:</span>
+                          <span className="font-medium text-slate-800 dark:text-zinc-200 truncate">{order.pickupLocation?.address}</span>
+                        </div>
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-[10px] text-slate-400 shrink-0">Tujuan:</span>
+                          <span className="font-medium text-slate-800 dark:text-zinc-200 truncate">{order.dropoffLocation?.address}</span>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                        <span>
+                          {order.driverName ? `Mitra: ${order.driverName}` : "Pesanan Langsung"}
+                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
+                          Buka E-Struk <ChevronRight className="h-3 w-3" />
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              );
+            })()}
           </motion.main>
         )}
 
@@ -460,7 +550,7 @@ export default function CustomerHome() {
                   onClick={() => setTheme("light")}
                   className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     theme === "light"
-                      ? "bg-slate-100 text-slate-900 shadow-sm border border-slate-200"
+                      ? "bg-slate-100 text-slate-900 shadow-sm border border-slate-200/80"
                       : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                   }`}
                 >
@@ -472,7 +562,7 @@ export default function CustomerHome() {
                   onClick={() => setTheme("dark")}
                   className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     theme === "dark"
-                      ? "bg-zinc-800 text-white shadow-sm border border-zinc-700"
+                      ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-white/[0.15]"
                       : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                   }`}
                 >
@@ -484,7 +574,7 @@ export default function CustomerHome() {
                   onClick={() => setTheme("system")}
                   className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     theme === "system"
-                      ? "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-zinc-700"
+                      ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-white/[0.15]"
                       : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                   }`}
                 >
@@ -535,6 +625,14 @@ export default function CustomerHome() {
       <SavedAddressesModal 
         isOpen={isAddressesModalOpen} 
         onClose={() => setIsAddressesModalOpen(false)} 
+      />
+
+      {/* History Detail Digital Receipt Modal */}
+      <HistoryDetailReceiptModal
+        isOpen={!!selectedOrderForReceipt}
+        onClose={() => setSelectedOrderForReceipt(null)}
+        order={selectedOrderForReceipt}
+        currentRole="customer"
       />
     </div>
   );
