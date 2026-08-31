@@ -96,9 +96,9 @@ export function IncomingOrderModal({ order, onAccept, onSkip }: IncomingOrderMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom duration-300">
+      <div className="w-full max-w-lg bg-white/95 dark:bg-[#0c1220]/95 rounded-t-[2.5rem] sm:rounded-[2.2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-3xl overflow-hidden flex flex-col animate-in slide-in-from-bottom duration-300">
         {/* Countdown Timer Progress Bar */}
-        <div className="w-full bg-slate-200 dark:bg-zinc-800 h-2 overflow-hidden">
+        <div className="w-full bg-slate-200/80 dark:bg-white/[0.06] h-2 overflow-hidden">
           <div 
             className={`h-full transition-all duration-1000 ease-linear ${timerColor}`}
             style={{ width: `${progressPercentage}%` }}
@@ -106,7 +106,7 @@ export function IncomingOrderModal({ order, onAccept, onSkip }: IncomingOrderMod
         </div>
 
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-950/40">
+        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100 dark:border-white/[0.06] bg-slate-50/70 dark:bg-white/[0.02]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center animate-pulse">
               {order.serviceType === "mobil" ? (
@@ -159,9 +159,9 @@ export function IncomingOrderModal({ order, onAccept, onSkip }: IncomingOrderMod
         {/* Modal Body */}
         <div className="p-4 sm:p-5 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Price & Earning Highlight */}
-          <div className="bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-emerald-500/15 dark:bg-emerald-500/20 rounded-[1.6rem] p-4 flex items-center justify-between shadow-xs">
             <div>
-              <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-extrabold text-slate-600 dark:text-zinc-300 uppercase tracking-wider block">
                 Pendapatan Tunai Bersih
               </span>
               <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
@@ -169,7 +169,7 @@ export function IncomingOrderModal({ order, onAccept, onSkip }: IncomingOrderMod
               </span>
             </div>
             <div className="text-right">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/20 px-2 py-1 rounded-xl">
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-500/25 px-2.5 py-1 rounded-xl">
                 <ShieldCheck className="h-3.5 w-3.5" /> 100% Tanpa Komisi
               </span>
               <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 font-semibold">+10 Poin Reward</p>
@@ -177,7 +177,7 @@ export function IncomingOrderModal({ order, onAccept, onSkip }: IncomingOrderMod
           </div>
 
           {/* Route Details */}
-          <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-2xl p-3.5 space-y-3 border border-slate-200 dark:border-zinc-700/60">
+          <div className="bg-slate-50/90 dark:bg-white/[0.03] rounded-[1.6rem] p-4 space-y-3.5 shadow-xs">
             <div className="flex items-start gap-2.5">
               <div className="p-1.5 bg-emerald-500/20 text-emerald-500 rounded-lg shrink-0 mt-0.5">
                 <MapPin className="h-4 w-4" />

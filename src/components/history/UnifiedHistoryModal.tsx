@@ -202,24 +202,24 @@ export function UnifiedHistoryModal({
 
           {/* Quick Stats Metric Cards */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="p-3 bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm text-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Riwayat</span>
+            <div className="p-3.5 bg-white dark:bg-[#0f172a] rounded-2xl shadow-xs text-center">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase block">Total Riwayat</span>
               <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">
                 {stats.totalOrders}
               </span>
               <span className="text-[9px] text-slate-500 dark:text-zinc-400">Transaksi</span>
             </div>
 
-            <div className="p-3 bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm text-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block">Selesai</span>
+            <div className="p-3.5 bg-white dark:bg-[#0f172a] rounded-2xl shadow-xs text-center">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase block">Selesai</span>
               <span className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
                 {stats.completedOrders}
               </span>
               <span className="text-[9px] text-slate-500 dark:text-zinc-400">Sukses</span>
             </div>
 
-            <div className="p-3 bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200/80 dark:border-white/[0.06] shadow-sm text-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block truncate">
+            <div className="p-3.5 bg-white dark:bg-[#0f172a] rounded-2xl shadow-xs text-center">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase block truncate">
                 {activeRole === "driver" || activeRole === "merchant" ? "Total Omset" : "Total Nilai"}
               </span>
               <span className="text-xs font-black text-amber-600 dark:text-amber-400 mt-1 block truncate">
@@ -237,7 +237,7 @@ export function UnifiedHistoryModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari ID pesanan, alamat jemput/tujuan, menu..."
-              className="w-full h-10 pl-9 pr-3.5 bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-white/[0.06] rounded-2xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500"
+              className="w-full h-11 pl-9 pr-3.5 bg-white dark:bg-[#0f172a] rounded-2xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-xs"
             />
           </div>
 

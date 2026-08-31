@@ -18,15 +18,15 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const variantStyles = {
-    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 shadow-[0_0_12px_rgba(16,185,129,0.12)]",
-    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25 shadow-[0_0_12px_rgba(245,158,11,0.12)]",
-    orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/25 shadow-[0_0_12px_rgba(249,115,22,0.12)]",
-    teal: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/25 shadow-[0_0_12px_rgba(20,184,166,0.12)]",
-    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25 shadow-[0_0_12px_rgba(244,63,94,0.12)]",
-    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25 shadow-[0_0_12px_rgba(59,130,246,0.12)]",
-    purple: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25 shadow-[0_0_12px_rgba(168,85,247,0.12)]",
-    neutral: "bg-slate-100 dark:bg-zinc-800/80 text-slate-700 dark:text-zinc-300 border-slate-300/80 dark:border-zinc-700/80",
-    outline: "bg-transparent text-slate-700 dark:text-zinc-300 border-slate-300 dark:border-zinc-700",
+    emerald: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 shadow-xs",
+    amber: "bg-amber-500/15 text-amber-800 dark:text-amber-300 shadow-xs",
+    orange: "bg-orange-500/15 text-orange-800 dark:text-orange-300 shadow-xs",
+    teal: "bg-teal-500/15 text-teal-800 dark:text-teal-300 shadow-xs",
+    rose: "bg-rose-500/15 text-rose-700 dark:text-rose-300 shadow-xs",
+    blue: "bg-blue-500/15 text-blue-800 dark:text-blue-300 shadow-xs",
+    purple: "bg-purple-500/15 text-purple-800 dark:text-purple-300 shadow-xs",
+    neutral: "bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-zinc-300 shadow-xs",
+    outline: "bg-white/60 dark:bg-white/[0.03] text-slate-700 dark:text-zinc-300 shadow-xs",
   };
 
   const dotColors = {

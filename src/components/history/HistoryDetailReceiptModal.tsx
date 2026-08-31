@@ -179,12 +179,12 @@ Tanpa Potongan Komisi 100% Warga
         </div>
 
         {/* Receipt Digital Paper Card */}
-        <div className="p-4 bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm space-y-4 relative overflow-hidden">
+        <div className="p-4.5 bg-white dark:bg-[#0f172a] rounded-[2rem] shadow-xs space-y-4 relative overflow-hidden">
           {/* Top Zig-zag / Badge Pill */}
-          <div className="flex items-center justify-between bg-emerald-500/10 dark:bg-emerald-500/15 p-2.5 rounded-2xl border border-emerald-500/20">
+          <div className="flex items-center justify-between bg-emerald-500/10 dark:bg-emerald-500/15 p-3 rounded-2xl">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+              <span className="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-300">
                 E-Struk Resmi Ride-Solo Surakarta
               </span>
             </div>
@@ -194,7 +194,7 @@ Tanpa Potongan Komisi 100% Warga
           </div>
 
           {/* Rute Perjalanan / Alamat */}
-          <div className="space-y-3 p-3 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-slate-100 dark:border-white/[0.04]">
+          <div className="space-y-3 p-3.5 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl">
             <div className="flex items-start gap-2.5">
               <div className="mt-0.5 p-1 rounded-full bg-emerald-500/20 text-emerald-600 shrink-0">
                 <MapPin className="h-3 w-3" />

@@ -14,10 +14,42 @@ import {
   Bike, 
   Eye,
   Camera,
-  Users
+  Users,
+  Loader2
 } from "lucide-react";
 
-export function GovDisparWorkspace() {
+import { OrderDocument } from "@/types/order.types";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/constants/collections";
+
+interface GovDisparWorkspaceProps {
+  orders?: OrderDocument[];
+  loading?: boolean;
+}
+
+export function GovDisparWorkspace({ orders = [], loading = false }: GovDisparWorkspaceProps) {
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<"orders" | "events" | "shelters">("orders");
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+
+  const pendingVerificationOrders = orders.filter(o => o.status === "pending_verification");
+  const inProgressOrders = orders.filter(o => o.status === "in_progress" || o.status === "accepted" || o.status === "pending");
+
+  const handleApproveTourRequest = async (orderId: string) => {
+    setDispatchingId(orderId);
+    try {
+      await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+        status: "pending",
+        verifiedByDinasAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      alert("✅ Permohonan Wisata / Pemandu Disetujui! Order diteruskan ke Radar Driver Mitra Ramah Wisata.");
+    } catch (err: any) {
+      alert(`Gagal memproses: ${err.message || err}`);
+    } finally {
+      setDispatchingId(null);
+    }
+  };
   const [events, setEvents] = useState([
     {
       id: "evt-1",
@@ -93,7 +125,126 @@ export function GovDisparWorkspace() {
         </div>
       </div>
 
-      {/* 2. EVENT MANAGEMENT SECTION */}
+      {/* 2. TAB SELECTOR */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-2xl">
+        <button
+          onClick={() => setActiveWorkspaceTab("orders")}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeWorkspaceTab === "orders"
+              ? "bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-400 shadow-sm border border-slate-200 dark:border-zinc-800"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+          }`}
+        >
+          <Compass className="h-4 w-4" />
+          <span>Antrean Paket Wisata & Guide ({orders.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveWorkspaceTab("events")}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeWorkspaceTab === "events"
+              ? "bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-400 shadow-sm border border-slate-200 dark:border-zinc-800"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+          }`}
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Kalender Budaya ({events.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveWorkspaceTab("shelters")}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeWorkspaceTab === "shelters"
+              ? "bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-400 shadow-sm border border-slate-200 dark:border-zinc-800"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+          }`}
+        >
+          <MapPin className="h-4 w-4" />
+          <span>Shelter Wisata</span>
+        </button>
+      </div>
+
+      {/* TAB 1: ORDERS / BOOKING QUEUE */}
+      {activeWorkspaceTab === "orders" && (
+        <div className="space-y-3">
+          {loading ? (
+            <div className="p-8 text-center bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800">
+              <Loader2 className="h-6 w-6 text-amber-500 animate-spin mx-auto mb-2" />
+              <p className="text-xs text-slate-500">Memeriksa permohonan wisata...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="p-8 text-center bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 text-xs text-slate-500">
+              Belum ada permohonan paket wisata atau booking pemandu baru dari warga/wisatawan.
+            </div>
+          ) : (
+            orders.map((order) => (
+              <div
+                key={order.id}
+                className="sg-card p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 space-y-3 shadow-sm"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">
+                        {order.serviceTitle || "Paket Wisata Solo"}
+                      </span>
+                      <Badge variant={order.status === "pending_verification" ? "rose" : "emerald"} size="sm">
+                        {order.status === "pending_verification" ? "Perlu Verifikasi Dinas" : "Telah Disetujui"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Wisatawan: <strong>{order.customerName}</strong> • {order.customerPhone}
+                    </p>
+                  </div>
+
+                  <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+                    Rp {(order.price || 0).toLocaleString("id-ID")}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-xl space-y-1 text-xs text-slate-600 dark:text-zinc-300 border border-slate-100 dark:border-zinc-700/60">
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-slate-400">Titik Jemput Wisatawan:</span>
+                    <span className="font-medium text-slate-800 dark:text-zinc-200 truncate max-w-[220px]">{order.pickupLocation.address}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-slate-400">Tujuan Destinasi:</span>
+                    <span className="font-medium text-slate-800 dark:text-zinc-200 truncate max-w-[220px]">{order.dropoffLocation.address}</span>
+                  </div>
+                  {order.citizenDetails?.notes && (
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-slate-400">Catatan Khusus:</span>
+                      <span className="text-slate-800 dark:text-zinc-200">{order.citizenDetails.notes}</span>
+                    </div>
+                  )}
+                </div>
+
+                {order.status === "pending_verification" && (
+                  <Button
+                    size="sm"
+                    onClick={() => order.id && handleApproveTourRequest(order.id)}
+                    disabled={dispatchingId === order.id}
+                    className="w-full h-9 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold text-xs rounded-xl shadow cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    {dispatchingId === order.id ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Menugaskan Driver Pemandu...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Konfirmasi Booking & Dispatch ke Driver Ramah Wisata
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: EVENT MANAGEMENT SECTION */}
+      {activeWorkspaceTab === "events" && (
       <div className="sg-card p-4 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 space-y-3.5 shadow-sm">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -133,8 +284,10 @@ export function GovDisparWorkspace() {
           ))}
         </div>
       </div>
+      )}
 
-      {/* 3. HERITAGE SHELTER STATUS */}
+      {/* TAB 3: HERITAGE SHELTER STATUS */}
+      {activeWorkspaceTab === "shelters" && (
       <div className="sg-card p-4 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 space-y-3 shadow-sm">
         <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider pl-1">
           Posko & Shelter Ojek Ramah Wisata
@@ -158,6 +311,7 @@ export function GovDisparWorkspace() {
           </div>
         </div>
       </div>
+      )}
 
       {/* MODAL ADD EVENT */}
       {isModalOpen && (

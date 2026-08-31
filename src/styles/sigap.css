@@ -81,34 +81,17 @@
     --sg-shadow-floating: 0 20px 50px -10px rgba(16, 185, 129, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.8);
 }
 
-/* Background Atmosphere Grid */
+/* Clean Solid Background Invariant */
 .bg-grid-pattern {
-  background-size: 36px 36px;
-  background-image: 
-    linear-gradient(to right, rgba(148, 163, 184, 0.09) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+  background-image: none !important;
 }
 
 .dark .bg-grid-pattern {
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-image: none !important;
 }
 
-/* Ambient Radial Glow Lighting */
 .ambient-glow {
-  position: absolute;
-  width: 420px;
-  height: 420px;
-  border-radius: 9999px;
-  filter: blur(90px);
-  pointer-events: none;
-  opacity: 0.15;
-  transition: opacity 0.5s ease;
-}
-
-.dark .ambient-glow {
-  opacity: 0.25;
+  display: none !important;
 }
 
 /* ========================================================================= */
@@ -247,5 +230,57 @@
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--sg-glass-border);
+  box-shadow: var(--sg-shadow-card);
+}
+
+/* ========================================================================= */
+/* BORDERLESS ULTRA-LUXE MOBILE-FIRST UTILITIES                              */
+/* ========================================================================= */
+
+.sg-surface-borderless {
+  background: var(--card);
+  box-shadow: var(--sg-shadow-card);
+  border-radius: 1.75rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.dark .sg-surface-borderless {
+  background: #0c1220;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.65);
+}
+
+.sg-squircle {
+  border-radius: 1.6rem;
+}
+
+.sg-squircle-lg {
+  border-radius: 2rem;
+}
+
+.sg-squircle-xl {
+  border-radius: 2.5rem;
+}
+
+.sg-tactile-press {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.sg-tactile-press:active {
+  transform: scale(0.93) !important;
+}
+
+.sg-btn-glass {
+  background: var(--sg-glass-subtle);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--sg-glass-border);
+  box-shadow: var(--sg-shadow-soft);
+  color: var(--foreground);
+}
+
+.sg-btn-glass:hover {
+  background: var(--sg-glass);
   box-shadow: var(--sg-shadow-card);
 }

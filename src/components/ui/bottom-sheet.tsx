@@ -22,13 +22,13 @@ export function BottomSheet({ isOpen, onClose, children, className }: BottomShee
       {/* Sheet */}
       <div 
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-in-out bg-white dark:bg-[#090d16] text-slate-900 dark:text-slate-100 border-t border-slate-200/80 dark:border-white/[0.08] rounded-t-3xl shadow-2xl p-6",
+          "fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-in-out bg-white/95 dark:bg-[#090d16]/95 text-slate-900 dark:text-slate-100 rounded-t-[2.5rem] shadow-[0_-12px_45px_-10px_rgba(0,0,0,0.2)] dark:shadow-[0_-20px_60px_-10px_rgba(0,0,0,0.85)] backdrop-blur-3xl p-6",
           isOpen ? "translate-y-0" : "translate-y-full",
           className
         )}
       >
         {/* Drag Handle (Visual only) */}
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto mb-6" />
+        <div className="w-12 h-1.5 bg-slate-300/80 dark:bg-white/20 rounded-full mx-auto mb-6" />
         
         {children}
       </div>

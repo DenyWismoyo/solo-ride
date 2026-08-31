@@ -121,11 +121,7 @@ export default function CustomerHome() {
   const effectiveRole = impersonatedRole || userData?.role || "customer";
 
   return (
-    <div className="relative min-h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-between pb-24 overflow-hidden bg-grid-pattern transition-colors duration-200">
-      {/* Ambient Lighting Glows */}
-      <div className="ambient-glow bg-emerald-500 -top-24 -right-24" />
-      <div className="ambient-glow bg-blue-500 top-1/2 -left-32" />
-      <div className="ambient-glow bg-amber-500 bottom-10 right-10" />
+    <div className="relative min-h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-between pb-24 transition-colors duration-200">
 
       {/* Impersonation Bar if Active */}
       <AdminImpersonationBar />
@@ -155,16 +151,17 @@ export default function CustomerHome() {
 
               <motion.div 
                 whileTap={{ scale: 0.98 }}
+                whileHover={{ y: -2 }}
                 onClick={() => router.push(`/services/ride`)}
-                className="flex items-center gap-3 p-3.5 bg-white/95 dark:bg-[#0c1220]/95 hover:bg-white dark:hover:bg-[#11192e] border border-slate-200/80 dark:border-white/[0.08] rounded-[1.4rem] cursor-pointer transition-all shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.5)] group"
+                className="flex items-center gap-3 p-3.5 bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50/90 dark:hover:bg-[#11192e] rounded-[1.8rem] cursor-pointer transition-all shadow-[0_8px_30px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.7)] backdrop-blur-2xl group"
               >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Search className="h-4 w-4" />
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                  <Search className="h-4 w-4 stroke-[2.2]" />
                 </div>
-                <span className="text-xs text-slate-500 dark:text-zinc-400 flex-1">
+                <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 flex-1">
                   Mau ojek, makan apa, atau kirim barang hari ini?
                 </span>
-                <span className="text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-black bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1.5 rounded-full shadow-xs">
                   Cari
                 </span>
               </motion.div>
@@ -175,15 +172,17 @@ export default function CustomerHome() {
               <motion.div 
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="p-3.5 rounded-2xl bg-teal-500/10 dark:bg-teal-950/40 border border-teal-500/30 flex items-start gap-3 shadow-sm backdrop-blur-md"
+                className="p-3.5 rounded-[1.6rem] bg-gradient-to-r from-teal-500/15 via-emerald-500/10 to-teal-500/5 dark:from-teal-950/50 dark:via-emerald-950/30 dark:to-transparent flex items-start gap-3 shadow-[0_6px_20px_-4px_rgba(13,148,136,0.1)] backdrop-blur-xl"
               >
-                <Megaphone className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5 animate-bounce" />
+                <div className="p-2 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400 shrink-0 shadow-xs">
+                  <Megaphone className="h-4 w-4 animate-bounce" />
+                </div>
                 <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-teal-700 dark:text-teal-300 leading-tight">
+                    <span className="text-[11px] font-black text-teal-800 dark:text-teal-300 leading-tight">
                       {broadcasts[0].title}
                     </span>
-                    <span className="text-[9px] font-bold text-teal-600 dark:text-teal-400 bg-teal-500/20 px-1.5 py-0.2 rounded">
+                    <span className="text-[9px] font-extrabold text-teal-600 dark:text-teal-400 bg-teal-500/20 px-2 py-0.5 rounded-full">
                       Pemda
                     </span>
                   </div>
@@ -202,26 +201,26 @@ export default function CustomerHome() {
 
             {/* Pasar Murah / Sinergi Pemkot Widget */}
             <motion.div 
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.97 }}
               whileHover={{ y: -2 }}
               onClick={() => router.push("/services/pasar")}
-              className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-white/90 dark:via-emerald-950/40 dark:to-[#0c1220] border border-emerald-500/30 rounded-[1.6rem] p-4 shadow-sm flex items-center justify-between cursor-pointer backdrop-blur-md"
+              className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-white/95 dark:via-emerald-950/40 dark:to-[#0c1220] rounded-[1.8rem] p-4 shadow-[0_8px_25px_-4px_rgba(16,185,129,0.1)] flex items-center justify-between cursor-pointer backdrop-blur-xl"
             >
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0 shadow-sm">
-                  <Store className="h-6 w-6" />
+                <div className="p-3 rounded-2xl bg-gradient-to-tr from-emerald-500/25 to-teal-500/15 text-emerald-600 dark:text-emerald-400 shrink-0 shadow-xs">
+                  <Store className="h-6 w-6 stroke-[2.2]" />
                 </div>
                 <div className="space-y-0.5">
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                     Program Pasar Murah
-                    <Badge variant="emerald" className="h-4 text-[9px] px-1.5 py-0 bg-emerald-500 text-white border-0">Pemkot</Badge>
+                    <span className="text-[9px] font-black px-1.5 py-0.2 bg-emerald-500 text-white rounded-md">Pemkot</span>
                   </h3>
-                  <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-tight">
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-zinc-400 leading-tight">
                     Sembako & bahan pokok subsidi khusus warga Solo terdaftar.
                   </p>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-emerald-500 shrink-0 opacity-70" />
+              <ArrowRight className="h-4 w-4 text-emerald-500 shrink-0 opacity-80" />
             </motion.div>
 
             {/* Promo & News Carousel */}
@@ -332,14 +331,15 @@ export default function CustomerHome() {
                   {filtered.map((order) => (
                     <motion.div
                       key={order.id}
-                      whileTap={{ scale: 0.98 }}
+                      whileTap={{ scale: 0.97 }}
+                      whileHover={{ y: -2 }}
                       onClick={() => setSelectedOrderForReceipt(order)}
-                      className="sg-card p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-zinc-900/95 space-y-3 shadow-sm hover:border-emerald-500/50 transition-all cursor-pointer"
+                      className="p-4.5 rounded-[1.8rem] bg-white/95 dark:bg-[#0c1220]/95 space-y-3.5 shadow-[0_8px_24px_-4px_rgba(15,23,42,0.04)] dark:shadow-[0_14px_32px_-6px_rgba(0,0,0,0.65)] hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
                     >
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                               {(order as any).serviceTitle || order.serviceType}
                             </span>
                             <Badge 
@@ -358,27 +358,27 @@ export default function CustomerHome() {
                           </p>
                         </div>
 
-                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                           Rp {Number(order.price || 0).toLocaleString("id-ID")}
                         </span>
                       </div>
 
-                      <div className="p-2.5 bg-slate-50 dark:bg-zinc-800/60 rounded-xl space-y-1 text-xs text-slate-600 dark:text-zinc-300 border border-slate-100 dark:border-zinc-700/60">
-                        <div className="flex items-start gap-1.5">
-                          <span className="text-[10px] text-slate-400 shrink-0">Jemput:</span>
-                          <span className="font-medium text-slate-800 dark:text-zinc-200 truncate">{order.pickupLocation?.address}</span>
+                      <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl space-y-1.5 text-xs text-slate-600 dark:text-zinc-300">
+                        <div className="flex items-start gap-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">Jemput:</span>
+                          <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{order.pickupLocation?.address}</span>
                         </div>
-                        <div className="flex items-start gap-1.5">
-                          <span className="text-[10px] text-slate-400 shrink-0">Tujuan:</span>
-                          <span className="font-medium text-slate-800 dark:text-zinc-200 truncate">{order.dropoffLocation?.address}</span>
+                        <div className="flex items-start gap-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">Tujuan:</span>
+                          <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{order.dropoffLocation?.address}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-                        <span>
+                        <span className="font-medium">
                           {order.driverName ? `Mitra: ${order.driverName}` : "Pesanan Langsung"}
                         </span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-0.5">
                           Buka E-Struk <ChevronRight className="h-3 w-3" />
                         </span>
                       </div>
@@ -406,10 +406,10 @@ export default function CustomerHome() {
               </h2>
             </div>
 
-            <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-transparent border border-amber-500/30 space-y-3">
+            <div className="p-5.5 rounded-[2rem] bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-transparent shadow-[0_10px_30px_-6px_rgba(245,158,11,0.12)] space-y-3.5 relative overflow-hidden">
               <div className="flex justify-between items-start">
                 <div>
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">Total Stamp Anda:</span>
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-extrabold uppercase tracking-wider">Total Stamp Anda:</span>
                   <div className="text-3xl font-black text-amber-500 flex items-center gap-2 mt-0.5">
                     <span>🪙 {userData?.points || 120}</span>
                     <span className="text-xs font-bold text-slate-500">Poin</span>
@@ -433,12 +433,12 @@ export default function CustomerHome() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="pt-20 px-4 max-w-lg w-full mx-auto flex-1 space-y-4 relative z-10"
+            className="pt-20 px-4 max-w-lg w-full mx-auto flex-1 space-y-4 relative z-10 pb-24"
           >
             {/* Identity Card */}
-            <div className="p-5 rounded-[1.8rem] bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] shadow-sm space-y-4">
+            <div className="p-5.5 rounded-[2rem] bg-white/95 dark:bg-[#0c1220]/95 shadow-[0_10px_30px_-6px_rgba(15,23,42,0.05)] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.7)] space-y-4 relative overflow-hidden">
               <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold text-xl flex items-center justify-center shadow-md shrink-0">
+                <div className="w-14 h-14 rounded-[1.4rem] bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0">
                   {userData?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "W"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -456,27 +456,27 @@ export default function CustomerHome() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]">
-                <div className="p-2.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-100 dark:border-white/[0.04]">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase block">Dompet Warga</span>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">Rp 25.000</span>
+                <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl shadow-xs">
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Dompet Warga</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">Rp 25.000</span>
                 </div>
-                <div className="p-2.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-100 dark:border-white/[0.04]">
-                  <span className="text-[9px] text-slate-400 font-bold uppercase block">Stamp Komunitas</span>
-                  <span className="text-xs font-black text-amber-500">{userData?.points || 120} Poin</span>
+                <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl shadow-xs">
+                  <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Stamp Komunitas</span>
+                  <span className="text-sm font-black text-amber-500">{userData?.points || 120} Poin</span>
                 </div>
               </div>
             </div>
 
             {/* Menu List Khusus Customer */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
+              <h4 className="text-xs font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
                 Layanan & Pengaturan Akun:
               </h4>
 
               <div className="space-y-1.5">
                 <button
                   onClick={() => router.push("/services/more")}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50/90 dark:hover:bg-white/[0.05] shadow-xs transition-all text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -492,7 +492,7 @@ export default function CustomerHome() {
 
                 <button
                   onClick={() => setIsAddressesModalOpen(true)}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50/90 dark:hover:bg-white/[0.05] shadow-xs transition-all text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
@@ -508,14 +508,14 @@ export default function CustomerHome() {
 
                 <button
                   onClick={() => alert("Pendaftaran Mitra Driver Koperasi Solo. Hubungi Koperasi di Balai Kota.")}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/25 transition-colors text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/15 shadow-xs transition-all text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
                       <Bike className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Daftar Jadi Mitra Driver Solo</p>
+                      <p className="text-xs font-bold text-amber-800 dark:text-amber-300">Daftar Jadi Mitra Driver Solo</p>
                       <p className="text-[10px] text-slate-500">Pendapatan 100% tunai tanpa potongan komisi</p>
                     </div>
                   </div>
@@ -524,14 +524,14 @@ export default function CustomerHome() {
 
                 <button
                   onClick={() => alert("Pendaftaran Kios Pedagang UMKM Pasar Tradisional Solo.")}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/25 transition-colors text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-orange-500/10 hover:bg-orange-500/15 shadow-xs transition-all text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-orange-500/20 text-orange-600 dark:text-orange-400">
                       <Store className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-orange-700 dark:text-orange-300">Buka Kios UMKM / Pedagang Pasar</p>
+                      <p className="text-xs font-bold text-orange-800 dark:text-orange-300">Buka Kios UMKM / Pedagang Pasar</p>
                       <p className="text-[10px] text-slate-500">Jual kuliner & bahan pokok ke seluruh warga</p>
                     </div>
                   </div>

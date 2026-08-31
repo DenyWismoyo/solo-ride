@@ -17,6 +17,7 @@ description: |
   - ECOSYSTEM_ROLES.md → Feature matrix lengkap per 6 role
   - DATA_CONTRACTS.md  → Schema Firestore + cross-ecosystem integration points
   - CUSTOMER_SERVICES_BLUEPRINT.md → Pemetaan detail alur & skema ke-8 layanan warga (Customer Services)
+  - GOVERNMENT_CIVIC_BLUEPRINT.md  → Panduan lengkap 7 dinas Pemkot Surakarta & modal pelayanan warga
 
   Skill terkait yang harus dibaca bersamaan:
   - ridesolo-functions  → Setup Firebase Cloud Functions, trigger, callable, scheduler

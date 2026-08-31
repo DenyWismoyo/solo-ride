@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Mail, Lock, Sparkles, ArrowLeft, ShieldCheck } from "lucide-react";
+import { SoloAppLogoIcon } from "@/components/icons";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -73,9 +74,10 @@ export default function LoginPage() {
         <CardContent className="p-7 space-y-6">
           {/* Logo & Headline */}
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
-              <span className="font-black text-xl text-white tracking-tighter">RS</span>
-            </div>
+            <SoloAppLogoIcon 
+              size={56} 
+              className="mx-auto rounded-[1.4rem] shadow-xl shadow-emerald-500/25" 
+            />
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Selamat Datang</h2>
             <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mx-auto">
               Masuk ke ekosistem ojek lokal berbasis komunitas tanpa potongan komisi.

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { UserRole } from "@/types/user.types";
 import { cn } from "@/lib/utils";
+import { SoloAppLogoIcon } from "@/components/icons";
 
 interface AppHeaderProps {
   onOpenProfile: () => void;
@@ -71,7 +72,7 @@ export function AppHeader({ onOpenProfile }: AppHeaderProps) {
   return (
     <>
       <header className={cn(
-        "fixed top-0 inset-x-0 z-30 px-4 py-2.5 bg-white/85 dark:bg-[#030712]/85 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between transition-all duration-200",
+        "fixed top-0 inset-x-0 z-30 px-4 py-2.5 bg-white dark:bg-[#030712] shadow-[0_4px_25px_-4px_rgba(15,23,42,0.04)] dark:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.6)] flex items-center justify-between transition-all duration-200",
         isImpersonating && "top-10 sm:top-9"
       )}>
         {/* Brand & Role Tag */}
@@ -80,14 +81,15 @@ export function AppHeader({ onOpenProfile }: AppHeaderProps) {
             className="flex items-center gap-2 cursor-pointer select-none group"
             onClick={handleBrandClick}
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-              <span className="font-black text-sm text-white tracking-tighter">RS</span>
-            </div>
+            <SoloAppLogoIcon 
+              size={36} 
+              className="rounded-[1.1rem] shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform shrink-0" 
+            />
             <div>
-              <h1 className="font-extrabold text-base text-slate-900 dark:text-white tracking-tight leading-none">
+              <h1 className="font-black text-base text-slate-900 dark:text-white tracking-tight leading-none">
                 Ride-Solo
               </h1>
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
                 Smart Hub Surakarta
               </span>
             </div>
@@ -107,11 +109,11 @@ export function AppHeader({ onOpenProfile }: AppHeaderProps) {
                 variant="secondary"
                 size="icon"
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.08] text-slate-700 dark:text-zinc-300 relative cursor-pointer hover:bg-slate-200 dark:hover:bg-white/[0.1]"
+                className="w-9 h-9 rounded-full bg-slate-100/90 dark:bg-white/[0.06] text-slate-700 dark:text-zinc-300 relative cursor-pointer shadow-xs hover:bg-slate-200/90 dark:hover:bg-white/[0.1]"
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-[10px] font-black text-white flex items-center justify-center shadow-md animate-pulse">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-pulse">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -126,7 +128,7 @@ export function AppHeader({ onOpenProfile }: AppHeaderProps) {
             <>
               {(activeRole === "customer" || activeRole === "driver") && (
                 <div 
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.08] rounded-full text-xs font-semibold text-amber-600 dark:text-amber-400 cursor-pointer hover:border-amber-500/40 transition-colors"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-100/90 dark:bg-white/[0.06] rounded-full text-xs font-semibold text-amber-600 dark:text-amber-400 cursor-pointer transition-colors"
                   onClick={onOpenProfile}
                 >
                   <Coins className="h-3.5 w-3.5" />
@@ -149,7 +151,7 @@ export function AppHeader({ onOpenProfile }: AppHeaderProps) {
               <Button
                 variant="secondary"
                 size="sm"
-                className="rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-800 dark:text-zinc-200 h-9 px-3 gap-2 cursor-pointer"
+                className="rounded-full bg-slate-100/90 dark:bg-white/[0.06] hover:bg-slate-200/90 dark:hover:bg-white/[0.1] text-slate-800 dark:text-zinc-200 h-9 px-3 gap-2 cursor-pointer shadow-xs"
                 onClick={onOpenProfile}
               >
                 <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">

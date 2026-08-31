@@ -132,12 +132,12 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
         <Button
           variant="secondary"
           size="icon"
-          className="rounded-full shadow-xl pointer-events-auto bg-white/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 backdrop-blur-md cursor-pointer text-slate-800 dark:text-zinc-200"
+          className="rounded-full shadow-lg pointer-events-auto bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur-2xl cursor-pointer text-slate-800 dark:text-zinc-200"
           onClick={onClose}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="bg-white/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 px-3.5 py-1.5 rounded-full backdrop-blur-md text-xs font-bold text-emerald-600 dark:text-emerald-400 pointer-events-auto flex items-center gap-1.5 shadow-md">
+        <div className="bg-white/95 dark:bg-[#0c1220]/95 px-4 py-2 rounded-full backdrop-blur-2xl text-xs font-black text-emerald-600 dark:text-emerald-400 pointer-events-auto flex items-center gap-2 shadow-[0_8px_25px_-4px_rgba(16,185,129,0.2)]">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           {initialService?.name || "Pesan Perjalanan"} (Surakarta)
         </div>
@@ -155,17 +155,17 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
       </div>
 
       {/* Floating Bottom Booking Form */}
-      <div className="z-10 mt-auto bg-white/95 dark:bg-zinc-900/95 border-t border-slate-200 dark:border-zinc-800/90 rounded-t-3xl shadow-2xl p-5 backdrop-blur-2xl max-w-lg w-full mx-auto space-y-4">
-        <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto mb-2" />
+      <div className="z-10 mt-auto bg-white/95 dark:bg-[#0c1220]/95 rounded-t-[2.5rem] shadow-[0_-12px_45px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_-20px_60px_-10px_rgba(0,0,0,0.85)] p-5.5 backdrop-blur-3xl max-w-lg w-full mx-auto space-y-4">
+        <div className="w-12 h-1.5 bg-slate-300/80 dark:bg-white/20 rounded-full mx-auto mb-2" />
 
         {/* Place Inputs */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-2.5 p-2 bg-slate-100 dark:bg-zinc-800/70 rounded-2xl border border-slate-200 dark:border-zinc-700/70">
+          <div className="flex items-center gap-2.5 p-3 bg-slate-50/90 dark:bg-white/[0.04] rounded-2xl shadow-xs">
             <div className="p-2 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl shrink-0">
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4 w-4 stroke-[2.2]" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Titik Jemput</span>
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Titik Jemput</span>
               <PlaceAutocomplete
                 placeholder="Cari lokasi penjemputan di Solo..."
                 onLocationSelect={(point) => {
@@ -177,12 +177,12 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 p-2 bg-slate-100 dark:bg-zinc-800/70 rounded-2xl border border-slate-200 dark:border-zinc-700/70">
+          <div className="flex items-center gap-2.5 p-3 bg-slate-50/90 dark:bg-white/[0.04] rounded-2xl shadow-xs">
             <div className="p-2 bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl shrink-0">
-              <Navigation className="h-4 w-4" />
+              <Navigation className="h-4 w-4 stroke-[2.2]" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Lokasi Tujuan</span>
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Lokasi Tujuan</span>
               <PlaceAutocomplete
                 placeholder="Cari lokasi tujuan di Solo..."
                 onLocationSelect={(point) => {
@@ -201,17 +201,17 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
             <Button 
               onClick={calculateRoute}
               disabled={!pickup || !dropoff || isCalculatingPrice}
-              className="w-full h-12 bg-slate-900 dark:bg-zinc-800 hover:bg-slate-800 dark:hover:bg-zinc-700 text-white dark:text-zinc-200 font-bold rounded-2xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              className="w-full h-12 bg-slate-900 dark:bg-white/[0.08] hover:bg-slate-800 dark:hover:bg-white/[0.12] text-white dark:text-white font-black rounded-2xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
               {isCalculatingPrice ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {isCalculatingPrice ? "Menghitung Harga..." : "Hitung Jarak & Tarif Rute"}
             </Button>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+              <div className="flex items-center justify-between p-4 bg-emerald-500/15 dark:bg-emerald-500/20 rounded-2xl shadow-xs">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white">Tarif Bebas Komisi</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white">Tarif Bebas Komisi</span>
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md font-bold">
                       {distanceKm.toFixed(1)} KM
                     </span>
@@ -226,7 +226,7 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
               </div>
 
               <Button 
-                className="w-full h-13 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-xl shadow-emerald-600/25 text-sm cursor-pointer"
+                className="w-full h-13 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-[1.4rem] shadow-xl shadow-emerald-600/25 text-sm cursor-pointer"
                 onClick={handleOrder}
                 disabled={isOrdering}
               >

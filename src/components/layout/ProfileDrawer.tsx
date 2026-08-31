@@ -39,6 +39,15 @@ import {
   Layers,
   History
 } from "lucide-react";
+import { 
+  SoloMotorIcon,
+  SoloMarketIcon,
+  SoloIndustryCargoIcon,
+  SoloGovPillarIcon,
+  SoloShieldTrustIcon,
+  SoloAllServicesIcon,
+  SoloCoinStampIcon
+} from "@/components/icons";
 import { GOVERNMENT_SECTORS, INDUSTRY_SECTORS } from "@/constants/ecosystemSectors";
 import { SavedAddressesModal } from "@/components/profile/SavedAddressesModal";
 import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
@@ -77,10 +86,10 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
   const roleNavigation = [
     { role: "customer", label: "Mode Pelanggan (Warga)", desc: "Pesan ojek, kuliner & belanja UMKM", icon: User, path: "/", color: "text-emerald-500 bg-emerald-500/10" },
-    { role: "driver", label: "Mode Mitra Driver", desc: "Radar order & karcis harian bebas komisi", icon: Bike, path: "/driver", color: "text-amber-500 bg-amber-500/10" },
-    { role: "merchant", label: "Mode Mitra UMKM", desc: "Kelola toko, menu & Flash Sale Pasar Warga", icon: Store, path: "/merchant", color: "text-orange-500 bg-orange-500/10" },
-    { role: "industry", label: "Mode Industri B2B", desc: "Logistik kargo & pasokan bahan baku lokal", icon: Building2, path: "/industry", color: "text-blue-500 bg-blue-500/10" },
-    { role: "government", label: "Mode Pemerintah", desc: "Smart City & broadcast resmi dinas", icon: Landmark, path: "/gov", color: "text-teal-500 bg-teal-500/10" },
+    { role: "driver", label: "Mode Mitra Driver", desc: "Radar order & karcis harian bebas komisi", icon: SoloMotorIcon, path: "/driver", color: "text-amber-500 bg-amber-500/10" },
+    { role: "merchant", label: "Mode Mitra UMKM", desc: "Kelola toko, menu & Flash Sale Pasar Warga", icon: SoloMarketIcon, path: "/merchant", color: "text-orange-500 bg-orange-500/10" },
+    { role: "industry", label: "Mode Industri B2B", desc: "Logistik kargo & pasokan bahan baku lokal", icon: SoloIndustryCargoIcon, path: "/industry", color: "text-blue-500 bg-blue-500/10" },
+    { role: "government", label: "Mode Pemerintah", desc: "Smart City & broadcast resmi dinas", icon: SoloGovPillarIcon, path: "/gov", color: "text-teal-500 bg-teal-500/10" },
   ];
 
   return (
@@ -91,9 +100,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
           {/* 1. PROFILE HEADER CARD */}
           {/* ========================================================================= */}
           {user ? (
-            <div className="p-4 rounded-3xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] space-y-3">
+            <div className="p-4.5 rounded-[2rem] bg-slate-50/90 dark:bg-white/[0.04] shadow-xs space-y-3.5">
               <div className="flex items-center gap-3.5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ${
+                <div className={`w-14 h-14 rounded-[1.3rem] flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ${
                   activeRole === "driver" 
                     ? "bg-gradient-to-tr from-amber-600 to-orange-500" 
                     : activeRole === "merchant"
@@ -135,7 +144,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
               {/* Quick Status / Identity Metric Pill */}
               {activeRole === "customer" && (
-                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl shadow-xs flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Coins className="h-4 w-4 text-amber-500" />
                     <div>
@@ -148,7 +157,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               )}
 
               {activeRole === "driver" && (
-                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl shadow-xs flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold block uppercase">Karcis Harian 24 Jam</span>
                     <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">Aktif (Bebas Komisi)</span>
@@ -161,7 +170,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
               )}
 
               {activeRole === "merchant" && (
-                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl shadow-xs flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold block uppercase">Status Kios / Warung</span>
                     <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">🟢 Buka Menerima Pesanan</span>
@@ -246,7 +255,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        <Layers className="h-4 w-4" />
+                        <SoloAllServicesIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">Semua Layanan Warga Solo</p>
@@ -278,7 +287,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                        <Bike className="h-4 w-4" />
+                        <SoloMotorIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Daftar Jadi Mitra Driver Solo</p>
@@ -315,7 +324,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                        <Bike className="h-4 w-4" />
+                        <SoloMotorIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">Pusat Radar & Order Driver</p>
@@ -331,7 +340,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                        <ShieldCheck className="h-4 w-4" />
+                        <SoloShieldTrustIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">KTA Digital Koperasi Mitra</p>
@@ -384,7 +393,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-orange-500/20 text-orange-600 dark:text-orange-400">
-                        <Store className="h-4 w-4" />
+                        <SoloMarketIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">Dashboard Toko & Kelola Menu</p>
@@ -437,7 +446,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400">
-                        <Landmark className="h-4 w-4" />
+                        <SoloGovPillarIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">Pusat Komando Dinas Pemkot</p>
@@ -474,7 +483,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400">
-                        <Building2 className="h-4 w-4" />
+                        <SoloIndustryCargoIcon size={18} variant="duotone" />
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">Portal Logistik B2B Industri</p>
@@ -495,12 +504,12 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
             <h4 className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
               Tampilan & Tema Aplikasi:
             </h4>
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] rounded-2xl">
+            <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-100/90 dark:bg-white/[0.04] rounded-2xl">
               <button
                 onClick={() => setTheme("light")}
-                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                   theme === "light"
-                    ? "bg-white text-slate-900 shadow-sm border border-slate-200/80"
+                    ? "bg-white text-slate-900 shadow-xs"
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                 }`}
               >
@@ -510,9 +519,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
               <button
                 onClick={() => setTheme("dark")}
-                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                   theme === "dark"
-                    ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-white/[0.15]"
+                    ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-xs"
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                 }`}
               >
@@ -522,9 +531,9 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
 
               <button
                 onClick={() => setTheme("system")}
-                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                   theme === "system"
-                    ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-white/[0.15]"
+                    ? "bg-white dark:bg-white/[0.14] text-slate-900 dark:text-white shadow-xs"
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
                 }`}
               >
@@ -569,7 +578,7 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
                     >
                       <div className="flex items-center gap-2.5">
                         <div className={`p-1.5 rounded-xl ${item.color}`}>
-                          <Icon className="h-3.5 w-3.5" />
+                          <Icon size={16} variant="duotone" className="h-4 w-4" />
                         </div>
                         <div>
                           <p className="text-xs font-bold text-slate-900 dark:text-white">{item.label}</p>

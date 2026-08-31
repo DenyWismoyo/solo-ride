@@ -194,19 +194,34 @@ interface DriverDocument {
 
 ---
 
-## 6. Design System (SIGAP Multi-Tenant)
+## 6. Design System (SIGAP Multi-Tenant & Borderless Mobile-First)
 
-### Filosofi: "SIGAP Slate & Emerald Dark Canvas"
-- Tenant: `[data-tenant="sigap"]` dengan basis dark canvas
+### Filosofi: "Borderless Tactile Glass & Obsidian Canvas"
+- Tenant: `[data-tenant="sigap"]` dengan basis adaptive light & dark canvas
 - File Token: `src/styles/sigap.css` diimpor di `globals.css`
-- Background: Slate 900 Elegan (`--background: 222.2 47.4% 11.2%`)
-- Surface/Card: `.sg-card` / `.sg-glass-panel`
+- **Borderless Elevation**: Hindari garis pembatas kaku (harsh 1px solid borders). Gunakan soft tonal elevation (`bg-white/90 dark:bg-[#0c1220]/90`), ambient drop shadow (`0 8px 30px -4px rgba(0,0,0,0.06)`), dan inner specular highlight (`inset 0 1px 0 0 rgba(255,255,255,0.8)`).
+- **Squircle Corners**: Seluruh kartu utama, modal, dan sheet menggunakan continuous curve radius (`rounded-[1.75rem]`, `rounded-[2rem]`, `rounded-t-[2.5rem]`).
+- **Tactile Haptic Spring**: Setiap tombol dan elemen interaktif wajib memiliki feedback animasi pegas (`motion: scale 0.92 - 0.94`, spring stiffness 400, damping 25).
+- **Fintech Bento & Tile Aesthetics**: Kartu saldo/metrik menggunakan layout bento asimetris dengan icon well bergradasi ambient halo.
+- Surface/Card: `.sg-card` / `.sg-card-borderless` / `.sg-glass-panel`
 - Aksen Primer: **Emerald / Royal Blue Gradient** (`--sg-gradient-start` & `--sg-gradient-end`)
 - Aksen Sekunder: **Rose** (`--destructive`) → Cancel/Bahaya
 - Aksen Tersier: **Amber** → Poin Stamp UMKM
 - Judul Section: `.sg-editorial-title` atau `.sg-text-gradient`
-- Tombol Aksi: `.sg-btn` (`.sg-btn-primary`, `.sg-btn-success`, `.sg-btn-outline`)
+- Tombol Aksi: `.sg-btn` (`.sg-btn-primary`, `.sg-btn-success`, `.sg-btn-outline`, `.sg-btn-glass`)
 - Micro-Interaksi: `.sg-hover-lift`, `.sg-active-scale`, `.sg-animate-in`
+
+### Hyperlocal Bespoke Icon Library (`src/components/icons/`)
+- Gunakan komponen ikon internal dari `src/components/icons/` untuk seluruh 8 Layanan Warga, Fitur Dompet Koperasi, dan Navigasi Sektor Ekosistem.
+- Setiap ikon kustom wajib:
+  1. Menerima props standar `IconProps` (`className`, `size`, `variant="duotone" | "solid"`).
+  2. Memiliki dua lapisan visual: *primary stroke/accent path* dan *soft opacity background fill* (`opacity-20` / `0.25`).
+  3. Mendukung adaptabilitas warna teks (`currentColor`) atau palette token tematik SIGAP.
+- Hindari penggunaan ikon generik monokrom 1px untuk fitur unggulan atau tile beranda.
+
+### Brand Asset & Logo Icon Rules (`SoloAppLogoIcon`)
+- Seluruh elemen branding aplikasi yang menampilkan logo Ride-Solo (seperti pada `AppHeader`, halaman `login`, `register`, dan splash header) **wajib menggunakan komponen vektor resmi `SoloAppLogoIcon`**, bukan sekadar teks inisial ("RS") di dalam kotak warna.
+- `SoloAppLogoIcon` menjaga konsistensi visual identitas produk antara icon web, PWA icon (`public/icon.svg`), dan UI aplikasi.
 
 ### Lokasi Hyperlocal Default
 - **Kota**: Surakarta (Solo), Jawa Tengah
@@ -215,8 +230,8 @@ interface DriverDocument {
 ### Tipografi
 - Font: `Geist Sans` (sudah dikonfigurasi di layout.tsx)
 - Heading halaman: `sg-editorial-title text-xl md:text-2xl font-bold`
-- Sub-heading: `text-sm text-zinc-400`
-- Label form: `text-xs font-semibold text-zinc-300`
+- Sub-heading: `text-sm text-slate-500 dark:text-zinc-400`
+- Label form: `text-xs font-semibold text-slate-700 dark:text-zinc-300`
 
 ---
 

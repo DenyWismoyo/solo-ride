@@ -42,11 +42,11 @@ export function PromoBanner() {
           return (
             <div
               key={p.id}
-              className={`sg-card sg-hover-lift min-w-[280px] max-w-[320px] p-4 rounded-3xl border ${p.border} bg-gradient-to-tr ${p.gradient} shrink-0 snap-start space-y-2 flex flex-col justify-between shadow-sm`}
+              className={`min-w-[280px] max-w-[320px] p-4.5 rounded-[1.8rem] bg-gradient-to-tr ${p.gradient} shrink-0 snap-start space-y-2.5 flex flex-col justify-between shadow-[0_8px_25px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] cursor-pointer hover:scale-[1.01] transition-transform`}
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-white/[0.06] px-2 py-0.5 rounded-full text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-white/[0.08]">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100/90 dark:bg-white/[0.08] px-2.5 py-0.5 rounded-full text-slate-800 dark:text-zinc-200 shadow-xs">
                     {p.tag}
                   </span>
                 </div>
@@ -58,7 +58,7 @@ export function PromoBanner() {
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-white/[0.06] text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100/80 dark:border-white/[0.06] text-xs font-black text-emerald-600 dark:text-emerald-400">
                 <span>Pelajari Selengkapnya</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </div>

@@ -39,6 +39,11 @@ import { DinkesCivicModal } from "@/components/civic/DinkesCivicModal";
 import { DisparCivicModal } from "@/components/civic/DisparCivicModal";
 import { DiskopCivicModal } from "@/components/civic/DiskopCivicModal";
 import { DishubCivicModal } from "@/components/civic/DishubCivicModal";
+import { BapendaCivicModal } from "@/components/civic/BapendaCivicModal";
+import { DamkarCivicModal } from "@/components/civic/DamkarCivicModal";
+import { BpbdCivicModal } from "@/components/civic/BpbdCivicModal";
+import { Dp3aCivicModal } from "@/components/civic/Dp3aCivicModal";
+import { DynamicGovCivicModal } from "@/components/civic/DynamicGovCivicModal";
 
 const cardContainerVariants = {
   hidden: { opacity: 0 },
@@ -81,6 +86,17 @@ export default function AllEcosystemServicesPage() {
   const [isDisparOpen, setIsDisparOpen] = useState(false);
   const [isDiskopOpen, setIsDiskopOpen] = useState(false);
   const [isDishubOpen, setIsDishubOpen] = useState(false);
+  const [isBapendaOpen, setIsBapendaOpen] = useState(false);
+
+  // High Priority Emergency & Protection Modals States
+  const [isDamkarOpen, setIsDamkarOpen] = useState(false);
+  const [damkarServiceId, setDamkarServiceId] = useState<string>("damkar_panic_button");
+  const [isBpbdOpen, setIsBpbdOpen] = useState(false);
+  const [bpbdServiceId, setBpbdServiceId] = useState<string>("bpbd_peringatan_dini_banjir");
+  const [isDp3aOpen, setIsDp3aOpen] = useState(false);
+  const [dp3aServiceId, setDp3aServiceId] = useState<string>("dp3a_hotline_sahabat_perempuan");
+
+  const [selectedGovService, setSelectedGovService] = useState<AppService | null>(null);
 
   // Generic B2B / Industry Request Modal State
   const [selectedCivicService, setSelectedCivicService] = useState<AppService | null>(null);
@@ -113,33 +129,60 @@ export default function AllEcosystemServicesPage() {
       return;
     }
 
-    // 2. Specialized Dinas Modals
-    if (service.id === "dukcapil_antar_ktp") {
-      setIsDukcapilOpen(true);
+    // 2. High Priority Specialized Modals (Emergency & Protection)
+    if (service.additionalRole === "gov_damkar" || service.id.startsWith("damkar_")) {
+      setDamkarServiceId(service.id);
+      setIsDamkarOpen(true);
       return;
     }
-    if (service.id === "dinsos_bansos_pasar") {
-      setIsDinsosOpen(true);
+    if (service.additionalRole === "gov_bpbd" || service.id.startsWith("bpbd_")) {
+      setBpbdServiceId(service.id);
+      setIsBpbdOpen(true);
       return;
     }
-    if (service.id === "dinkes_resep_puskesmas") {
-      setIsDinkesOpen(true);
-      return;
-    }
-    if (service.id === "dispar_heritage_tour") {
-      setIsDisparOpen(true);
-      return;
-    }
-    if (service.id === "diskop_shu_koperasi") {
-      setIsDiskopOpen(true);
-      return;
-    }
-    if (service.id === "dishub_cfd_shelter") {
-      setIsDishubOpen(true);
+    if (service.additionalRole === "gov_dp3a" || service.id.startsWith("dp3a_")) {
+      setDp3aServiceId(service.id);
+      setIsDp3aOpen(true);
       return;
     }
 
-    // 3. Fallback to Generic B2B / Industry Request Modal
+    // 3. Standard Specialized Dinas Modals by ID prefix or additionalRole
+    if (service.additionalRole === "gov_dukcapil" || service.id.startsWith("dukcapil_")) {
+      setIsDukcapilOpen(true);
+      return;
+    }
+    if (service.additionalRole === "gov_dinsos" || service.id.startsWith("dinsos_")) {
+      setIsDinsosOpen(true);
+      return;
+    }
+    if (service.additionalRole === "gov_dinkes" || service.id.startsWith("dinkes_")) {
+      setIsDinkesOpen(true);
+      return;
+    }
+    if (service.additionalRole === "gov_dispar" || service.id.startsWith("dispar_")) {
+      setIsDisparOpen(true);
+      return;
+    }
+    if (service.additionalRole === "gov_diskop" || service.id.startsWith("diskop_")) {
+      setIsDiskopOpen(true);
+      return;
+    }
+    if (service.additionalRole === "gov_dishub" || service.id.startsWith("dishub_")) {
+      setIsDishubOpen(true);
+      return;
+    }
+    if (service.additionalRole === "gov_bapenda" || service.id.startsWith("bapenda_")) {
+      setIsBapendaOpen(true);
+      return;
+    }
+
+    // 4. Government category services for remaining agencies
+    if (service.category === "government" || (service.additionalRole && service.additionalRole.startsWith("gov_"))) {
+      setSelectedGovService(service);
+      return;
+    }
+
+    // 5. Fallback to Generic B2B / Industry Request Modal
     setSelectedCivicService(service);
     setRequestSuccessOrder(null);
   };
@@ -194,10 +237,7 @@ export default function AllEcosystemServicesPage() {
   };
 
   return (
-    <div className="relative min-h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-between pb-16 overflow-hidden bg-grid-pattern transition-colors duration-200">
-      {/* Ambient Lighting */}
-      <div className="ambient-glow bg-emerald-500 -top-24 -right-24" />
-      <div className="ambient-glow bg-blue-500 bottom-1/3 -left-32" />
+    <div className="relative min-h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-between pb-16 transition-colors duration-200">
 
       <AdminImpersonationBar />
       <AppHeader onOpenProfile={() => setIsProfileOpen(true)} />
@@ -307,7 +347,7 @@ export default function AllEcosystemServicesPage() {
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 shadow-sm ${service.bgColor} ${service.borderColor}`}>
-                        <Icon className={`h-5 w-5 ${service.color}`} />
+                        <Icon size={24} variant="duotone" className={`h-6 w-6 ${service.color}`} />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -354,12 +394,34 @@ export default function AllEcosystemServicesPage() {
       {/* ========================================================================= */}
       {/* DEDICATED CIVIC MODALS */}
       {/* ========================================================================= */}
+      <DamkarCivicModal 
+        isOpen={isDamkarOpen} 
+        onClose={() => setIsDamkarOpen(false)} 
+        serviceId={damkarServiceId}
+      />
+      <BpbdCivicModal 
+        isOpen={isBpbdOpen} 
+        onClose={() => setIsBpbdOpen(false)} 
+        serviceId={bpbdServiceId}
+      />
+      <Dp3aCivicModal 
+        isOpen={isDp3aOpen} 
+        onClose={() => setIsDp3aOpen(false)} 
+        serviceId={dp3aServiceId}
+      />
+
       <DukcapilCivicModal isOpen={isDukcapilOpen} onClose={() => setIsDukcapilOpen(false)} />
       <DinsosCivicModal isOpen={isDinsosOpen} onClose={() => setIsDinsosOpen(false)} />
       <DinkesCivicModal isOpen={isDinkesOpen} onClose={() => setIsDinkesOpen(false)} />
       <DisparCivicModal isOpen={isDisparOpen} onClose={() => setIsDisparOpen(false)} />
       <DiskopCivicModal isOpen={isDiskopOpen} onClose={() => setIsDiskopOpen(false)} />
       <DishubCivicModal isOpen={isDishubOpen} onClose={() => setIsDishubOpen(false)} />
+      <BapendaCivicModal isOpen={isBapendaOpen} onClose={() => setIsBapendaOpen(false)} />
+      <DynamicGovCivicModal 
+        service={selectedGovService} 
+        isOpen={Boolean(selectedGovService)} 
+        onClose={() => setSelectedGovService(null)} 
+      />
 
       {/* ========================================================================= */}
       {/* GENERIC B2B / INDUSTRY SERVICE REQUEST MODAL */}

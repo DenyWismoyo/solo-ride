@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-export type MerchantCategory = "kuliner" | "sembako" | "apotek" | "fashion" | "jasa";
+export type MerchantCategory = "kuliner" | "sembako" | "apotek" | "fashion" | "jasa" | "pasar";
 
 export interface MenuItemDocument {
   id?: string;

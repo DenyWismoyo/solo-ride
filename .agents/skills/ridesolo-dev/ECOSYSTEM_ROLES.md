@@ -169,32 +169,26 @@ koperasi — jauh lebih efisien dan murah dari ekspedisi nasional untuk pengirim
 memantau kesehatan ekonomi lokal, dan berkolaborasi dengan koperasi untuk program SHU.
 Ini adalah civic technology yang nyata.
 
-### ✅ Sudah Ada (Phase 1)
-| Fitur | File | Status |
+### ✅ Sudah Ada & Terintegrasi
+| Fitur | Komponen / File | Status |
 |---|---|---|
-| Dashboard civic (statistik lokal statis) | `gov/page.tsx` | ✅ |
-| Form broadcast pengumuman (UI, belum ke Firestore) | `gov/page.tsx` | ✅ |
-| Metrics UMKM binaan + SHU + perputaran lokal | `gov/page.tsx` | ✅ |
-| Riwayat broadcast statis | `gov/page.tsx` (state lokal) | ✅ |
+| Dashboard Civic Multi-Dinas (7 Dinas Pemkot Solo) | `gov/page.tsx` | ✅ |
+| Broadcast Pengumuman Resmi ke Seluruh Warga (Firestore) | `broadcast.service.ts` + `useBroadcasts.ts` | ✅ |
+| Disdukcapil Workspace: Antar KTP/KK & Validasi OTP | `GovDukcapilWorkspace.tsx` + `DukcapilCivicModal.tsx` | ✅ |
+| Dinkes Workspace: Resep Obat 17 Puskesmas & Medis | `GovDinkesWorkspace.tsx` + `DinkesCivicModal.tsx` | ✅ |
+| Dinsos Workspace: Bansos Pasar & Ojek Difabel/Lansia | `GovDinsosWorkspace.tsx` + `DinsosCivicModal.tsx` | ✅ |
+| Diskop Workspace: NIB OSS & SHU Koperasi Mitra | `GovDiskopWorkspace.tsx` + `DiskopCivicModal.tsx` | ✅ |
+| Dispar Workspace: Kalender Budaya & Paket Wisata | `GovDisparWorkspace.tsx` + `DisparCivicModal.tsx` | ✅ |
+| Dishub Workspace: Shelter CFD & Integrasi BST | `GovDishubWorkspace.tsx` + `DishubCivicModal.tsx` | ✅ |
+| Bapenda Workspace: PBB-P2, e-Retribusi Pasar & PAD | `GovBapendaWorkspace.tsx` + `BapendaCivicModal.tsx` | ✅ |
+| Audit Log Terpadu & Riwayat Berkas Warga | `UnifiedHistoryModal.tsx` | ✅ |
 
-### 🔲 Phase 2 — Prioritas Tinggi
+### 🔲 Tahap Lanjutan
 | Fitur | Deskripsi | Data Required |
 |---|---|---|
-| Broadcast ke Firestore | Simpan pengumuman ke `broadcasts` + notif ke target role | `broadcasts` collection |
-| Push notifikasi ke user berdasarkan role/area | Pengumuman masuk ke notif semua customer/driver di area | `notifications` + FCM |
-| Approval KYC Driver | Review dokumen KTP/SIM driver, set `isVerified: true` | `kyc_requests` collection |
-| Subsidi Karcis Program | Top-up dompet driver terpilih dari anggaran koperasi | `wallets` + `ledger` |
-
-### 🔲 Phase 3+ — Visioner
-| Fitur | Deskripsi |
-|---|---|
-| Dashboard Analytics Ekonomi Lokal | Chart realtime perputaran uang, pertumbuhan UMKM |
-| SHU Koperasi Calculator | Hitung dan distribusi bagi hasil tahunan ke semua driver |
-| Program Pasar Murah | Tambah merchant ke program subsidi harga sembako |
-| Pengumuman Geofenced | Broadcast hanya ke warga di kecamatan tertentu |
-| Laporan Dampak Ekonomi | Berapa warga terbantu, berapa UMKM tumbuh, per kuartal |
-| Integrasi B2B Program Binaan | Hubungkan industri lokal dengan UMKM mitra Pemda |
-| Monitoring Anti-Fraud | Pantau laporan driver fraud dari dashboard admin |
+| Webhook SIAK Dukcapil | Sinkronisasi status cetak KTP otomatis | Cloud Functions Webhook |
+| Live IoT BST Tracker | Posisi bus Batik Solo Trans real-time di peta | Dishub API Feed |
+| Host-to-Host Bank Jateng PAD | Rekonsiliasi mutasi PBB & retribusi harian | Bapenda Banking Bridge |
 
 ---
 

@@ -205,11 +205,7 @@ export default function SuperAdminPage() {
   const pendingKYCCount = kycRequests.filter(r => r.status === "pending").length;
 
   return (
-    <div className="relative min-h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-between pb-16 overflow-hidden bg-grid-pattern transition-colors duration-200">
-      {/* Ambient Glows */}
-      <div className="ambient-glow bg-emerald-500 -top-20 -right-20" />
-      <div className="ambient-glow bg-rose-500 top-1/3 -left-32" />
-      <div className="ambient-glow bg-blue-500 bottom-10 right-10" />
+    <div className="relative min-h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col justify-between pb-16 transition-colors duration-200">
 
       <AdminImpersonationBar />
       <AppHeader onOpenProfile={() => setIsProfileOpen(true)} />

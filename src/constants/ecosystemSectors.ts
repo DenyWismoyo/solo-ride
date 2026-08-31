@@ -18,6 +18,57 @@ export interface SectorDefinition {
 // -------------------------------------------------------------
 export const GOVERNMENT_SECTORS: SectorDefinition[] = [
   {
+    id: "gov_dukcapil",
+    parentRole: "government",
+    name: "Disdukcapil",
+    agencyOrCompanyName: "Dinas Kependudukan & Pencatatan Sipil Surakarta",
+    tagline: "Layanan Antar Dokumen Kependudukan Sampai Rumah",
+    avatar: "🪪",
+    accentColor: "blue",
+    services: [
+      "Dukcapil Antar KTP-el ke Rumah Warga",
+      "Pengantaran Kartu Keluarga (KK) & KIA",
+      "Distribusi Akta Kelahiran / Kematian",
+      "Layanan Perekaman KTP Mobile Lansia/Difabel"
+    ],
+    sampleFeatures: ["Dispatch Kurir KTP", "Tracking Berkas Warga", "Serah Terima OTP"],
+    description: "Memudahkan warga mendapatkan dokumen kependudukan resmi tanpa antri melalui kurir driver mitra terverifikasi."
+  },
+  {
+    id: "gov_dinkes",
+    parentRole: "government",
+    name: "Dinas Kesehatan",
+    agencyOrCompanyName: "Dinas Kesehatan Kota Surakarta",
+    tagline: "Layanan Kesehatan Preventif & Pengantaran Obat",
+    avatar: "🏥",
+    accentColor: "teal",
+    services: [
+      "Pengantaran Obat Resep Puskesmas & RSUD ke Rumah",
+      "Distribusi Obat Rutin Prolanis BPJS",
+      "Armada Siaga Kurir Darah PMI & Posyandu",
+      "Antar Hasil Uji Laboratorium Faskes"
+    ],
+    sampleFeatures: ["Dispatch Resep Obat", "Peta 17 Puskesmas", "Jadwal Posyandu Warga"],
+    description: "Mempermudah pasien kronis/lansia mendapatkan obat resep langsung ke rumah melalui driver bersertifikat pengantaran medis."
+  },
+  {
+    id: "gov_dinsos",
+    parentRole: "government",
+    name: "Dinas Sosial",
+    agencyOrCompanyName: "Dinas Sosial Kota Surakarta",
+    tagline: "Perlindungan Sosial & Bantuan Pangan Warga",
+    avatar: "🤝",
+    accentColor: "rose",
+    services: [
+      "Voucher Bansos Sembako di Pasar Tradisional",
+      "Layanan Antar Jemput Warga Difabel & Lansia",
+      "Posko Tanggap Bencana & Dapur Umum",
+      "Pendataan Pemerlu Pelayanan Kesejahteraan Sosial (PPKS)"
+    ],
+    sampleFeatures: ["Klaim Voucher Beras", "Armada Siaga Lansia", "Audit Distribusi Bansos"],
+    description: "Menyalurkan bantuan pangan warga terintegrasi pasar lokal dan menyediakan armada ojek ramah difabel/lansia 100% subsidi."
+  },
+  {
     id: "gov_diskop",
     parentRole: "government",
     name: "Dinas Koperasi & UMKM",
@@ -28,7 +79,7 @@ export const GOVERNMENT_SECTORS: SectorDefinition[] = [
     services: [
       "Distribusi Dividen SHU Koperasi",
       "Subsidi Karcis Harian Driver",
-      "Sertifikasi Legalitas & NIB UMKM",
+      "Sertifikasi Legalitas & NIB OSS UMKM",
       "Fasilitasi Dana Bergulir Usaha Mikro"
     ],
     sampleFeatures: ["Kalkulator SHU", "Pencairan Subsidi Karcis", "Data 1.250 Mitra"],
@@ -46,83 +97,15 @@ export const GOVERNMENT_SECTORS: SectorDefinition[] = [
       "Kalender Event Budaya & Solo Great Sale",
       "Rute Wisata Heritage (Keraton, Mangkunegaran, Radya Pustaka)",
       "Shelter Wisata Ojek Mitra di Lokasi Wisata",
-      "Pemandu Wisata Terintegrasi Driver Lokal"
+      "Pemandu Wisata Terintegrasi Driver Lokal HPI"
     ],
     sampleFeatures: ["Event Kirab 1 Suro", "Shelter Pasar Gede", "Paket Keliling Heritage"],
     description: "Memfasilitasi wisatawan menjelajahi Solo dengan peta wisata pintar dan shelter ojek terintegrasi event kota."
   },
   {
-    id: "gov_dukcapil",
-    parentRole: "government",
-    name: "Disdukcapil (Administrasi Kependudukan)",
-    agencyOrCompanyName: "Dinas Kependudukan & Pencatatan Sipil Surakarta",
-    tagline: "Layanan Antar Dokumen Kependudukan Sampai Rumah",
-    avatar: "🪪",
-    accentColor: "blue",
-    services: [
-      "Dukcapil Antar KTP-el ke Rumah Warga",
-      "Pengantaran Kartu Keluarga (KK) & KIA",
-      "Distribusi Akta Kelahiran / Kematian",
-      "Verifikasi Identitas Kependudukan Digital (IKD)"
-    ],
-    sampleFeatures: ["Dispatch Kurir KTP", "Tracking Berkas Warga", "Serah Terima OTP"],
-    description: "Memudahkan warga mendapatkan dokumen kependudukan resmi tanpa antri melalui kurir driver mitra terverifikasi."
-  },
-  {
-    id: "gov_dinsos",
-    parentRole: "government",
-    name: "Dinas Sosial",
-    agencyOrCompanyName: "Dinas Sosial Kota Surakarta",
-    tagline: "Perlindungan Sosial & Bantuan Pangan Warga",
-    avatar: "🤝",
-    accentColor: "rose",
-    services: [
-      "Voucher Bansos Sembako di Pasar Tradisional",
-      "Layanan Antar Jemput Warga Difabel & Lansia",
-      "Posko Tanggap Bencana & Dapur Umum",
-      "Pendataan Pemerlu Pelayanan Kesejahteraan Sosial (PPKS)"
-    ],
-    sampleFeatures: ["Klaim Voucher Beras", "Armada Siaga Lansia", "Audit Distribusi Bansos"],
-    description: "Menyalurkan bantuan pangan warga terintegrasi pasar lokal dan menyediakan armada ojek ramah difabel/lansia."
-  },
-  {
-    id: "gov_bapenda",
-    parentRole: "government",
-    name: "Badan Pendapatan Daerah (Bapenda)",
-    agencyOrCompanyName: "Bapenda Kota Surakarta",
-    tagline: "Optimalisasi PAD & Retribusi Pasar Digital",
-    avatar: "📊",
-    accentColor: "indigo",
-    services: [
-      "Monitoring Retribusi Kios Pasar Digital (QRIS)",
-      "Transparansi Pajak Parkir & Restoran UMKM",
-      "Dashboard Real-time Mikro-Ekonomi Surakarta",
-      "Insentif Pajak Usaha Mikro Kepatuhan Tinggi"
-    ],
-    sampleFeatures: ["Grafik PAD Harian", "Audit Transaksi Pasar", "Analisis Inflasi Pangan"],
-    description: "Memantau sirkulasi ekonomi mikro kota Solo, retribusi kios pasar digital, dan optimalisasi PAD secara transparan."
-  },
-  {
-    id: "gov_dinkes",
-    parentRole: "government",
-    name: "Dinas Kesehatan",
-    agencyOrCompanyName: "Dinas Kesehatan Kota Surakarta",
-    tagline: "Layanan Kesehatan Preventif & Pengantaran Obat",
-    avatar: "🏥",
-    accentColor: "teal",
-    services: [
-      "Pengantaran Obat Resep Puskesmas & RSUD ke Rumah",
-      "Pemetaan Faskes & Ketersediaan Ruang Inap",
-      "Armada Siaga Donor Darah & Posyandu",
-      "E-Resep Terintegrasi Apotek Daerah"
-    ],
-    sampleFeatures: ["Dispatch Resep Obat", "Peta 17 Puskesmas", "Jadwal Posyandu Warga"],
-    description: "Mempermudah pasien kronis/lansia mendapatkan obat resep langsung ke rumah melalui driver bersertifikat pengantaran medis."
-  },
-  {
     id: "gov_dishub",
     parentRole: "government",
-    name: "Dinas Perhubungan (Dishub)",
+    name: "Dinas Perhubungan",
     agencyOrCompanyName: "Dinas Perhubungan Kota Surakarta",
     tagline: "Manajemen Lalu Lintas, CFD & Shelter Ojek",
     avatar: "🚦",
@@ -130,11 +113,215 @@ export const GOVERNMENT_SECTORS: SectorDefinition[] = [
     services: [
       "Rekayasa Shelter Ojek Saat Car Free Day (CFD)",
       "Integrasi Rute Feeder Batik Solo Trans (BST)",
-      "Manajemen Titik Kumpul Stasiun & Terminal",
-      "Laporan Kemacetan & Kondisi Jalan Real-time"
+      "Laporan Kemacetan & Lampu Lalin Rusak",
+      "Antrean Uji KIR Digital & Retribusi Parkir"
     ],
     sampleFeatures: ["Peta Shelter CFD", "Integrasi BST", "Broadcast Rekayasa Lalin"],
     description: "Mengatur titik kumpul mitra ojek lokal, rekayasa lalu lintas saat event kota, dan integrasi angkutan umum BST."
+  },
+  {
+    id: "gov_bapenda",
+    parentRole: "government",
+    name: "Bapenda",
+    agencyOrCompanyName: "Badan Pendapatan Daerah Kota Surakarta",
+    tagline: "Optimalisasi PAD & Retribusi Pasar Digital",
+    avatar: "📊",
+    accentColor: "indigo",
+    services: [
+      "Pembayaran PBB-P2 Online & Cek SPPT",
+      "Monitoring Retribusi Kios Pasar Digital (QRIS)",
+      "Konsultasi Pajak Daerah & NPWPD Baru",
+      "Insentif Kepatuhan Wajib Pajak Berhadiah Poin"
+    ],
+    sampleFeatures: ["Grafik PAD Harian", "Audit Transaksi Pasar", "Bukti Lunas Sah"],
+    description: "Memantau sirkulasi ekonomi mikro kota Solo, retribusi kios pasar digital, dan optimalisasi PAD secara transparan."
+  },
+  {
+    id: "gov_disdik",
+    parentRole: "government",
+    name: "Dinas Pendidikan",
+    agencyOrCompanyName: "Dinas Pendidikan Kota Surakarta",
+    tagline: "Pendidikan Ramah Anak & Akses Sekolah Berkeadilan",
+    avatar: "🎒",
+    accentColor: "blue",
+    services: [
+      "Antar Jemput Sekolah Warga Bersubsidi (Zonasi Solo)",
+      "Distribusi Ijazah & Paket Buku BOS ke Rumah",
+      "Verifikasi Beasiswa BPMKS Siswa Warga",
+      "Panduan Titik Koordinat PPDB Zonasi"
+    ],
+    sampleFeatures: ["Driver Ramah Anak", "Tracking Zonasi Sekolah", "Legalisir Digital"],
+    description: "Memfasilitasi transportasi sekolah anak yang aman terverifikasi dan layanan administrasi pendidikan door-to-door."
+  },
+  {
+    id: "gov_dlh",
+    parentRole: "government",
+    name: "Dinas Lingkungan Hidup",
+    agencyOrCompanyName: "Dinas Lingkungan Hidup Kota Surakarta",
+    tagline: "Solo Bersih, Sirkular Ekonomi & Bank Sampah Warga",
+    avatar: "♻️",
+    accentColor: "emerald",
+    services: [
+      "Jemput Sampah Daur Ulang Anorganik ke Rumah",
+      "Tukar Sampah Jadi Saldo / Poin Stamp UMKM",
+      "Sertifikasi Uji Emisi Gratis Driver Mitra",
+      "Laporan Perantingan Pohon Tepi Jalan Rawan"
+    ],
+    sampleFeatures: ["Bank Sampah RW", "Timbangan Digital", "Reward Poin Lingkungan"],
+    description: "Menggerakkan ekonomi sirkular warga dengan integrasi kurir jemput sampah daur ulang dan pemeliharaan pohon kota."
+  },
+  {
+    id: "gov_damkar",
+    parentRole: "government",
+    name: "Dinas Pemadam Kebakaran",
+    agencyOrCompanyName: "Dinas Pemadam Kebakaran & Penyelamatan Surakarta",
+    tagline: "Respon Cepat 15 Menit & Penyelamatan Non-Kebakaran",
+    avatar: "🚒",
+    accentColor: "rose",
+    services: [
+      "Panic Button Darurat Kebakaran (Auto-GPS)",
+      "Animal Rescue (Sarang Tawon, Ular, Kucing Terjebak)",
+      "Evakuasi Cincin Macet di Jari Warga",
+      "Inspeksi & Isi Ulang APAR Kios Pasar / UMKM"
+    ],
+    sampleFeatures: ["Panic Geolocation", "Rescue Non-Kebakaran", "Edukasi Redkar"],
+    description: "Layanan tanggap darurat kebakaran dan penyelamatan satwa berbahaya/evakuasi darurat bagi warga Solo 24 jam."
+  },
+  {
+    id: "gov_dispusip",
+    parentRole: "government",
+    name: "Dinas Perpustakaan & Kearsipan",
+    agencyOrCompanyName: "Dinas Perpustakaan & Kearsipan Kota Surakarta",
+    tagline: "Gerakan Literasi Solo Membaca & Restorasi Naskah Kuno",
+    avatar: "📚",
+    accentColor: "purple",
+    services: [
+      "Kurir Pustaka: Peminjaman & Antar Buku Fisik ke Rumah",
+      "KTA Perpustakaan Digital & Ribuan E-Book",
+      "Layanan Restorasi & Laminasi Arsip Kuno Warga",
+      "Wisata Literasi & Bedah Naskah Babad Solo"
+    ],
+    sampleFeatures: ["Katalog Pustaka Solo", "Kurir Antar Buku", "Digitalisasi Naskah"],
+    description: "Meningkatkan literasi warga dengan kurir pengantaran buku perpustakaan kota dan preservasi arsip sejarah."
+  },
+  {
+    id: "gov_dispertan",
+    parentRole: "government",
+    name: "Ketahanan Pangan & Pertanian",
+    agencyOrCompanyName: "Dinas Ketahanan Pangan & Pertanian Surakarta",
+    tagline: "Ketahanan Pangan Kota, Urban Farming & Klinik Hewan",
+    avatar: "🌾",
+    accentColor: "emerald",
+    services: [
+      "Dokter Hewan Puskeswan Homecare & Vaksin Rabies",
+      "Gerakan Pasar Pangan Murah (GPM) Keliling",
+      "Pembagian Bibit Tanaman Sayur Gratis KWT RW",
+      "Sertifikasi Keamanan Pangan Segar (PSAT)"
+    ],
+    sampleFeatures: ["Homecare Anabul", "Jadwal Pangan Murah", "Urban Farming Kit"],
+    description: "Mendukung ketahanan pangan perkotaan, pasokan sembako terjangkau, dan layanan kesehatan hewan peliharaan."
+  },
+  {
+    id: "gov_disnaker",
+    parentRole: "government",
+    name: "Tenaga Kerja & Perindustrian",
+    agencyOrCompanyName: "Dinas Tenaga Kerja & Perindustrian Surakarta",
+    tagline: "Pemberdayaan Tenaga Kerja, Job Fair & Pelatihan BLK",
+    avatar: "🛠️",
+    accentColor: "orange",
+    services: [
+      "Pengantaran Fisik Kartu Kuning AK-1 ke Rumah",
+      "Pendaftaran Pelatihan Kerja BLK Gratis (Barista, Las, Digital)",
+      "Konsultasi Pengaduan Hubungan Industrial & THR",
+      "Fasilitasi Hak Paten & Merek Dagang HKI UMKM"
+    ],
+    sampleFeatures: ["Kartu AK-1 Kilat", "Jadwal Kursus BLK", "Bursa Kerja Solo"],
+    description: "Menjembatani pencari kerja, pelatihan vokasi terstandar, dan perlindungan hak-hak tenaga kerja di Surakarta."
+  },
+  {
+    id: "gov_diskominfo",
+    parentRole: "government",
+    name: "Diskominfo & Statistik",
+    agencyOrCompanyName: "Dinas Komunikasi, Informatika, Statistik & Persandian",
+    tagline: "Satu Data Surakarta, Solopos Netizen & Kanal ULAS",
+    avatar: "📡",
+    accentColor: "blue",
+    services: [
+      "Kanal Aduan Warga ULAS (Unit Layanan Aduan Surakarta)",
+      "Kanal Cek Fakta Anti-Hoaks Berita Kota Solo",
+      "Peta Titik Internet WiFi Publik Gratis 54 Kelurahan",
+      "Portal Satu Data Mikro-Statistik Terbuka Solo"
+    ],
+    sampleFeatures: ["Tiket Aduan ULAS", "Verifikasi Berita", "Peta WiFi RW"],
+    description: "Pusat komando digitalisasi kota, keterbukaan informasi publik, dan integrasi penanganan aduan warga terpadu."
+  },
+  {
+    id: "gov_satpolpp",
+    parentRole: "government",
+    name: "Satpol PP",
+    agencyOrCompanyName: "Satuan Polisi Pamong Praja Kota Surakarta",
+    tagline: "Penegakan Perda Humanis, Ketertiban Umum & Keamanan",
+    avatar: "🛡️",
+    accentColor: "slate",
+    services: [
+      "Laporan Gangguan Ketertiban Umum & Musik Bising",
+      "Permohonan Izin & Pengawalan Keramaian Warga",
+      "Penertiban Parkir Liar & PKL Jalur Hijau",
+      "Satgas Perlindungan Ruang Publik Ramah Warga"
+    ],
+    sampleFeatures: ["Lapor Trantibum Geotag", "Izin Keramaian", "Patroli Humanis"],
+    description: "Menjaga ketenteraman, ketertiban umum, dan perlindungan masyarakat Surakarta secara humanis dan responsif."
+  },
+  {
+    id: "gov_bpbd",
+    parentRole: "government",
+    name: "BPBD Surakarta",
+    agencyOrCompanyName: "Badan Penanggulangan Bencana Daerah Surakarta",
+    tagline: "Kesiapsiagaan Bencana, EWS Bengawan Solo & Logistik",
+    avatar: "🌊",
+    accentColor: "teal",
+    services: [
+      "Radar Ketinggian Air EWS Bengawan Solo & Kali Pepe",
+      "Laporan Bencana Banjir, Puting Beliung & Tanggul Jebol",
+      "Distribusi Logistik Tenda & Perlengkapan Pengungsian",
+      "Relawan Siaga Bencana Kelurahan (Destana)"
+    ],
+    sampleFeatures: ["Radar EWS Live", "Logistik Kilat", "Peta Siaga Banjir"],
+    description: "Sistem mitigasi bencana, pemantauan sungai real-time, dan respon cepat tanggap darurat bagi warga Solo."
+  },
+  {
+    id: "gov_dp3a",
+    parentRole: "government",
+    name: "DP3APM (Perlindungan Anak)",
+    agencyOrCompanyName: "Dinas Pemberdayaan Perempuan & Perlindungan Anak",
+    tagline: "Kota Layak Anak, Perlindungan Perempuan & Keluarga",
+    avatar: "👩‍👧",
+    accentColor: "pink",
+    services: [
+      "Hotline Darurat Sahabat Perempuan & Anak (Unit PPA)",
+      "Konseling Psikolog Keluarga Puspaga Gratis",
+      "Pendampingan Hukum Korban Kekerasan Domestik",
+      "Rumah Aman & Pemulihan Trauma Anak"
+    ],
+    sampleFeatures: ["Hotline Rahasia PPA", "Konseling Puspaga", "Rumah Aman"],
+    description: "Menjamin hak anak, perlindungan perempuan dari tindak kekerasan, dan penguatan ketahanan keluarga berbasis komunitas."
+  },
+  {
+    id: "gov_dpmptsp",
+    parentRole: "government",
+    name: "DPMPTSP (MPP Solo)",
+    agencyOrCompanyName: "Dinas Penanaman Modal & PTSP Kota Surakarta",
+    tagline: "Mal Pelayanan Publik Jenderal Sudirman & Izin Usaha",
+    avatar: "🏢",
+    accentColor: "indigo",
+    services: [
+      "Layanan Antar Fisik SK Izin Usaha / IMB ke Kantor",
+      "Booking Antrean Mal Pelayanan Publik (MPP Sudirman)",
+      "Fasilitasi Kemitraan Investasi UMKM Solo",
+      "Klinik Konsultasi Tata Ruang & PBG"
+    ],
+    sampleFeatures: ["Kurir SK Izin", "Antrean MPP Online", "Katalog Investasi"],
+    description: "Mempermudah perizinan usaha satu pintu terpadu dan pengantaran dokumen legalitas usaha langsung ke alamat pelaku usaha."
   }
 ];
 
