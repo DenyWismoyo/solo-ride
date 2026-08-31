@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback, useState } from "react";
-import { GoogleMap, Marker, DirectionsRenderer } from "@react-google-maps/api";
+import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { GoogleMap, Marker, Polyline } from "@react-google-maps/api";
 import { useGoogleMaps } from "@/components/map/GoogleMapsProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAP_DARK_STYLE, MAP_LIGHT_STYLE } from "@/constants/maps";
@@ -73,10 +73,13 @@ export function RouteMap({
     mapRef.current = null;
   }, []);
 
-  // Compute map center
-  const mapCenter = center || (pickup
-    ? { lat: pickup.lat, lng: pickup.lng }
-    : driverLocation || DEFAULT_CENTER);
+  // Compute map center (Memoized to prevent snapping on every render)
+  const mapCenter = useMemo(() => {
+    if (center) return center;
+    if (pickup) return { lat: pickup.lat, lng: pickup.lng };
+    if (driverLocation) return driverLocation;
+    return DEFAULT_CENTER;
+  }, [center, pickup, driverLocation]);
 
   // Auto-fit bounds if both pickup and dropoff exist and not in manual pin mode
   useEffect(() => {
@@ -248,16 +251,15 @@ export function RouteMap({
         )}
 
         {/* Route Directions Line */}
-        {directions && !manualPinMode && (
-          <DirectionsRenderer
-            directions={directions}
+        {directions && directions.routes[0] && !manualPinMode && (
+          <Polyline
+            key={directions.routes[0].overview_polyline || Date.now().toString()}
+            path={directions.routes[0].overview_path}
             options={{
-              suppressMarkers: true,
-              polylineOptions: {
-                strokeColor: polylineColor,
-                strokeWeight: 5,
-                strokeOpacity: 0.9,
-              },
+              strokeColor: polylineColor,
+              strokeWeight: 5,
+              strokeOpacity: 0.9,
+              clickable: false,
             }}
           />
         )}

@@ -1,74 +1,34 @@
-# Dinas Perpustakaan & Kearsipan Surakarta — Blueprint Operasional
+# Dinas Perpustakaan dan Kearsipan Surakarta (gov_dispusip) � Blueprint Operasional
 
-**additionalRole**: `gov_dispusip`  
-**Status Implementasi**: ❌ CivicModal BELUM ADA | ❌ Workspace BELUM ADA  
-**PRIORITAS**: 🟢 Rendah–Sedang  
-**Tipe Interaksi**: Kelompok A — Delivery/Antar Dokumen
-
----
-
-## Profil Dinas
-
-| Atribut | Data |
-|---------|------|
-| Nama Lengkap | Dinas Perpustakaan dan Kearsipan Kota Surakarta |
-| Alamat | Jl. Kolonel Sutarto No. 4, Surakarta |
-| Telepon | (0271) 656890 |
-| Jam Perpustakaan | Senin–Jumat 08.00–16.00, Sabtu 08.00–13.00 |
-| Avatar/Emoji | 📚 |
-| Warna Tema | Purple (`text-purple-500`, `bg-purple-500/10`) |
+**additionalRole**: `gov_dispusip`
+**Status Implementasi**: ? 1 Form ada | ? Workspace ada | ?? Phase 2 gaps
+**Tipe Interaksi**: Kelompok A � Delivery/Antar Dokumen
 
 ---
 
-## Layanan yang Tersedia
+## Arsitektur Saat Ini
 
-### 1. `dispusip_kurir_buku` — Pinjam & Antar Buku Fisik ke Rumah
-- **Target**: Anggota perpustakaan kota Solo
-- **Biaya**: Ongkir flat Rp 6.000 (antar + jemput kembali)
-- **OTP pengembalian**: Kode OTP saat buku dikembalikan ke driver
+```
+Form Customer:
+  src/components/civic/forms/dispusip/DispusipKurirBukuForm.tsx  ?
 
----
+Workspace Admin:
+  src/components/government/workspaces/dispusip/ param($m) $m.Groups[1].Value.ToUpper() + $m.Groups[2].Value Workspace.tsx  ?
 
-## Spesifikasi `DispusipCivicModal.tsx`
-
-```tsx
-<input noAnggotaPerpus placeholder="Nomor Kartu Anggota" />
-// Note: Jika belum punya kartu → tampilkan link daftar online Perpustakaan Kota
-
-<input judulBukuDiminta />
-<select kategoriPustaka>      {/* Fiksi / Non-Fiksi / Referensi / Anak / Remaja */}
-<select durasiPeminjaman>     {/* 7 hari / 14 hari / 21 hari */}
-<input alamatAntar />
-<input kontakWa />
-<textarea catatanTambahan>    {/* Alternatif judul jika tidak tersedia */}
-
-// Setelah submit → tampilkan:
-// "Petugas perpustakaan akan mengecek ketersediaan buku Anda dalam 2 jam"
-// Jika tersedia: driver akan dikirim dalam hari yang sama (sebelum pkl 14.00)
+Routing:
+  CivicFormDispatcher.tsx ? routing per serviceId ke form yang sesuai
+  GovWorkspaceDispatcher.tsx ? case "gov_dispusip"
+  Customer page: /services/gov/gov_dispusip/[serviceId]
 ```
 
 ---
 
-## Spesifikasi `GovDispusipWorkspace.tsx`
+## Phase 2 Gaps
 
-### Tab 1: PERMINTAAN BUKU
-```
-- List permintaan dengan judul buku
-- Tombol "Tersedia" → dispatch driver ambil dari perpus
-- Tombol "Tidak Tersedia" → kirim notif ke customer, suggest alternatif
-- Filter: Menunggu verifikasi / Driver sudah dikirim
-```
+Tambah durasiPeminjaman radio button (7/14/21 hari) � saat ini mungkin text; tambah kategoriPustaka dropdown (fiksi/non-fiksi/referensi/anak-anak); workspace: H-3/H-1 due date alert + toggle buku tersedia/tidak tersedia
 
-### Tab 2: BUKU AKAN KEMBALI
-```
-- Daftar buku yang masa pinjam H-3 dan H-1 (reminder)
-- Tombol "Kirim Reminder WA" ke peminjam
-- Tombol "Dispatch Driver Jemput" jika sudah H+0 (harus kembali hari ini)
-```
+---
 
-### Tab 3: KOLEKSI POPULER
-```
-- 10 judul buku paling banyak diminta bulan ini
-- Statistik genre favorit pembaca Solo
-- Saran pengadaan buku baru berdasarkan demand
-```
+## citizenDetails Interface
+
+Lihat `DATA_CONTRACTS_EXTENDED.md` untuk interface lengkap dinas ini.

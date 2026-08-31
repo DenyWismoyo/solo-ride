@@ -27,11 +27,11 @@ async function getBizConfig() {
             cachedConfig = {
                 ojek: { base: data.BASE_FARE_OJEK || 3000, perKm: data.RATE_PER_KM_OJEK || 2500, min: data.MIN_FARE_OJEK || 10000 },
                 mobil: { base: data.BASE_FARE_MOBIL || 5000, perKm: data.RATE_PER_KM_MOBIL || 4500, min: data.MIN_FARE_MOBIL || 15000 },
-                kirim: { base: 5000, perKm: 3000, min: 12000 },
-                kuliner: { base: 8000, perKm: 2000, min: 8000, flatRadius: 3 },
-                mart: { base: 8000, perKm: 2000, min: 8000, flatRadius: 3 },
-                titip: { base: 5000, perKm: 3000, min: 12000 },
-                pasar: { base: 8000, perKm: 2000, min: 8000, flatRadius: 3 },
+                kirim: { base: data.BASE_FARE_KIRIM || 5000, perKm: data.RATE_PER_KM_KIRIM || 3000, min: data.MIN_FARE_KIRIM || 12000 },
+                kuliner: { base: data.BASE_FARE_KULINER || 8000, perKm: data.RATE_PER_KM_KULINER || 2000, min: data.MIN_FARE_KULINER || 8000, flatRadius: data.FLAT_RADIUS_KULINER || 3 },
+                mart: { base: data.BASE_FARE_MART || 8000, perKm: data.RATE_PER_KM_MART || 2000, min: data.MIN_FARE_MART || 8000, flatRadius: data.FLAT_RADIUS_MART || 3 },
+                titip: { base: data.BASE_FARE_TITIP || 5000, perKm: data.RATE_PER_KM_TITIP || 3000, min: data.MIN_FARE_TITIP || 12000 },
+                pasar: { base: data.BASE_FARE_PASAR || 8000, perKm: data.RATE_PER_KM_PASAR || 2000, min: data.MIN_FARE_PASAR || 8000, flatRadius: data.FLAT_RADIUS_PASAR || 3 },
                 SURGE_CAP: data.SURGE_CAP || 1.5,
                 KARCIS_HARIAN: data.KARCIS_HARIAN || 15000,
             };

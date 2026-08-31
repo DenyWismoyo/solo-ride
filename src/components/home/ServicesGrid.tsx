@@ -61,7 +61,7 @@ export function ServicesGrid({ onSelectService }: ServicesGridProps) {
               onClick={() => onSelectService(service)}
               whileTap={{ scale: 0.89 }}
               whileHover={{ y: -3 }}
-              className="flex flex-col items-center justify-start p-3 rounded-[1.6rem] bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-[#11192e] shadow-[0_6px_20px_-4px_rgba(15,23,42,0.04)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65)] transition-all group text-center cursor-pointer relative overflow-visible"
+              className="flex flex-col items-center justify-start p-3 rounded-[1.6rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl hover:bg-white/90 dark:hover:bg-[#11192e]/90 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/50 dark:border-white/10 transition-all group text-center cursor-pointer relative overflow-visible"
             >
               {service.tag && (
                 <motion.span 
@@ -74,22 +74,22 @@ export function ServicesGrid({ onSelectService }: ServicesGridProps) {
               )}
 
               <div
-                className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center mb-1.5 transition-transform duration-200 group-hover:scale-110 shadow-xs ${
+                className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center mb-1.5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg ${
                   service.id === "ride" 
-                    ? "bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400"
+                    ? "bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 group-hover:shadow-emerald-500/30 group-hover:bg-emerald-500/30"
                     : service.id === "car"
-                    ? "bg-gradient-to-tr from-teal-500/20 to-cyan-500/10 text-teal-600 dark:text-teal-400"
+                    ? "bg-gradient-to-tr from-teal-500/20 to-cyan-500/10 text-teal-600 dark:text-teal-400 group-hover:shadow-teal-500/30 group-hover:bg-teal-500/30"
                     : service.id === "send"
-                    ? "bg-gradient-to-tr from-blue-500/20 to-indigo-500/10 text-blue-600 dark:text-blue-400"
+                    ? "bg-gradient-to-tr from-blue-500/20 to-indigo-500/10 text-blue-600 dark:text-blue-400 group-hover:shadow-blue-500/30 group-hover:bg-blue-500/30"
                     : service.id === "food"
-                    ? "bg-gradient-to-tr from-orange-500/20 to-amber-500/10 text-orange-600 dark:text-orange-400"
+                    ? "bg-gradient-to-tr from-orange-500/20 to-amber-500/10 text-orange-600 dark:text-orange-400 group-hover:shadow-orange-500/30 group-hover:bg-orange-500/30"
                     : service.id === "titip"
-                    ? "bg-gradient-to-tr from-amber-500/20 to-yellow-500/10 text-amber-600 dark:text-amber-400"
+                    ? "bg-gradient-to-tr from-amber-500/20 to-yellow-500/10 text-amber-600 dark:text-amber-400 group-hover:shadow-amber-500/30 group-hover:bg-amber-500/30"
                     : service.id === "pasar"
-                    ? "bg-gradient-to-tr from-rose-500/20 to-pink-500/10 text-rose-600 dark:text-rose-400"
+                    ? "bg-gradient-to-tr from-rose-500/20 to-pink-500/10 text-rose-600 dark:text-rose-400 group-hover:shadow-rose-500/30 group-hover:bg-rose-500/30"
                     : service.id === "mart"
-                    ? "bg-gradient-to-tr from-purple-500/20 to-fuchsia-500/10 text-purple-600 dark:text-purple-400"
-                    : "bg-gradient-to-tr from-slate-500/20 to-zinc-500/10 text-slate-600 dark:text-slate-400"
+                    ? "bg-gradient-to-tr from-purple-500/20 to-fuchsia-500/10 text-purple-600 dark:text-purple-400 group-hover:shadow-purple-500/30 group-hover:bg-purple-500/30"
+                    : "bg-gradient-to-tr from-slate-500/20 to-zinc-500/10 text-slate-600 dark:text-slate-400 group-hover:shadow-slate-500/30 group-hover:bg-slate-500/30"
                 }`}
               >
                 <Icon size={24} variant="duotone" className="h-6 w-6 transition-transform duration-200 group-hover:scale-105" />

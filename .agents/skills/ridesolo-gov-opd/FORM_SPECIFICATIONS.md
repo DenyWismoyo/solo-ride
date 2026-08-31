@@ -1,116 +1,119 @@
-# Spesifikasi Form Customer per Dinas — Ride-Solo Gov Services
+# Spesifikasi Form Customer per Dinas — Ride-Solo Gov Services (Phase 2 Blueprint)
 
 > **Panduan ini adalah sumber kebenaran tunggal** untuk field-by-field form
-> yang harus diimplementasikan di setiap `<Dinas>CivicModal.tsx`.
-> Jangan menggunakan `DynamicGovCivicModal` sebagai solusi permanen.
+> yang diimplementasikan di setiap `<Dinas><SubService>Form.tsx`.
+>
+> **ARSITEKTUR SAAT INI**: Page-based forms via `/services/gov/[id]/[serviceId]`
+> Semua form di-dispatch oleh `CivicFormDispatcher.tsx`.
+>
+> Format anotasi: ✅ Sudah ada | ⚠️ Phase 2 gap | ❌ Belum ada
 
 ---
 
 ## KELOMPOK A — DELIVERY / ANTAR DOKUMEN
 
-### Dukcapil (`gov_dukcapil`) — ✅ SUDAH ADA `DukcapilCivicModal.tsx`
+### Dukcapil (`gov_dukcapil`) — ✅ 3 Form Tersedia
 
 Sub-service routing:
-- `dukcapil_antar_ktp` → Form antar KTP-el/KK
-- `dukcapil_kia_akte` → Form antar KIA/Akta
-- `dukcapil_mobile_perekaman` → Form jemput bola lansia/difabel
+- `dukcapil_antar_ktp` → `DukcapilAntarKtpForm.tsx` ✅
+- `dukcapil_kia_akte` → `DukcapilKiaAkteForm.tsx` ✅
+- `dukcapil_mobile_perekaman` → `DukcapilMobilePerekamanForm.tsx` ✅
 
-Form fields per sub-service:
+**Gap Phase 2:**
+```typescript
+// ⚠️ Validasi NIK belum enforce:
+// Saat ini: hanya validasi panjang 16 digit
+// Seharusnya: NIK harus diawali "3372" (kode wilayah Kota Surakarta)
+const isNIKValid = (nik: string) =>
+  nik.length === 16 && nik.startsWith("3372") && /^\d+$/.test(nik);
+
+// ⚠️ Field kecamatanAsal belum ada di form:
+// Tambahkan dropdown KecamatanSolo di semua form Dukcapil
+const KECAMATAN_SOLO = ["Laweyan", "Serengan", "Pasar Kliwon", "Jebres", "Banjarsari"];
+```
+
+Form fields lengkap yang seharusnya ada:
 ```typescript
 interface DukcapilFormFields {
   // Sub: antar_ktp, kia_akte
-  nik: string;                  // 16 digit NIK (required)
-  namaLengkap: string;          // Nama sesuai data kependudukan
+  nik: string;                  // 16 digit, wajib prefix 3372
+  namaLengkap: string;
   jenisLayanan: "ktp_el" | "kk" | "kia" | "akta_lahir" | "akta_kematian";
-  kecamatan: KecamatanSolo;     // Pilihan: Laweyan, Serengan, Pasar Kliwon, Jebres, Banjarsari
-  noHpWhatsapp: string;         // Untuk konfirmasi jadwal antar
-  alamatAntar: string;          // Alamat tujuan pengantaran
+  kecamatanAsal: KecamatanSolo; // ⚠️ Belum ada di form saat ini
+  noHpWhatsapp: string;
+  alamatAntar: string;
 
   // Sub: mobile_perekaman (jemput bola)
   alasanJemputBola: "lansia" | "difabel" | "sakit_keras";
-  keteranganKondisi?: string;   // Deskripsi kondisi yang membatasi mobilitas
+  keteranganKondisi?: string;
   waktuPilihan: string;         // Jadwal kunjungan tim Dukcapil
 }
+// OTP serah terima: WAJIB ada (requiresOtp: true di submitOrder)
 ```
-
-OTP serah terima: WAJIB ada kode OTP 6 digit saat driver serahkan dokumen.
 
 ---
 
-### Disdik (`gov_disdik`) — ❌ BELUM ADA `DisdikCivicModal.tsx`
+### Disdik (`gov_disdik`) — ✅ 1 Form + ⚠️ 1 Form Belum Ada
 
 Sub-service routing:
-- `disdik_antar_jemput_sekolah` → Antar jemput anak sekolah
-- `disdik_antar_ijazah_buku` → Antar legalisir ijazah/buku BOS
+- `disdik_antar_jemput_sekolah` → `DisdikAntarSekolahForm.tsx` ✅
+- `disdik_antar_ijazah_buku` → `DisdikAntarIjazahForm.tsx` ❌ BELUM DIBUAT
 
-Form fields:
+**Gap Phase 2 — Form antar ijazah:**
 ```typescript
-interface DisdikFormFields {
-  // Sub: antar_jemput_sekolah
-  namaSiswa: string;
-  nisn: string;                     // Nomor Induk Siswa Nasional
-  namaSekolah: string;              // Pilihan dari list sekolah zonasi Solo
-  kelasSekolah: string;             // Misal: "Kelas 3 SDN Mangkubumen"
-  alamatPenjemputan: string;
-  jamBerangkat: string;             // Jam antar ke sekolah
-  jamPulang: string;                // Jam jemput pulang
-  kontakOrtuWali: string;           // WA orang tua/wali
-  catatanKhusus?: string;           // Alergi, kebutuhan khusus
-
-  // Sub: antar_ijazah_buku
+// File baru yang perlu dibuat:
+// src/components/civic/forms/disdik/DisdikAntarIjazahForm.tsx
+interface DisdikIjazahFormFields {
   namaAlumnus: string;
-  nisn: string;
-  asalSekolah: string;
+  nisn: string;                 // Nomor Induk Siswa Nasional (10 digit)
+  asalSekolah: string;          // Dropdown sekolah negeri Solo
   jenisLegalisir: "ijazah" | "raport" | "buku_bos";
-  jumlahDokumen: number;
+  jumlahDokumen: number;        // Min 1, Max 10
   alamatAntar: string;
+  kontakWa: string;
 }
+```
+
+**Gap Phase 2 — Form antar jemput sekolah:**
+```typescript
+// ⚠️ Field yang masih kurang di DisdikAntarSekolahForm:
+catatanKhusus?: string; // Alergi, kebutuhan khusus
+// Tambah validasi: jamBerangkat harus lebih awal dari jamPulang
 ```
 
 ---
 
-### Dispusip (`gov_dispusip`) — ❌ BELUM ADA `DispusipCivicModal.tsx`
+### Dispusip (`gov_dispusip`) — ✅ 1 Form dengan Gap
 
 Sub-service:
-- `dispusip_kurir_buku` → Pinjam dan antar buku fisik dari Perpustakaan Kota
+- `dispusip_kurir_buku` → `DispusipKurirBukuForm.tsx` ✅ (dengan gap)
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DispusipFormFields {
-  noAnggotaPerpus: string;          // Nomor kartu anggota Perpustakaan Kota Solo
-  judulBukuDiminta: string;         // Judul atau ISBN buku yang ingin dipinjam
-  kategoriPustaka?: string;         // Fiksi / Non-fiksi / Referensi / Anak-anak
-  durasiPeminjaman: 7 | 14 | 21;   // Hari (pilihan)
-  alamatAntar: string;
-  kontakWa: string;
-  catatanTambahan?: string;         // Alternatif judul jika tidak tersedia
+// ⚠️ Field yang belum ada di DispusipKurirBukuForm:
+interface DispusipFormFieldsMissing {
+  kategoriPustaka: "fiksi" | "non_fiksi" | "referensi" | "anak_anak" | "majalah";
+  durasiPeminjaman: 7 | 14 | 21; // Radio button, bukan text input
+  // Catatan: noAnggotaPerpus perlu validasi format (angka 8 digit)
 }
+// OTP pengembalian: saat buku dikembalikan ke driver kurir
 ```
-
-OTP pengembalian: Kode OTP digenerate saat buku dikembalikan ke driver kurir.
 
 ---
 
-### Disnaker (`gov_disnaker`) — ❌ BELUM ADA `DisnakerCivicModal.tsx`
+### Disnaker (`gov_disnaker`) — ✅ 2 Form dengan Gap
 
 Sub-service:
-- `disnaker_kartu_kuning_ak1` → Antar kartu AK-1 + pendaftaran BLK
+- `disnaker_kartu_kuning_ak1` → `DisnakerKartuKuningForm.tsx` ✅
+- `disnaker_pelatihan_blk` → `DisnakerPelatihanBlkForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DisnakerFormFields {
-  // Kartu Kuning AK-1
-  namaLengkap: string;
-  nik: string;
-  pendidikanTerakhir: "SD" | "SMP" | "SMA_SMK" | "D1_D3" | "S1_ke_atas";
-  bidangKeahlian?: string;          // Keahlian yang dimiliki
-  alamatKtp: string;
-  alamatAntar: string;              // Tempat kartu AK-1 diantar
-  kontakWa: string;
-
-  // Kursus BLK (jika memilih kursus juga)
-  minatKursusBLK?: string;          // Contoh: Barista, Las, Digital Marketing, Menjahit
-  ketersediaanWaktu?: string;       // Contoh: "Pagi hari, Senin-Jumat"
+// ⚠️ Field yang belum ada di DisnakerKartuKuningForm:
+interface DisnakerKKMissing {
+  pendidikanTerakhir: "SD" | "SMP" | "SMA_SMK" | "D1_D3" | "S1_ke_atas"; // dropdown, bukan text
+  bidangKeahlian?: string; // Keahlian yang dimiliki (text input opsional)
+  // nik wajib ada — cek apakah sudah ada validasi 16 digit
 }
 ```
 
@@ -118,73 +121,52 @@ interface DisnakerFormFields {
 
 ## KELOMPOK B — ANTAR FARMASI / MEDIS
 
-### Dinkes (`gov_dinkes`) — ✅ SUDAH ADA `DinkesCivicModal.tsx`
+### Dinkes (`gov_dinkes`) — ✅ 3 Form dengan Gap
 
 Sub-service routing:
-- `dinkes_resep_puskesmas` → Antar obat resep dari Puskesmas
-- `dinkes_prolanis` → Obat rutin Prolanis BPJS
-- `dinkes_donor_darah` → Kurir darah PMI darurat
+- `dinkes_resep_puskesmas` → `DinkesResepObatForm.tsx` ✅
+- `dinkes_prolanis` → `DinkesProlanisForm.tsx` ✅
+- `dinkes_donor_darah` → `DinkesDonorDarahForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DinkesFormFields {
-  // Sub: resep_puskesmas, prolanis
-  noRekamMedis: string;             // Nomor rekam medis pasien
-  noBpjs?: string;                  // Nomor kartu BPJS Kesehatan
-  asalPuskesmas: string;            // Pilihan dari 17 Puskesmas Solo
-  namaObat?: string;                // Nama obat / deskripsi resep (opsional, privasi)
-  catatanAlergi?: string;           // Alergi obat yang perlu diperhatikan driver
-  namaWaliPenerima: string;         // Nama yang menerima (jika bukan pasien)
-  alamatPengantaran: string;
-  kontakWa: string;
-
-  // Sub: donor_darah (emergency — form ringkas)
-  rsujuanDarah: string;             // Rumah Sakit tujuan
-  golDarah: "A" | "B" | "AB" | "O";
-  rhesus: "+" | "-";
-  jumlahKantong: number;
-  namaKontakPMI: string;
-  notesUrgency: string;             // Untuk apa darah tersebut
+// ⚠️ Field yang belum ada di DinkesResepObatForm & DinkesProlanisForm:
+interface DinkesMedicalMissing {
+  noBpjs?: string;            // Nomor kartu BPJS Kesehatan (13 digit)
+  catatanAlergi?: string;     // Alergi obat yang perlu diperhatikan driver
+  // asalPuskesmas sudah ada tapi pastikan list lengkap 17 Puskesmas Solo
 }
+
+// ⚠️ DinkesDonorDarahForm perlu treatment khusus emergency:
+// - Status awal "pending" (skip verifikasi) karena mendesak
+// - Tampilkan nomor PMI: 0271-632202 yang bisa diklik
+// - Form sangat ringkas: RS tujuan + gol. darah + rhesus + jumlah kantong
 ```
 
 ---
 
 ## KELOMPOK C — BANTUAN SOSIAL
 
-### Dinsos (`gov_dinsos`) — ✅ SUDAH ADA `DinsosCivicModal.tsx`
+### Dinsos (`gov_dinsos`) — ✅ 3 Form dengan Gap Minor
 
 Sub-service routing:
-- `dinsos_bansos_pasar` → Tebus sembako voucher
-- `dinsos_ojek_difabel` → Antar jemput bersubsidi
-- `dinsos_tanggap_bencana` → Logistik bencana
+- `dinsos_bansos_pasar` → `DinsosBansosSembakoForm.tsx` ✅
+- `dinsos_ojek_difabel` → `DinsosOjekDifabelForm.tsx` ✅
+- `dinsos_tanggap_bencana` → `DinsosTanggapBencanaForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DinsosFormFields {
-  // Sub: bansos_pasar
-  namaKepalaKeluarga: string;
-  nikKepalaKeluarga: string;
-  nomorKartuPKH?: string;           // Nomor Kartu PKH/KKS
-  paketSembako: "paket_A" | "paket_B" | "paket_C";  // Sesuai ketetapan dinas
-  alamatPenjemputan: string;        // Ke mana sembako diantar
-  kontakWa: string;
+// ⚠️ DinsosTanggapBencanaForm — field yang belum ada:
+interface DinsosBencanaMissing {
+  kebutuhanLogistik: string[]; // Multi-select checkbox!
+  // Pilihan: ["Beras 5kg", "Air Mineral 1 dus", "Tenda Darurat", "Selimut", "Sembako Paket"]
+  // Saat ini mungkin hanya text input biasa
+}
 
-  // Sub: ojek_difabel
-  namaWargaDifabel: string;
-  nik: string;
-  jenisDisabilitas: "netra" | "tuli" | "fisik_kursi_roda" | "lansia_75_plus" | "lainnya";
-  alat bantu?: string;              // Kursi roda, tongkat, dll
-  tujuanPerjalanan: string;         // Puskesmas/RS/tujuan lain
-  waktuJemput: string;
-  kontakWaliPendamping?: string;
-
-  // Sub: tanggap_bencana
-  lokasiTerdampak: string;
-  jenisBencana: "banjir" | "kebakaran" | "angin_puting_beliung" | "lainnya";
-  jumlahKK_terdampak: number;
-  kebutuhanLogistik: string[];      // Checkbox: Beras, Air, Tenda, Selimut, dll
-  kontakRelawan: string;
+// ⚠️ DinsosOjekDifabelForm — field yang belum ada:
+interface DinsosOjekMissing {
+  alatBantu?: string; // "Kursi Roda", "Tongkat", "Walker", dll
+  // Tambahkan di form sebagai text input opsional
 }
 ```
 
@@ -192,225 +174,199 @@ interface DinsosFormFields {
 
 ## KELOMPOK D — PENGADUAN / LAPORAN
 
-### Dishub (`gov_dishub`) — ✅ SUDAH ADA `DishubCivicModal.tsx`
+### Dishub (`gov_dishub`) — ✅ 3 Form Lengkap
 
-Form fields:
+Sub-service routing:
+- `dishub_cfd_shelter` / `dishub_peta_shelter_cfd` → `DishubCfdShelterView.tsx` ✅ (informasi saja)
+- `dishub_booking_uji_kir` → `DishubBookingKirForm.tsx` ✅
+- `dishub_lapor_jalan` / `dishub_lapor_lalin` → `DishubLaporLalinForm.tsx` ✅
+
+Status: **Sudah cukup lengkap**, tidak ada gap kritikal di Phase 2.
+
+---
+
+### DLH (`gov_dlh`) — ✅ 2 Form dengan Gap
+
+Sub-service:
+- `dlh_jemput_sampah_daur_ulang` / yang include `sampah` → `DlhBankSampahForm.tsx` ✅
+- `dlh_lapor_pohon_tumbang` / yang include `pohon` → `DlhLaporPohonForm.tsx` ✅
+
+**Gap Phase 2:**
 ```typescript
-interface DishubFormFields {
-  // Sub: lapor_lalin
-  jenisLaporan: "kemacetan" | "lampu_lalu_lintas_rusak" | "rambu_rusak" | "jalan_berlubang" | "pohon_tumbang_lalin";
-  lokasiKejadian: string;           // Nama jalan / pertigaan
-  kelurahan: string;
-  deskripsiDetail: string;
-  fotoEvidenceUrl?: string;         // Upload foto (opsional)
-  kontakWa: string;
-
-  // Sub: kir_digital (booking)
-  jenisKendaraan: "motor" | "mobil" | "angkutan_barang" | "bus";
-  nomorPolisi: string;
-  jadwalKIR: string;                // Tanggal booking
-
-  // Sub: cfd_shelter (informasi)
-  // Tidak perlu form — tampilkan peta shelter saja
+// ⚠️ DlhBankSampahForm — field yang belum ada:
+interface DlhBankSampahMissing {
+  jenisSampah: string[]; // Multi-select CHECKBOX! Bukan single select
+  // Pilihan: ["Kardus/Kertas", "Plastik", "Besi/Logam", "Kaca/Botol", "Jelantah/Minyak", "Kertas Koran"]
+  estimasiBeratKg: number; // Number input, min 1, max 500
+  // ⚠️ Penting: setelah verifikasi berat oleh DLH, trigger Eco Points ke customer
 }
 ```
 
 ---
 
-### DLH (`gov_dlh`) — ❌ BELUM ADA `DlhCivicModal.tsx`
+### Diskominfo (`gov_diskominfo`) — ✅ 1 Form dengan Gap
 
 Sub-service:
-- `dlh_jemput_sampah_daur_ulang` → Jemput sampah ke rumah
-- `dlh_lapor_pohon_tumbang` → Lapor pohon berbahaya
+- `diskominfo_ulas_terpadu` / yang include `ulas` → `DiskominfoUlasForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DlhFormFields {
-  // Sub: jemput_sampah_daur_ulang
-  namaPemohon: string;
-  alamatRumah: string;
-  rwBankSampah: string;             // RW tempat bank sampah aktif
-  jenisSampah: ("kardus" | "plastik" | "besi" | "kaca" | "jelantah" | "kertas")[];
-  estimasiBeratKg: number;          // Estimasi berat total (kg)
-  jadwalJemput: string;             // Tanggal dan slot waktu penjemputan
-  kontakWa: string;
-  catatanTambahan?: string;         // Contoh: "Di depan pintu pagar besi coklat"
-
-  // Sub: lapor_pohon_tumbang
-  lokasiPohon: string;              // Nama jalan + nomor rumah terdekat
-  kelurahan: string;
-  kecamatan: KecamatanSolo;
-  kondisiPohon: "miring_berbahaya" | "sudah_tumbang" | "butuh_perantingan" | "menghalangi_kabel";
-  tingkatUrgensi: "segera" | "normal";
-  fotoUrl?: string;                 // Upload foto pohon
-  kontakWa: string;
+// ⚠️ DiskominfoUlasForm — field yang belum ada:
+interface DiskominfoMissing {
+  judulAduan: string;     // Judul singkat (max 60 karakter) — wajib terpisah dari deskripsi
+  kelurahan: string;      // Dropdown kelurahan/desa Solo (54 kelurahan)
+  kecamatan: KecamatanSolo; // 5 kecamatan Solo
+  // Tambah karakter counter untuk isiAduan (max 500 karakter)
 }
 ```
 
 ---
 
-### Diskominfo (`gov_diskominfo`) — ❌ BELUM ADA `DiskominfoC ivicModal.tsx`
+### Satpol PP (`gov_satpolpp`) — ✅ 1 Form dengan Gap
 
 Sub-service:
-- `diskominfo_ulas_terpadu` → Kirim aduan ke ULAS
+- `satpolpp_lapor_trantib` / yang include `trantib` → `SatpolppTrantibForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DiskominfoFormFields {
-  namaWarga: string;
-  nik: string;
-  kategoriAduan: 
-    | "jalan_rusak"
-    | "sampah_tidak_terangkut"
-    | "penerangan_jalan_mati"
-    | "pelayanan_publik_buruk"
-    | "pungli"
-    | "banjir_gorong"
-    | "pohon_bahaya"
-    | "lainnya";
-  judulAduan: string;               // Judul singkat aduan
-  isiAduan: string;                 // Deskripsi lengkap (max 500 karakter)
-  lokasiKejadian: string;
+// ⚠️ SatpolppTrantibForm — field yang belum ada:
+interface SatpolppMissing {
+  rt: string;   // Nomor RT (2 digit)
+  rw: string;   // Nomor RW (2 digit)
   kelurahan: string;
   kecamatan: KecamatanSolo;
-  fotoEvidenceUrl?: string;
-  kontakWa: string;                 // Untuk update status aduan
-}
-```
 
----
-
-### Satpol PP (`gov_satpolpp`) — ❌ BELUM ADA `SatpolppCivicModal.tsx`
-
-Sub-service:
-- `satpolpp_lapor_trantib` → Lapor gangguan ketertiban
-
-Form fields:
-```typescript
-interface SatpolppFormFields {
-  namaWarga: string;
-  jenisGangguan:
-    | "kebisingan_malam"          // Suara bising >22.00 WIB
-    | "parkir_liar"
-    | "pkl_liar"                  // PKL di trotoar/badan jalan
-    | "bangunan_liar"
-    | "minuman_keras"
-    | "perjudian"
-    | "izin_acara";               // Permohonan pengamanan keramaian
-  lokasiKejadian: string;
-  rt: string;
-  rw: string;
-  kelurahan: string;
-  kecamatan: KecamatanSolo;
-  waktuKejadian: string;          // Jam kejadian / waktu acara
-  deskripsiDetail: string;
-  fotoUrl?: string;
-  kontakWa: string;
-  // Jika izin acara:
+  // Kondisional: tampilkan hanya jika jenisGangguan === "izin_acara"
   namaAcara?: string;
   estimasiPeserta?: number;
   tanggalAcara?: string;
 }
+
+// Pattern untuk field kondisional:
+{jenisGangguan === "izin_acara" && (
+  <>
+    <CivicTextField label="Nama Acara" ... />
+    <CivicTextField label="Estimasi Peserta" type="number" ... />
+    <CivicTextField label="Tanggal Acara" type="date" ... />
+  </>
+)}
 ```
 
 ---
 
 ## KELOMPOK E — DARURAT / EMERGENCY
 
-### Damkar (`gov_damkar`) — ❌ BELUM ADA `DamkarCivicModal.tsx`
-
-> ⚠️ EMERGENCY: Minimal field, GPS auto-detect, submit cepat!
+### Damkar (`gov_damkar`) — ✅ 1 Form, ⚠️ GPS Belum Ada
 
 Sub-service:
-- `damkar_panic_button` → Lapor kebakaran/darurat (EMERGENCY)
-- `damkar_animal_rescue` → Rescue hewan/evakuasi non-api
+- Yang include `damkar` atau `panic` → `DamkarPanicDispatchForm.tsx` ✅
+- `damkar_animal_rescue` → ❌ Belum ada form terpisah (saat ini sama-sama ke panic form)
 
-Form fields:
+**Gap Phase 2 — KRITIKAL:**
 ```typescript
-interface DamkarFormFields {
-  // Sub: panic_button (DARURAT — form ultra ringkas)
-  gpsLat: number;                   // Auto-detect dari geolocation browser
-  gpsLng: number;
-  alamatManual: string;             // Konfirmasi manual alamat
-  jenisDarurat: "kebakaran" | "ledakan" | "orang_terjebak" | "gas_bocor";
+// ⚠️ DamkarPanicDispatchForm — GPS auto-detect belum ada!
+// Tambahkan GPS detection di useEffect:
+const [gpsLat, setGpsLat] = useState<number | null>(null);
+const [gpsLng, setGpsLng] = useState<number | null>(null);
+const [gpsStatus, setGpsStatus] = useState<"detecting" | "found" | "error" | "idle">("idle");
+
+const detectGPS = () => {
+  setGpsStatus("detecting");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { setGpsLat(pos.coords.latitude); setGpsLng(pos.coords.longitude); setGpsStatus("found"); },
+    () => setGpsStatus("error"),
+    { timeout: 8000, enableHighAccuracy: true }
+  );
+};
+
+// ⚠️ Field yang belum ada:
+interface DamkarPanicMissing {
+  gpsLat: number | null;
+  gpsLng: number | null;
+  jenisDarurat: "kebakaran" | "ledakan" | "orang_terjebak" | "gas_bocor"; // enum, bukan free text
   tingkatKeparahan: "besar" | "sedang" | "kecil";
-  kontakWa: string;                 // Auto-filled dari profil user
-  // NO NIK, NO NOTES — cukup ini saja, kirim cepat!
-
-  // Sub: animal_rescue (tidak darurat, bisa lebih detail)
-  jenisRescue: "sarang_tawon_vespa" | "ular" | "hewan_terjebak" | "cincin_macet" | "lainnya";
-  lokasiRescue: string;
-  deskripsiDetail: string;
-  kontakWa: string;
-  waktuPilihan?: string;            // Jika tidak mendesak, pilih jadwal
 }
+
+// ⚠️ Status harus langsung "pending" (skip pending_verification)!
+// ⚠️ Tampilkan nomor darurat yang bisa diklik: tel:027163 0133
+
+// Untuk animal_rescue — buat form terpisah DamkarAnimalRescueForm.tsx:
+// - Tidak emergency, boleh lebih detail
+// - jenisRescue: enum sarang tawon/ular/hewan terjebak/cincin macet
+// - waktuPilihan: bisa pilih jadwal (tidak harus segera)
 ```
 
-UI Rules untuk Panic Button:
-- Latar merah/oranye menyala
-- Tombol submit BESAR diameter minimal 60px
-- Teks "KIRIM DARURAT SEKARANG" — bukan "Submit"
-- Tampilkan nomor telepon Damkar (0271-7630133) yang bisa diklik
-- Auto-submit langsung setelah GPS terkunci (countdown 3 detik)
+**UI Rules Panic Button (wajib):**
+- Latar merah/oranye menyala, tombol submit merah besar
+- Teks tombol: `"🚨 DISPATCH SIAGA 1 DAMKAR SEKARANG"` (sudah ada ✅)
+- Tampilkan nomor Damkar: `0271-7630133` (bisa diklik)
+- Countdown auto-submit setelah GPS terkunci: **OPSIONAL** (Phase 3)
 
 ---
 
-### BPBD (`gov_bpbd`) — ❌ BELUM ADA `BpbdCivicModal.tsx`
+### BPBD (`gov_bpbd`) — ✅ 1 Form dengan Gap Signifikan
 
 Sub-service:
-- `bpbd_peringatan_dini_banjir` → Cek status siaga + minta bantuan darurat
+- Yang include `bpbd` atau `banjir` → `BpbdLaporBanjirForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface BpbdFormFields {
-  // Mode A: Cek Status EWS (tidak butuh form — tampilkan data saja)
-  // Mode B: Permohonan Bantuan Darurat
-  namaKontakDarurat: string;
-  lokasiTerdampak: string;
-  gpsLat?: number;
+// ⚠️ BpbdLaporBanjirForm perlu refactor signifikan:
+// Tambah mode toggle di atas form:
+const [mode, setMode] = useState<"ews" | "bantuan">("ews");
+
+// Mode EWS: tampilkan info status siaga sungai (no form, hanya info)
+// Mode Bantuan: tampilkan form permohonan bantuan darurat
+
+// Field yang belum ada di mode bantuan:
+interface BpbdBantuanMissing {
+  gpsLat?: number;    // GPS opsional (tidak semua user punya akses)
   gpsLng?: number;
-  jenisBencana: "banjir" | "tanah_longsor" | "puting_beliung" | "gempa" | "kebakaran_hutan";
-  levelSiaga: "siaga_1" | "siaga_2" | "siaga_3" | "siaga_4";  // 1=sangat bahaya
+  levelSiaga: "siaga_1" | "siaga_2" | "siaga_3" | "siaga_4"; // 1=sangat bahaya
+  bantuanDiminta: string[]; // Multi-select: tenda_darurat/selimut/sembako/perahu_karet/evakuasi_medis
   jumlahKK: number;
-  bantuanDiminta: ("tenda_darurat" | "selimut" | "sembako" | "perahu_karet" | "evakuasi_medis")[];
-  kontakWa: string;
 }
+
+// Status awal: "pending" (skip verifikasi) karena emergency!
 ```
 
 ---
 
-### DP3APM (`gov_dp3a`) — ❌ BELUM ADA `Dp3aCivicModal.tsx`
-
-> ⚠️ PRIVACY FIRST: Mode anonim wajib tersedia. Tidak boleh expose identitas.
+### DP3APM (`gov_dp3a`) — ✅ 1 Form, ⚠️ Mode Anonim Belum Ada (KRITIS!)
 
 Sub-service:
-- `dp3a_hotline_sahabat_perempuan` → Lapor kekerasan / minta bantuan darurat
-- `dp3a_konseling_puspaga` → Booking sesi konseling psikolog
+- Yang include `dp3a` atau `sapa` → `Dp3aSapa129Form.tsx` ✅
 
-Form fields:
+**Gap Phase 2 — KRITIS (wajib diimplementasikan):**
 ```typescript
-interface Dp3aFormFields {
-  // TOGGLE: isAnonymous: boolean (default: true untuk laporan kekerasan)
-  
-  // Sub: hotline (jika isAnonymous = true, nama = kode anonim)
-  namaAtauKode: string;             // "Pemohon-XXXX" jika anonim
-  jenisKasus:
-    | "kdrt"                        // Kekerasan Dalam Rumah Tangga
-    | "kekerasan_seksual"
-    | "perdagangan_orang"
-    | "kekerasan_anak"
-    | "penelantaran"
-    | "darurat_perlindungan";       // Butuh perlindungan segera
-  lokasiAman: string;               // Lokasi pemohon SEKARANG (bukan alamat rumah)
-  kontakRahasia: string;            // WA / sinyal aman
-  deskripsiSingkat?: string;        // OPSIONAL — jangan paksa detail
-  butuhPendampingan: boolean;       // Butuh psikolog / petugas datang?
+// ⚠️ Dp3aSapa129Form WAJIB memiliki Mode Anonim!
+// Ini adalah aturan AGENTS.md yang belum dipenuhi:
 
-  // Sub: konseling_puspaga (tidak harus anonim)
-  namaLengkap?: string;
-  jenisKonseling: "pernikahan" | "pola_asuh" | "trauma" | "remaja" | "lansia";
-  jadwalKonseling: string;
-  kontakWa: string;
+const [isAnonymous, setIsAnonymous] = useState(true); // Default anonim!
+
+// Header form wajib punya toggle:
+<div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-950/30 rounded-2xl border border-purple-200/60 dark:border-purple-800/40">
+  <div>
+    <p className="text-xs font-bold text-purple-700 dark:text-purple-300">Mode Anonim</p>
+    <p className="text-[11px] text-purple-600 dark:text-purple-400">Identitas Anda terlindungi sepenuhnya</p>
+  </div>
+  <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
+</div>
+
+// Di handleSubmit, jika anonim:
+const randomCode = Math.floor(1000 + Math.random() * 9000);
+const effectiveName = isAnonymous ? `Pemohon-${randomCode}` : reporterName;
+
+// citizenDetails:
+{
+  reporterName: effectiveName,    // Kode anonim atau nama asli
+  isAnonymous,                    // Flag untuk workspace OPD
+  // safeContact tetap disimpan tapi hanya visible ke petugas tertentu
+}
+
+// ⚠️ Field jenisKasus saat ini terlalu umum — perlu enum spesifik:
+interface Dp3aJenisKasus {
+  jenisKasus: "kdrt" | "kekerasan_seksual" | "perdagangan_orang" | "kekerasan_anak" | "penelantaran" | "darurat_perlindungan";
 }
 ```
 
@@ -418,84 +374,88 @@ interface Dp3aFormFields {
 
 ## KELOMPOK F — TRANSAKSIONAL / PAJAK
 
-### Bapenda (`gov_bapenda`) — ✅ SUDAH ADA `BapendaCivicModal.tsx`
+### Bapenda (`gov_bapenda`) — ✅ 1 Form + 2 Form Belum Ada
 
-Form fields:
+Sub-service:
+- `bapenda_pbb` → `BapendaPbbForm.tsx` ✅
+- `bapenda_retribusi_pasar` → ❌ `BapendaRetribusiPasarForm.tsx` BELUM DIBUAT
+- `bapenda_konsultasi_pajak` → ❌ `BapendaKonsultasiPajakForm.tsx` BELUM DIBUAT
+
+**Phase 2 — Form retribusi pasar:**
 ```typescript
-interface BapendaFormFields {
-  // Sub: pbb_online
-  nomorNOP_SPPT: string;            // Nomor Objek Pajak
-  tahunPajak: number;
-  nominaTagihan?: number;           // Auto-fetch dari sistem Bapenda
-  metodePembayaran: "qris" | "wallet" | "virtual_account";
-
-  // Sub: retribusi_pasar
-  idKiosPasar: string;              // Kode kios pedagang (dari kartu ID pedagang)
+// src/components/civic/forms/bapenda/BapendaRetribusiPasarForm.tsx
+interface BapendaRetribusiFields {
+  idKiosPasar: string;          // Kode kios dari kartu ID pedagang
   namaKios: string;
-  tanggalRetribusi: string;
-  nominalRetribusi: number;
-
-  // Sub: konsultasi_pajak
-  jenisKonsultasi: "npwpd_baru" | "keberatan_pajak" | "insentif_umkm";
-  namaUsaha: string;
-  nik: string;
-  pertanyaanKonsultasi: string;
+  tanggalRetribusi: string;     // date picker
+  nominalRetribusi: number;     // Tampilkan sebagai currency (Rp)
+  metodePembayaran: "qris" | "tunai"; // Bayar lewat platform
+  namaKontakPedagang: string;
   kontakWa: string;
 }
+```
+
+**Phase 2 — Form konsultasi pajak:**
+```typescript
+// src/components/civic/forms/bapenda/BapendaKonsultasiPajakForm.tsx
+interface BapendaKonsultasiFields {
+  jenisKonsultasi: "npwpd_baru" | "keberatan_pajak" | "insentif_umkm" | "pemutihan";
+  namaUsaha: string;
+  nik: string;
+  pertanyaanKonsultasi: string; // Textarea, max 500 karakter
+  jadwalKonsultasi: string;     // Date + time picker
+  kontakWa: string;
+}
+```
+
+**Gap BapendaPbbForm:**
+```typescript
+// ⚠️ Validasi format NOP:
+const isValidNOP = (nop: string) =>
+  /^\d{2}\.\d{2}\.\d{3}\.\d{3}\.\d{3}-\d{4}\.\d$/.test(nop);
+// Format: 33.71.xxx.xxx.xxx-xxxx.x (kode Bapenda Surakarta)
 ```
 
 ---
 
 ## KELOMPOK G — BOOKING / RESERVASI
 
-### Dispar (`gov_dispar`) — ✅ SUDAH ADA `DisparCivicModal.tsx`
+### Dispar (`gov_dispar`) — ✅ 1 Form dengan Gap
 
-Form fields:
+Sub-service:
+- Yang include `dispar` atau `heritage` → `DisparHeritageTourForm.tsx` ✅
+
+**Gap Phase 2:**
 ```typescript
-interface DisparFormFields {
-  // Sub: heritage_tour
-  namaWisatawan: string;
-  jumlahRombongan: number;
-  tanggalKunjungan: string;
-  destinasiDipilih: ("keraton" | "mangkunegaran" | "radya_pustaka" | "triwindu" | "kampung_batik")[];
-  preferensiBahasa: "id" | "en" | "ja" | "cn";
-  kontakWa: string;
+// ⚠️ DisparHeritageTourForm — destinasi saat ini single select:
+// Harus diubah jadi multi-select checkbox!
+const DESTINASI_HERITAGE = [
+  { id: "keraton", label: "Keraton Kasunanan Surakarta" },
+  { id: "mangkunegaran", label: "Pura Mangkunegaran" },
+  { id: "radya_pustaka", label: "Museum Radya Pustaka" },
+  { id: "triwindu", label: "Pasar Triwindu (Antik)" },
+  { id: "kampung_batik", label: "Kampung Batik Laweyan" },
+];
 
-  // Sub: tiket_event
-  namaEvent: string;               // Dari kalender resmi dinas
-  jumlahTiket: number;
-  kategoriTiket?: string;
-
-  // Sub: pemandu_wisata
-  sertifikasiHPI: boolean;         // Filter pemandu bersertifikat HPI
-  namaGuide?: string;              // Jika request guide tertentu
-  tanggalTour: string;
-  durasiJam: number;
-}
+const [destinasiDipilih, setDestinasiDipilih] = useState<string[]>([]);
+// Pattern toggle checkbox: di dalam map destinasi, toggle item di array
 ```
 
 ---
 
-### Dispertan (`gov_dispertan`) — ❌ BELUM ADA `DispertanCivicModal.tsx`
+### Dispertan (`gov_dispertan`) — ✅ 1 Form dengan Gap
 
 Sub-service:
-- `dispertan_klinik_hewan_homecare` → Dokter hewan homecare
+- Yang include `dispertan` atau `puskeswan` → `DispertanPuskeswanForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DispertanFormFields {
-  namaHewan: string;
-  jenisHewan: "kucing" | "anjing" | "kelinci" | "burung" | "ikan" | "unggas" | "sapi" | "kambing";
-  rasHewan?: string;
-  usiaPerkiraanHewan: string;       // Contoh: "2 tahun 3 bulan"
-  keluhan: string;                  // Deskripsi gejala sakit / tujuan kunjungan
-  riwayatVaksin?: string;           // Vaksin terakhir apa, kapan
-  riwayatObat?: string;             // Obat yang sedang dikonsumsi hewan
-  layananDiminta: "pemeriksaan_umum" | "vaksin_rabies" | "sterilisasi" | "konsultasi" | "grooming_medis";
-  alamatHomecare: string;
-  tanggalJadwal: string;
-  kontakWa: string;
-  fotoHewan?: string;               // Foto kondisi hewan (opsional)
+// ⚠️ DispertanPuskeswanForm — field yang belum ada:
+interface DispertanMissing {
+  layananDiminta: "pemeriksaan_umum" | "vaksin_rabies" | "sterilisasi" | "konsultasi" | "grooming_medis"; // dropdown!
+  riwayatVaksin?: string;   // Vaksin terakhir apa, kapan
+  riwayatObat?: string;     // Obat yang sedang dikonsumsi hewan
+  // fotoHewan: Phase 3 (butuh Firebase Storage upload)
 }
 ```
 
@@ -503,71 +463,71 @@ interface DispertanFormFields {
 
 ## KELOMPOK H — USAHA / LEGALITAS
 
-### Diskop (`gov_diskop`) — ✅ SUDAH ADA `DiskopCivicModal.tsx`
-
-Form fields:
-```typescript
-interface DiskopFormFields {
-  // Sub: nib_pendampingan
-  namaUsaha: string;
-  jenisUsaha: string;               // Deskripsi bidang usaha
-  skalaUsaha: "mikro" | "kecil";
-  sudahPunyaNIB: boolean;
-  nikPemilik: string;
-  alamatUsaha: string;
-  omzetBulananEstimasi?: number;
-  kontakWa: string;
-
-  // Sub: modal_bergulir
-  namaUsaha: string;
-  nik: string;
-  jumlahPinjamanDiminta: number;    // Dalam Rupiah
-  rencanaPenggunaan: string;
-  agunanYangDimiliki?: string;
-  sudahIkutPelatihan: boolean;
-
-  // Sub: shu_koperasi (informasi poin saja)
-  // Tidak butuh form — tampilkan dashboard poin user
-}
-```
-
----
-
-### DPMPTSP (`gov_dpmptsp`) — ❌ BELUM ADA `DpmptspCivicModal.tsx`
+### Diskop (`gov_diskop`) — ✅ 2 Form dengan Gap Minor
 
 Sub-service:
-- `dpmptsp_antar_sk_izin` → Antar SK izin usaha dari MPP ke kantor
+- `diskop_legalitas_nib` → `DiskopLegalitasNibForm.tsx` ✅
+- `diskop_dana_bergulir` → `DiskopDanaBergulirForm.tsx` ✅
 
-Form fields:
+**Gap Phase 2:**
 ```typescript
-interface DpmptspFormFields {
-  namaUsaha: string;
-  nomorRegistrasiMPP: string;       // Nomor antrean/registrasi di MPP
-  jenisIzin:
-    | "nib"                         // Nomor Induk Berusaha
-    | "imb_pbg"                     // IMB / PBG
-    | "situ"                        // Surat Izin Tempat Usaha
-    | "siup"                        // SIUP
-    | "hak_bangunan"
-    | "lainnya";
-  namaKontakPenerima: string;       // Nama yang akan menerima SK fisik
-  alamatKantor: string;             // Alamat tujuan pengantaran SK
-  kontakWa: string;
-  nomorSKJika diketahui?: string;   // Jika sudah tahu nomor SK
-  catatanPengambilan?: string;
+// ⚠️ DiskopLegalitasNibForm — field yang belum ada:
+interface DiskopNibMissing {
+  omzetBulananEstimasi?: number; // Currency input (Rp), opsional
+}
+
+// ⚠️ DiskopDanaBergulirForm — field yang belum ada:
+interface DiskopBergulirMissing {
+  agunanYangDimiliki?: string; // Aset yang dijaminkan (opsional)
 }
 ```
 
 ---
 
-## Catatan Penting: Field Validasi
+### DPMPTSP (`gov_dpmptsp`) — ✅ 1 Form dengan Gap
+
+Sub-service:
+- Yang include `dpmptsp` atau `mpp` → `DpmptspMppIzinForm.tsx` ✅
+
+**Gap Phase 2:**
+```typescript
+// ⚠️ DpmptspMppIzinForm — field yang belum ada:
+interface DpmptspMissing {
+  nomorRegistrasiMPP: string;  // Nomor antrean/registrasi di MPP (wajib!)
+  jenisIzin: "nib" | "imb_pbg" | "situ" | "siup" | "hak_bangunan" | "lainnya"; // dropdown!
+  nomorSKJikaDisetujui?: string; // Jika sudah tahu nomor SK (opsional)
+}
+```
+
+---
+
+## Catatan Penting: Field Validasi (Diperbarui Phase 2)
 
 | Field | Aturan |
 |-------|--------|
-| NIK | Tepat 16 digit, hanya angka, prefix 3372 (Solo) |
+| NIK | Tepat 16 digit, hanya angka, WAJIB prefix `3372` (Solo) |
 | No. HP/WA | Minimal 10 digit, format Indonesia (+62/08xx) |
 | GPS koordinat | Validasi range: lat (-7.4 s/d -7.7), lng (110.7 s/d 110.9) |
 | Tanggal jadwal | Min: besok, Max: 30 hari ke depan |
 | Estimasi berat (DLH) | Min: 1 kg, Max: 500 kg per pickup |
-| Nomor NOP/SPPT | Format Bapenda: 33.71.xxx.xxx.xxx-xxxx.x |
+| Nomor NOP/SPPT | Format: `33.71.xxx.xxx.xxx-xxxx.x` |
 | Nomor RM | Kombinasi huruf-angka, sesuai format Puskesmas |
+| NISN Disdik | Tepat 10 digit angka |
+| No. Anggota Perpusip | 8 digit angka |
+| Nomor Registrasi MPP | Prefix "MPP-" + 6 digit |
+
+## Komponen Shared yang Tersedia
+
+```typescript
+// Dari @/components/civic/shared/CivicFormControls:
+import {
+  CivicTextField,      // Text input dengan label + icon
+  CivicSelectField,    // Single select dropdown
+  CivicTextareaField,  // Textarea dengan label
+  CivicPriceFooter,    // Footer harga + keterangan
+  CivicSubmitButton,   // Submit + Cancel button
+} from "@/components/civic/shared/CivicFormControls";
+
+// Untuk multi-select (belum ada di shared controls — buat inline):
+// Pattern: array state + checkbox toggle per item
+```

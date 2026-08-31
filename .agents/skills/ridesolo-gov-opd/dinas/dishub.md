@@ -1,73 +1,36 @@
-# Dinas Perhubungan Surakarta — Blueprint Operasional
+# Dinas Perhubungan Surakarta (gov_dishub) � Blueprint Operasional
 
-**additionalRole**: `gov_dishub`  
-**Status Implementasi**: ✅ CivicModal ada | ✅ Workspace ada  
-**Tipe Interaksi**: Kelompok D — Pengaduan/Laporan
-
----
-
-## Profil Dinas
-
-| Atribut | Data |
-|---------|------|
-| Nama Lengkap | Dinas Perhubungan Kota Surakarta |
-| Alamat | Jl. Menteri Supeno No. 7, Surakarta |
-| Telepon | (0271) 635842 |
-| Avatar/Emoji | 🚦 |
-| Warna Tema | Yellow (`text-yellow-500`, `bg-yellow-500/10`) |
+**additionalRole**: `gov_dishub`
+**Status Implementasi**: ? 3 Form ada | ? Workspace ada | ?? Phase 2 gaps
+**Tipe Interaksi**: Kelompok D � Pengaduan/Laporan
 
 ---
 
-## Layanan yang Tersedia
+## Arsitektur Saat Ini
 
-### 1. `dishub_cfd_shelter` — Info CFD & Shelter BST
-- **Sifat**: Informasional — tampilkan peta shelter ojek resmi dan jalur CFD
-- **Tidak butuh form** — hanya tampilan peta dan informasi
-- **Driver relevance**: Driver harus tahu titik shelter resmi untuk ambil/antar penumpang
+```
+Form Customer:
+  src/components/civic/forms/dishub/DishubLaporLalinForm.tsx  ?
+  src/components/civic/forms/dishub/DishubBookingKirForm.tsx  ?
+  src/components/civic/forms/dishub/DishubCfdShelterView.tsx  ?
 
-### 2. `dishub_lapor_jalan` — Lapor Kemacetan & Lampu Lalu Lintas Rusak
-- **Sifat**: Laporan digital — driver dan warga bisa lapor dari aplikasi
-- **Tidak selalu butuh driver fisik** — laporan langsung ke database Dishub
-- **SLA**: Respons 24 jam, aksi lapangan 48 jam
+Workspace Admin:
+  src/components/government/workspaces/dishub/ param($m) $m.Groups[1].Value.ToUpper() + $m.Groups[2].Value Workspace.tsx  ?
 
-### 3. `dishub_kir_digital` — Booking Antrean Uji KIR
-- **Target**: Driver angkutan umum, truk, angkutan barang yang wajib uji KIR berkala
-- **Biaya**: Sesuai Perda Kota Surakarta
-- **Proses**: Booking slot → konfirmasi → driver datang ke UPT KIR
-
----
-
-## Form Fields (Lihat DishubCivicModal.tsx)
-
-```typescript
-// Sub: lapor_lalin
-jenisLaporan: JenisLaporanLalin;
-lokasiKejadian: string;           // Nama jalan / perempatan
-kelurahan: string;
-deskripsiDetail: string;
-fotoEvidenceUrl?: string;
-kontakWa: string;
-
-// Sub: kir_digital
-jenisKendaraan: "motor" | "mobil" | "angkutan_barang" | "bus";
-nomorPolisi: string;              // Contoh: AD 1234 XY
-jadwalKIR: string;                // Date picker dengan ketersediaan slot
-
-// Sub: cfd_shelter
-// Tidak butuh form — render peta shelter saja
+Routing:
+  CivicFormDispatcher.tsx ? routing per serviceId ke form yang sesuai
+  GovWorkspaceDispatcher.tsx ? case "gov_dishub"
+  Customer page: /services/gov/gov_dishub/[serviceId]
 ```
 
 ---
 
-## Integrasi Driver Ride-Solo dengan Dishub
+## Phase 2 Gaps
 
-Fitur unik: Driver Ride-Solo secara otomatis menjadi **relawan pelapor** kondisi jalan:
-- Setiap driver yang sedang online bisa lapor kondisi jalan dari dashboard driver
-- Laporan otomatis tercatat dengan GPS koordinat presisi
-- Driver yang lapor mendapat **bonus poin stamp** sebagai insentif
+Sudah cukup lengkap. Phase 2: tambah cluster peta laporan lalin di workspace per kelurahan; estimasi waktu antrian KIR per slot
 
-```typescript
-// Di dashboard driver, tambahkan shortcut "Lapor Jalan":
-// → Buka form ringkas Dishub dengan GPS auto-fill
-// → Submit → tambah poin driver
-```
+---
+
+## citizenDetails Interface
+
+Lihat `DATA_CONTRACTS_EXTENDED.md` untuk interface lengkap dinas ini.

@@ -1,79 +1,35 @@
-# Dinas Tenaga Kerja & Perindustrian Surakarta — Blueprint Operasional
+# Dinas Tenaga Kerja Surakarta (gov_disnaker) � Blueprint Operasional
 
-**additionalRole**: `gov_disnaker`  
-**Status Implementasi**: ❌ CivicModal BELUM ADA | ❌ Workspace BELUM ADA  
-**PRIORITAS**: 🟢 Rendah–Sedang  
-**Tipe Interaksi**: Kelompok A — Delivery/Antar Dokumen
-
----
-
-## Profil Dinas
-
-| Atribut | Data |
-|---------|------|
-| Nama Lengkap | Dinas Tenaga Kerja dan Perindustrian Kota Surakarta |
-| Alamat | Jl. Arifin No. 2, Surakarta |
-| Telepon | (0271) 649100 |
-| BLK | Balai Latihan Kerja — Jl. Bhayangkara No. 34 |
-| Avatar/Emoji | 👷 |
-| Warna Tema | Orange (`text-orange-500`, `bg-orange-500/10`) |
+**additionalRole**: `gov_disnaker`
+**Status Implementasi**: ? 2 Form ada | ? Workspace ada | ?? Phase 2 gaps
+**Tipe Interaksi**: Kelompok A � Delivery/Antar Dokumen + Pendaftaran
 
 ---
 
-## Layanan yang Tersedia
+## Arsitektur Saat Ini
 
-### 1. `disnaker_kartu_kuning_ak1` — Antar Kartu AK-1 + Daftar BLK
-- **Target**: Pencari kerja berdomisili Surakarta
-- **Proses**: Driver ambil kartu AK-1 yang sudah jadi dari kantor Disnaker → antar ke rumah
+```
+Form Customer:
+  src/components/civic/forms/disnaker/DisnakerKartuKuningForm.tsx  ?
+  src/components/civic/forms/disnaker/DisnakerPelatihanBlkForm.tsx  ?
 
-### 2. `disnaker_pelatihan_blk` (Sub dari kartu_kuning_ak1)
-- **Kursus tersedia**: Barista, Las, Digital Marketing, Menjahit, Tata Boga, Pemrograman
-- **Biaya kursus**: Gratis (dibiayai APBN/APBD)
-- **Durasi**: 1–3 bulan tergantung kursus
+Workspace Admin:
+  src/components/government/workspaces/disnaker/ param($m) $m.Groups[1].Value.ToUpper() + $m.Groups[2].Value Workspace.tsx  ?
 
----
-
-## Spesifikasi `DisnakerCivicModal.tsx`
-
-```tsx
-// Sub: Kartu Kuning AK-1
-<input namaLengkap />
-<input nik />
-<select pendidikanTerakhir>    {/* SD / SMP / SMA/SMK / D1-D3 / S1+ */}
-<textarea bidangKeahlian optional />
-<input alamatKtp />
-<input alamatAntar />          {/* Ke mana kartu diantar — bisa beda dengan alamat KTP */}
-<input kontakWa />
-
-// Toggle: "Saya juga ingin daftar kursus BLK"
-// Jika toggle aktif:
-<select minatKursusBLK>        {/* Dropdown kursus yang tersedia */}
-<input ketersediaanWaktu />    {/* Contoh: Pagi hari, Senin-Jumat */}
+Routing:
+  CivicFormDispatcher.tsx ? routing per serviceId ke form yang sesuai
+  GovWorkspaceDispatcher.tsx ? case "gov_disnaker"
+  Customer page: /services/gov/gov_disnaker/[serviceId]
 ```
 
 ---
 
-## Spesifikasi `GovDisnakerWorkspace.tsx`
+## Phase 2 Gaps
 
-### Tab 1: KARTU KUNING QUEUE
-```
-- Verifikasi NIK dan pendidikan terakhir
-- Status kartu: "Sedang diproses" / "Siap diambil" / "Sudah diantar"
-- Tombol "Dispatch Driver" setelah kartu siap
-```
+Tambah pendidikanTerakhir dropdown enum (SD/SMP/SMA_SMK/D1_D3/S1_ke_atas) di Kartu Kuning form; tambah bidangKeahlian text input opsional; workspace: slot kapasitas BLK per jurusan
 
-### Tab 2: PENDAFTARAN BLK
-```
-- List pendaftar per kursus
-- Kapasitas: slot tersedia / total
-- Konfirmasi keikutsertaan dan kirim jadwal via WA
-- Filter: Menunggu konfirmasi / Terkonfirmasi / Lulus / Tidak lulus
-```
+---
 
-### Tab 3: PENGADUAN KETENAGAKERJAAN
-```
-- List pengaduan UMK/THR/PHK
-- Kategori dan batas waktu penanganan (SLA)
-- Forward ke mediator ketenagakerjaan
-- Status: Diterima / Mediasi / Selesai / Dilimpahkan ke Pengadilan
-```
+## citizenDetails Interface
+
+Lihat `DATA_CONTRACTS_EXTENDED.md` untuk interface lengkap dinas ini.

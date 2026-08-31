@@ -148,6 +148,12 @@ export function useOrder(orderId?: string) {
 - Pisahkan logika kompleks ke custom hook, komponen harus "tipis"
 - Gunakan `"use client"` hanya jika memang butuh interaktivitas browser
 
+### Pengisian Alamat & Lokasi
+- **Wajib "Saved Address First"**: Untuk setiap layanan yang membutuhkan alamat pengiriman/penjemputan (mis. Kurir, Dokumen, Bantuan), form wajib menampilkan opsi untuk memilih dari `user.savedAddresses` (Rumah/Kantor).
+- **Fallback & Panduan**: Jika pengguna belum mengatur alamat di profil, tampilkan prompt/tombol yang memandu mereka untuk menyetel alamat terlebih dahulu, daripada langsung menyediakan input teks manual yang panjang. Input manual hanya bersifat darurat/lokasi spesifik (misalnya laporan insiden di jalan).
+- **Visual Map / GPS Only (No Text Autocomplete)**: Untuk penentuan lokasi baru (di luar alamat tersimpan), DILARANG menggunakan input teks *autocomplete* karena rawan meleset. Selalu gunakan *read-only input* yang membuka **Map Modal** (`MapLocationPickerModal`) atau tombol **GPS Saya**. Input teks hanya berfungsi untuk menampilkan alamat hasil *reverse-geocoding*.
+- **Destination-First Stepper (Ride & Car)**: Saat pengguna memilih lokasi tujuan, **DILARANG** mengisi otomatis lokasi penjemputan (pickup) menggunakan data GPS di belakang layar tanpa interaksi eksplisit pengguna. Mengisi GPS otomatis akan memicu kalkulasi rute prematur dan merampas kontrol pengguna untuk menentukan titik jemput mereka sendiri.
+
 ---
 
 ## 5. Firestore Schema
@@ -200,10 +206,20 @@ interface DriverDocument {
 - Tenant: `[data-tenant="sigap"]` dengan basis adaptive light & dark canvas
 - File Token: `src/styles/sigap.css` diimpor di `globals.css`
 - **Borderless Elevation**: Hindari garis pembatas kaku (harsh 1px solid borders). Gunakan soft tonal elevation (`bg-white/90 dark:bg-[#0c1220]/90`), ambient drop shadow (`0 8px 30px -4px rgba(0,0,0,0.06)`), dan inner specular highlight (`inset 0 1px 0 0 rgba(255,255,255,0.8)`).
+- **Ultra-Premium Distinct Identity**: Untuk membedakan dari aplikasi ojek standar, menu utama dan katalog BUKAN sekadar kotak putih/hitam. WAJIB menggunakan:
+  1. **Glassmorphism Base**: Latar belakang tembus pandang (`backdrop-blur-xl`, `bg-white/70`, `dark:bg-[#0c1220]/70`).
+  2. **Specular Lighting (Inner Shadow)**: Efek pantulan cahaya di tepi kartu (`shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]` untuk terang, `rgba(255,255,255,0.1)` untuk gelap) agar komponen terlihat 3D dan *tactile*.
+  3. **Vibrant Floating Icons**: Kontainer icon tidak boleh flat. Gunakan gradasi *mesh* tebal dengan bayangan bercahaya (glow) yang senada dengan warna brand layanan.
 - **Squircle Corners**: Seluruh kartu utama, modal, dan sheet menggunakan continuous curve radius (`rounded-[1.75rem]`, `rounded-[2rem]`, `rounded-t-[2.5rem]`).
 - **Tactile Haptic Spring**: Setiap tombol dan elemen interaktif wajib memiliki feedback animasi pegas (`motion: scale 0.92 - 0.94`, spring stiffness 400, damping 25).
 - **Fintech Bento & Tile Aesthetics**: Kartu saldo/metrik menggunakan layout bento asimetris dengan icon well bergradasi ambient halo.
 - Surface/Card: `.sg-card` / `.sg-card-borderless` / `.sg-glass-panel`
+
+### Mobile-First Ergonomics & Elegance
+- **Floating Pill Navigation**: Komponen Bottom Navigation dan Search Bar wajib menggunakan gaya "Floating Pill" atau "Dynamic Island" (mengambang di tengah bawah/atas layar dengan `rounded-full` atau `rounded-[2rem]`) dipadukan dengan `backdrop-blur` tebal, bukan bar penuh yang menempel kaku di tepi layar.
+- **Fintech-Grade Padding & Touch Targets**: Semua elemen yang dapat disentuh (tombol, tab, kartu) WAJIB memiliki ukuran target sentuh minimal 44px (Tinggi/`h-11`) dan padding yang lapang (`p-4` atau `p-5`) agar terasa premium dan mencegah salah tekan di HP.
+- **Bottom Sheets over Center Modals**: Interaksi sekunder pada mobile (seperti pengaturan alamat atau detail pesanan) harus memprioritaskan penggunaan "Bottom Sheet" (modal yang muncul dari bawah layar) daripada modal di tengah layar, agar selaras dengan UX mobile modern.
+
 - Aksen Primer: **Emerald / Royal Blue Gradient** (`--sg-gradient-start` & `--sg-gradient-end`)
 - Aksen Sekunder: **Rose** (`--destructive`) → Cancel/Bahaya
 - Aksen Tersier: **Amber** → Poin Stamp UMKM

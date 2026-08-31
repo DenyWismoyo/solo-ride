@@ -297,6 +297,19 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
+        {/* OTP Display for Document Handover (Government Services) */}
+        {order.otpCode && order.status !== "completed" && order.status !== "cancelled" && (
+          <div className="mb-4 bg-blue-50/90 dark:bg-blue-900/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 backdrop-blur-md flex items-center justify-between shadow-xs">
+            <div>
+              <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-0.5">OTP Serah Terima</p>
+              <p className="text-[10px] text-blue-600/80 dark:text-blue-300/80">Berikan ke kurir / petugas dinas</p>
+            </div>
+            <div className="font-mono text-xl font-black tracking-widest text-blue-700 dark:text-blue-300 bg-white dark:bg-zinc-900 px-3 py-1 rounded-xl shadow-xs">
+              {order.otpCode}
+            </div>
+          </div>
+        )}
+
         {/* Status: Pending (Waiting for Merchant) */}
         {order.status === "pending" && (
           <div className="space-y-4">

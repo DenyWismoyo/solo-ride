@@ -72,7 +72,7 @@ export function AppHeader({ onOpenProfile }: AppHeaderProps) {
   return (
     <>
       <header className={cn(
-        "fixed top-0 inset-x-0 z-30 px-4 py-2.5 bg-white dark:bg-[#030712] shadow-[0_4px_25px_-4px_rgba(15,23,42,0.04)] dark:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.6)] flex items-center justify-between transition-all duration-200",
+        "fixed top-0 inset-x-0 z-30 px-4 py-2.5 bg-white/70 dark:bg-[#030712]/70 backdrop-blur-2xl shadow-[0_4px_30px_-4px_rgba(15,23,42,0.05),inset_0_-1px_0_rgba(255,255,255,0.5)] dark:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.6),inset_0_-1px_0_rgba(255,255,255,0.05)] border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between transition-all duration-200",
         isImpersonating && "top-10 sm:top-9"
       )}>
         {/* Brand & Role Tag */}

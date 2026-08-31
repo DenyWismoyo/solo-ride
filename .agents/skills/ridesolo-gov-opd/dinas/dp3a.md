@@ -1,9 +1,9 @@
-# DP3APM (Perlindungan Perempuan & Anak) Surakarta — Blueprint Operasional
+# DP3APM (gov_dp3a) — Blueprint Operasional
 
-**additionalRole**: `gov_dp3a`  
-**Status Implementasi**: ✅ CivicModal ada | ✅ Workspace ada  
-**PRIORITAS**: 🔴 Selesai — Privacy & Safety Critical  
-**Tipe Interaksi**: Kelompok E — Emergency + Privacy-First
+**additionalRole**: `gov_dp3a`
+**Status Implementasi**: ✅ Form ada | ✅ Workspace ada | ⚠️ Phase 2 gaps KRITIKAL
+**PRIORITAS**: 🔴 HIGH — Layanan Privasi-First (SAPA 129)
+**Tipe Interaksi**: Kelompok F — Privasi-First / Emergency Sosial
 
 ---
 
@@ -11,141 +11,206 @@
 
 | Atribut | Data |
 |---------|------|
-| Nama Lengkap | Dinas Pemberdayaan Perempuan, Perlindungan Anak & Pengendalian Penduduk (DP3APM) |
-| Hotline Darurat | 119 ext 8 / (0271) 711123 |
-| Puspaga (Konseling) | Jl. Veteran No. 18, Surakarta |
-| Jam Hotline | 24 jam / 7 hari |
-| Avatar/Emoji | 💜 |
-| Warna Tema | Pink (`text-pink-500`, `bg-pink-500/10`) |
+| Nama Lengkap | Dinas Pemberdayaan Perempuan, Perlindungan Anak, dan Pemberdayaan Masyarakat |
+| Layanan Utama | SAPA 129 — Sahabat Perempuan dan Anak |
+| Telepon Layanan | 129 (hotline nasional) / (0271) 712-567 |
+| Lokasi | Gedung Pemkot Surakarta, Jl. Jendral Sudirman |
+| Jam Operasional | 24 jam (hotline) / Hari Kerja (konseling) |
+| Avatar/Emoji | 🛡️ |
+| Warna Tema | Purple (`text-purple-500`, `bg-purple-500/10`) |
 
 ---
 
-## ⚠️ ATURAN PRIVASI WAJIB
+## Arsitektur Saat Ini
 
 ```
-1. Mode anonim harus menjadi DEFAULT untuk layanan hotline kekerasan
-2. Nama pemohon TIDAK disimpan plaintext di Firestore jika isAnonymous = true
-3. Nomor WA pemohon TIDAK ditampilkan di workspace OPD yang bisa diakses umum
-4. Nomor WA hanya digunakan server-side untuk SMS/WA relay
-5. Detail kasus hanya bisa dilihat petugas dengan re-authentication
-6. Workspace DP3A memiliki audit log akses otomatis
+Form Customer:
+  src/components/civic/forms/dp3a/Dp3aSapa129Form.tsx  ✅ (ada, ⚠️ anonim mode belum)
+
+Workspace Admin:
+  src/components/government/workspaces/dp3a/Dp3aWorkspace.tsx  ✅ (ada, ⚠️ data exposed)
+
+Routing:
+  CivicFormDispatcher.tsx → if (serviceId.includes("dp3a") || serviceId.includes("sapa"))
+  GovWorkspaceDispatcher.tsx → case "gov_dp3a"
 ```
 
 ---
 
 ## Layanan yang Tersedia
 
-### 1. `dp3a_hotline_sahabat_perempuan` — Hotline Darurat Kekerasan
-- **Sifat**: DARURAT — bisa juga terjadwal untuk pendampingan
-- **Biaya**: Gratis penuh (100% disubsidi)
-- **Anonimitas**: DEFAULT anonim
-- **Flow darurat**: Submit → OPD notify petugas → Tim respons dikirim ke lokasi aman
+### 1. `dp3a_hotline_sapa_129` — Laporan Kekerasan Darurat
 
-### 2. `dp3a_konseling_puspaga` — Booking Konseling Psikolog Puspaga
-- **Sifat**: Terjadwal, tidak darurat
-- **Biaya**: Gratis (sesi 60 menit per booking)
-- **Anonimitas**: Opsional
-- **Kapasitas**: Terbatas sesuai jadwal psikolog Puspaga
+- **Sifat**: Semi-darurat — perlu respons dalam 1x24 jam
+- **WAJIB Mode Anonim**: Default aktif, semua identitas terlindungi
+- **Status awal**: `"pending_verification"` (petugas perlu kategorisasi kasus)
+- **Privasi**: Data kasus TIDAK boleh exposed tanpa aksi verifikasi identitas di workspace
 
----
+### 2. `dp3a_konseling_puspaga` — Booking Sesi Konseling
 
-## Spesifikasi `Dp3aCivicModal.tsx` yang Harus Dibuat
-
-### Mode A: Hotline Darurat (serviceId = "dp3a_hotline_sahabat_perempuan")
-
-```tsx
-// DESAIN: Tenang, tidak menakutkan, warna ungu/lavender bukan merah
-// HEADER: Tampilkan pesan reassuring: "Kamu aman di sini. Identitasmu terlindungi."
-
-// Toggle Anonimitas (DEFAULT = true untuk hotline):
-<AnonymousToggle defaultOn={true} />
-// Jika anonim: nama = auto-generate kode "Sahabat-XXXX"
-
-// Form fields MINIMAL:
-<select jenisKasus>           {/* KDRT / Kekerasan Seksual / dll */}
-<input lokasiAman />          {/* "Di mana kamu SEKARANG?" — bukan alamat rumah! */}
-// Tombol "Bagikan Lokasi Saya" → GPS auto-detect
-<input kontakRahasia />       {/* WA aman yang bisa dihubungi */}
-<select butuhPendampingan>    {/* Ya, butuh petugas datang / Tidak, cukup konsultasi */}
-// Textarea deskripsi: OPSIONAL, dengan label "Tidak perlu tulis detail, aman untuk dikosongkan"
-
-<button>💜 Hubungi Tim Sahabat Sekarang</button>
-
-// Di bawah form: 
-// "Atau hubungi langsung: 119 ext 8" (bisa diklik)
-// "WhatsApp Sahabat: 081xxx" (bisa diklik)
-```
-
-### Mode B: Konseling Puspaga (serviceId = "dp3a_konseling_puspaga")
-
-```tsx
-// Lebih standar — tidak perlu anonim wajib
-<input namaLengkap />
-<select jenisKonseling>      {/* Pernikahan / Pola Asuh / Trauma / Remaja / Lansia */}
-<input jadwalKonseling />    {/* Date picker + slot waktu yang tersedia */}
-<input kontakWa />
-<textarea keluhanSingkat />
-```
+- **Sifat**: Non-darurat, booking jadwal
+- **Mode Anonim**: Opsional (default OFF untuk konseling reguler)
+- **Status awal**: `"pending_verification"` (konfirmasi slot tersedia)
 
 ---
 
-## Spesifikasi `GovDp3aWorkspace.tsx` yang Harus Dibuat
+## Phase 2 — Dp3aSapa129Form.tsx (UPGRADE KRITIKAL)
 
-### ⚠️ SECURITY: Workspace DP3A harus lebih restricted
+Tambahkan Mode Anonim toggle — ini adalah fitur WAJIB per AGENTS.md:
 
 ```typescript
-// Akses workspace DP3A harus re-authenticate dengan PIN khusus
-// Semua aksi di workspace ini dicatat di audit log:
-// { userId, action, timestamp, deviceInfo }
-```
+// ⚠️ Phase 2 KRITIKAL — Tambahkan ini di Dp3aSapa129Form.tsx
 
-### Tab 1: KASUS AKTIF (tampilkan anonim)
-```
-- Tampilkan: Kode kasus, Kategori, Waktu masuk, Status
-- SEMBUNYIKAN: Nama asli, Nomor WA (tampilkan "Kanal Aman Tersedia")
-- Badge "Darurat" merah untuk kasus butuh pendampingan fisik
-- Tombol "Tampilkan Detail Lengkap" → trigger re-auth PIN
-- Tombol "Kirim Tim Respons"
-- Tombol "Hubungkan ke Psikolog"
-```
+// State baru:
+const [isAnonymous, setIsAnonymous] = useState(true); // Default ANONIM!
+const [jenisKasus, setJenisKasus] = useState("kdrt");
+const [butuhPendampingan, setButuhPendampingan] = useState(false);
 
-### Tab 2: JADWAL KONSELING PUSPAGA
-```
-- Kalender mingguan dengan slot tersedia
-- Daftar psikolog aktif dan jadwalnya
-- Konfirmasi booking dan kirim reminder ke pemohon
-```
+// Import Switch dari shadcn:
+import { Switch } from "@/components/ui/switch";
 
-### Tab 3: PANTAU KEAMANAN
-```
-- Status korban yang sedang dalam pendampingan
-- Lokasi safe house jika ada
-- Timeline penanganan kasus
-```
+// Tambah toggle PALING ATAS form (sebelum semua input):
+<div className="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-2xl border border-purple-200/60 dark:border-purple-800/40">
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-xs font-bold text-purple-700 dark:text-purple-300">🛡️ Mode Anonim</p>
+      <p className="text-[11px] text-purple-600 dark:text-purple-400">
+        Identitas Anda terlindungi sepenuhnya. Hanya kode kasus yang tersimpan.
+      </p>
+    </div>
+    <Switch
+      checked={isAnonymous}
+      onCheckedChange={setIsAnonymous}
+    />
+  </div>
+  {isAnonymous && (
+    <p className="text-[10px] text-purple-500 mt-1.5">
+      Kode laporan Anda: Pemohon-{randomCode} (dibuat otomatis)
+    </p>
+  )}
+</div>
 
----
+// Field nama jadi kondisional:
+{!isAnonymous && (
+  <CivicTextField
+    label="Nama Lengkap (Opsional jika tidak anonim)"
+    value={reporterName}
+    onChange={setReporterName}
+    ...
+  />
+)}
 
-## Registrasi di more/page.tsx & gov/page.tsx
-
-```typescript
-// more/page.tsx:
-const [isDp3aOpen, setIsDp3aOpen] = useState(false);
-const [dp3aServiceId, setDp3aServiceId] = useState<string>("dp3a_hotline_sahabat_perempuan");
-
-if (service.additionalRole === "gov_dp3a" || service.id.startsWith("dp3a_")) {
-  setDp3aServiceId(service.id);
-  setIsDp3aOpen(true);
-  return;
-}
-
-<Dp3aCivicModal
-  isOpen={isDp3aOpen}
-  onClose={() => setIsDp3aOpen(false)}
-  serviceId={dp3aServiceId}
+// jenisKasus — ubah dari teks bebas ke dropdown dengan enum:
+<CivicSelectField
+  label="Jenis Kasus / Kekerasan"
+  value={jenisKasus}
+  onChange={setJenisKasus}
+  options={[
+    "Kekerasan Dalam Rumah Tangga (KDRT)",
+    "Kekerasan Seksual",
+    "Perdagangan Orang (Trafficking)",
+    "Kekerasan terhadap Anak",
+    "Penelantaran",
+    "Butuh Perlindungan Fisik Segera"
+  ]}
 />
 
-// gov/page.tsx:
-{selectedDinasId === "gov_dp3a" && (
-  <GovDp3aWorkspace orders={citizenRequests} loading={loadingRequests} />
-)}
+// Di handleSubmit:
+const randomCode = Math.floor(1000 + Math.random() * 9000);
+const effectiveName = isAnonymous
+  ? `Pemohon-${randomCode}`
+  : (reporterName || `Pemohon-${randomCode}`);
+
+// citizenDetails yang disimpan:
+citizenDetails: {
+  serviceId: service.id,
+  serviceName: service.name,
+  isAnonymous,           // ← WAJIB ada!
+  namaAtauKode: effectiveName,  // "Pemohon-XXXX" atau nama asli
+  jenisKasus,            // ← Ubah dari sapaCaseCategory
+  lokasiAman: address,   // Lokasi SEKARANG (bukan alamat rumah)
+  butuhPendampingan,     // ← Tambahkan
+  // safeContact: safeContact, ← Simpan di field terpisah (hanya untuk petugas)
+  submittedAt: new Date().toISOString()
+}
 ```
+
+---
+
+## Phase 2 — Dp3aWorkspace.tsx (UPGRADE KRITIKAL)
+
+Data masking — semua identitas HARUS tersembunyi by default:
+
+```typescript
+// ⚠️ Phase 2 KRITIKAL — Tambahkan ini di Dp3aWorkspace.tsx
+
+// Helper masking:
+const maskName = (name: string | undefined) => {
+  if (!name) return "—";
+  if (name.startsWith("Pemohon-")) return name; // Sudah anonim
+  // Untuk nama asli yang tidak anonim:
+  return `${name.charAt(0)}${"*".repeat(name.length - 2)}${name.charAt(name.length - 1)}`;
+};
+
+const maskPhone = (phone: string | undefined) => {
+  if (!phone) return "—";
+  return `${phone.slice(0, 4)}****${phone.slice(-3)}`;
+};
+
+// Di render order card — SELALU gunakan masking:
+const details = (order.citizenDetails || {}) as any;
+const displayName = maskName(details.namaAtauKode);  // JANGAN tampilkan langsung!
+const isAnon = details.isAnonymous;
+
+// Tombol "Lihat Identitas" — hanya muncul jika !isAnonymous:
+const [revealedOrderIds, setRevealedOrderIds] = useState<string[]>([]);
+const isRevealed = revealedOrderIds.includes(order.id || "");
+
+{!isAnon && (
+  <button
+    onClick={() => setRevealedOrderIds(prev => [...prev, order.id!])}
+    className="text-xs text-purple-600 underline"
+  >
+    {isRevealed ? details.namaAtauKode : "Klik untuk lihat identitas"}
+  </button>
+)}
+
+// Tab workspace yang direkomendasikan:
+// Tab 1: "Kasus Aktif" — semua yang perlu penanganan
+// Tab 2: "Jadwal Konseling" — booking Puspaga
+// Tab 3: "Selesai Ditangani"
+```
+
+---
+
+## citizenDetails Interface
+
+```typescript
+// Lihat DATA_CONTRACTS_EXTENDED.md → Dp3aDetails
+interface Dp3aDetails {
+  serviceId: string;
+  serviceName: string;
+  isAnonymous: boolean;       // WAJIB ada — Phase 2
+  namaAtauKode: string;       // "Pemohon-XXXX" atau nama asli
+  jenisKasus?: "kdrt" | "kekerasan_seksual" | "perdagangan_orang" | "kekerasan_anak" | "penelantaran" | "darurat_perlindungan";
+  lokasiAman?: string;
+  butuhPendampingan?: boolean;
+  jenisKonseling?: "pernikahan" | "pola_asuh" | "trauma" | "remaja" | "lansia";
+  jadwalKonseling?: string;
+  // Penanganan (diisi petugas):
+  psikologPenanganan?: string;
+  statusPenanganan?: "aman" | "dalam_pendampingan" | "butuh_perlindungan_fisik";
+  submittedAt: string;
+}
+```
+
+---
+
+## Catatan Keamanan Khusus
+
+> ⚠️ **WAJIB DIBACA** sebelum mengubah kode DP3A:
+>
+> 1. **Jangan pernah expose** `lokasiAman` di workspace tanpa konfirmasi
+> 2. **Audit log akses**: Idealnya setiap akses ke detail kasus dicatat (Phase 3)
+> 3. **Export/Print data kasus**: DILARANG tanpa autentikasi ulang (Phase 3)
+> 4. **Data rentention**: Kasus DP3A disimpan minimum 1 tahun di Firestore

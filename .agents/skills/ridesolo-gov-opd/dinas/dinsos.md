@@ -1,81 +1,36 @@
-# Dinas Sosial Kota Surakarta — Blueprint Operasional
+# Dinas Sosial Surakarta (gov_dinsos) � Blueprint Operasional
 
-**additionalRole**: `gov_dinsos`  
-**Status Implementasi**: ✅ CivicModal ada | ✅ Workspace ada  
-**Tipe Interaksi**: Kelompok C — Bantuan Sosial
-
----
-
-## Profil Dinas
-
-| Atribut | Data |
-|---------|------|
-| Nama Lengkap | Dinas Sosial Kota Surakarta |
-| Alamat | Jl. Arifin No. 2, Surakarta |
-| Telepon | (0271) 637978 |
-| Tagana (Relawan) | 24 jam siaga |
-| Avatar/Emoji | 🤝 |
-| Warna Tema | Rose (`text-rose-500`, `bg-rose-500/10`) |
+**additionalRole**: `gov_dinsos`
+**Status Implementasi**: ? 3 Form ada | ? Workspace ada | ?? Phase 2 gaps
+**Tipe Interaksi**: Kelompok C � Bantuan Sosial
 
 ---
 
-## Layanan yang Tersedia
+## Arsitektur Saat Ini
 
-### 1. `dinsos_bansos_pasar` — Voucher Bansos & Tebus Sembako
-- **Target**: Penerima PKH, KKS, BPNT terdaftar di DTKS
-- **Proses**: Driver mengantar voucher ke kios sembako yang ditunjuk, lalu mengambil paket ke rumah penerima
-- **Biaya**: Gratis 100% (disubsidi APBD)
+```
+Form Customer:
+  src/components/civic/forms/dinsos/DinsosBansosSembakoForm.tsx  ?
+  src/components/civic/forms/dinsos/DinsosOjekDifabelForm.tsx  ?
+  src/components/civic/forms/dinsos/DinsosTanggapBencanaForm.tsx  ?
 
-### 2. `dinsos_ojek_difabel` — Armada Siaga Difabel & Lansia
-- **Target**: Warga dengan disabilitas fisik, netra, tuli, lansia ≥75 tahun
-- **Biaya**: Gratis 100% (subsidi APBD + koperasi)
-- **Driver requirement**: Driver yang sudah mendapat pelatihan sensitivitas disabilitas
+Workspace Admin:
+  src/components/government/workspaces/dinsos/ param($m) $m.Groups[1].Value.ToUpper() + $m.Groups[2].Value Workspace.tsx  ?
 
-### 3. `dinsos_tanggap_bencana` — Logistik Dapur Umum
-- **Sifat**: Darurat — koordinasi Tagana Dinsos
-- **Pengguna**: Petugas Tagana/Dinsos yang input ke sistem, bukan customer biasa
-- **Driver**: Bisa dispatch banyak driver sekaligus untuk logistik berat
-
----
-
-## Aturan Eligibilitas Bansos
-
-```typescript
-// Petugas Dinsos WAJIB verifikasi di tab "Triage" workspace:
-// 1. NIK penerima ada di database DTKS (Data Terpadu Kesejahteraan Sosial)
-// 2. Nomor kartu PKH/KKS aktif
-// 3. Belum menerima bansos bulan yang sama
-// Jika tidak memenuhi: TOLAK dengan keterangan
-
-// Untuk ojek difabel:
-// 1. Verifikasi kondisi disabilitas dari surat keterangan RT/RS
-// 2. Assign driver dengan kendaraan yang sesuai
+Routing:
+  CivicFormDispatcher.tsx ? routing per serviceId ke form yang sesuai
+  GovWorkspaceDispatcher.tsx ? case "gov_dinsos"
+  Customer page: /services/gov/gov_dinsos/[serviceId]
 ```
 
 ---
 
-## Form Fields (Lihat DinsosCivicModal.tsx)
+## Phase 2 Gaps
 
-```typescript
-// Sub: bansos_pasar
-namaKepalaKeluarga: string;
-nikKepalaKeluarga: string;     // WAJIB — untuk verifikasi DTKS
-nomorKartuPKH?: string;        // Nomor KKS/kartu bansos
-paketSembako: PaketSembako;
-alamatPenjemputan: string;
+TanggapBencana: tambah multi-select kebutuhanLogistik[]; OjekDifabel: tambah field alatBantu; Bansos: tambah verifikasi terverifikasiDTKS di workspace
 
-// Sub: ojek_difabel
-namaWargaDifabel: string;
-nik: string;
-jenisDisabilitas: JenisDisabilitas;
-alatBantu?: string;
-tujuanPerjalanan: string;      // Puskesmas / RS / tujuan lain
-waktuJemput: string;
-kontakWaliPendamping?: string; // Kontak wali/pendamping jika ada
+---
 
-// Sub: tanggap_bencana
-lokasiTerdampak: string;
-jenisBencana: JenisBencana;
-jumlahKK_terdampak: number;
-kebutuhanLogistik: string[];   // Checkbox multi-pilih
-```
+## citizenDetails Interface
+
+Lihat `DATA_CONTRACTS_EXTENDED.md` untuk interface lengkap dinas ini.

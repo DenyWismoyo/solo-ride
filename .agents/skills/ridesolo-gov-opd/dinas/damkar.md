@@ -1,8 +1,8 @@
 # Dinas Pemadam Kebakaran & Penyelamatan Surakarta — Blueprint Operasional
 
-**additionalRole**: `gov_damkar`  
-**Status Implementasi**: ✅ CivicModal ada | ✅ Workspace ada  
-**PRIORITAS**: 🔴 Selesai — Layanan Darurat  
+**additionalRole**: `gov_damkar`
+**Status Implementasi**: ✅ Form ada | ✅ Workspace ada | ⚠️ Phase 2 gaps
+**PRIORITAS**: 🔴 HIGH — Layanan Darurat
 **Tipe Interaksi**: Kelompok E — Emergency / Darurat
 
 ---
@@ -21,138 +21,197 @@
 
 ---
 
+## Arsitektur Saat Ini (Setelah Refactor)
+
+```
+Form Customer:
+  src/components/civic/forms/damkar/DamkarPanicDispatchForm.tsx  ✅ (ada, ⚠️ GPS belum)
+  src/components/civic/forms/damkar/DamkarAnimalRescueForm.tsx   ❌ (belum dibuat - Phase 2)
+
+Workspace Admin:
+  src/components/government/workspaces/damkar/DamkarWorkspace.tsx ✅ (ada, ⚠️ audio alert belum)
+
+Routing:
+  CivicFormDispatcher.tsx → if (serviceId.includes("damkar") || serviceId.includes("panic"))
+  GovWorkspaceDispatcher.tsx → case "gov_damkar"
+
+Customer page:
+  /services/gov/gov_damkar/[serviceId] → isolated per sub-layanan
+```
+
+---
+
 ## Layanan yang Tersedia
 
 ### 1. `damkar_panic_button` — Tombol Darurat Kebakaran (PANIC GPS)
-- **Sifat**: EMERGENCY — tidak ada verifikasi OPD, langsung dispatch!
-- **Flow khusus**: Submit → status langsung "pending" (skip "pending_verification")
+
+- **Sifat**: EMERGENCY — **WAJIB skip `pending_verification`** → langsung `"pending"`
 - **SLA**: Respons dalam 5 menit sejak submit
-- **Form**: Ultra ringkas — GPS + jenis darurat + konfirmasi alamat (MAKSIMAL 3 field)
-- **UI khusus**: Latar merah menyala, tombol submit besar, tampilkan nomor darurat yang bisa diklik
+- **Status awal**: `"pending"` (BUKAN `"pending_verification"`)
+- **Form**: Ultra ringkas — GPS auto-detect + jenis darurat + konfirmasi alamat
 
 ### 2. `damkar_animal_rescue` — Animal Rescue & Evakuasi Non-Api
+
 - **Sifat**: Non-darurat, bisa dijadwalkan
 - **SLA**: Respons dalam 2 jam (bukan emergency)
-- **Form**: Jenis rescue + lokasi + deskripsi + pilih jadwal (opsional)
-- **Biaya**: Gratis (layanan Pemkot)
+- **Status awal**: `"pending_verification"` (perlu koordinasi jadwal)
+- **Form**: Jenis rescue + lokasi + deskripsi + pilih jadwal
 
 ---
 
-## Spesifikasi `DamkarCivicModal.tsx` yang Harus Dibuat
+## Phase 2 — DamkarPanicDispatchForm.tsx (UPGRADE)
 
-```tsx
-// RENDERING BERBEDA berdasarkan serviceId yang di-pass:
-interface DamkarCivicModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  serviceId: "damkar_panic_button" | "damkar_animal_rescue";
-}
+Tambahkan GPS auto-detect dan field yang kurang:
 
-// Jika serviceId === "damkar_panic_button":
-// → Render PanicButton mode: warna merah, GPS auto-detect, form ultra ringkas
-// → Auto-submit setelah GPS terkunci (countdown 3 detik dengan cancel option)
-// → Tampilkan: "Menyambungkan ke Pos Damkar Terdekat..."
-// → Tampilkan nomor 0271-7630133 yang bisa langsung di-tap untuk telepon
-
-// Jika serviceId === "damkar_animal_rescue":
-// → Render Normal mode: form standar dengan pilih jenis rescue
-// → Pilih jadwal (opsional)
-```
-
-### Form Panic Button (WAJIB ULTRA RINGKAS):
-
-```tsx
-// HANYA 3 FIELD + GPS AUTO:
-<GPSAutoDetect />                 {/* Peta kecil + koordinat */}
-<input alamatManual />            {/* Konfirmasi manual */}
-<select jenisDarurat />           {/* Kebakaran/Ledakan/Orang Terjebak/Gas Bocor */}
-<button>🔴 KIRIM DARURAT</button>  {/* BESAR, merah, mudah ditekan */}
-<a href="tel:02717630133">Telepon Damkar Langsung</a>
-```
-
-### Form Animal Rescue:
-
-```tsx
-<select jenisRescue />
-<textarea deskripsiDetail />
-<input lokasiRescue />
-<input waktuPilihan optional />
-<input kontakWa />
-```
-
----
-
-## Spesifikasi `GovDamkarWorkspace.tsx` yang Harus Dibuat
-
-### Tab 1: LIVE PANIC MAP (default active)
-```
-- Peta real-time koordinat semua panic button aktif hari ini
-- Marker animasi merah berkedip untuk yang < 10 menit
-- Tombol "Dispatch [Nama Pos Terdekat]" per marker
-- Audio alert Web Audio API saat laporan baru masuk
-- Badge counter laporan aktif di tab header
-```
-
-### Tab 2: TRIAGE DARURAT
-```
-- List permohonan: Panic Button (merah) dan Animal Rescue (oranye)
-- Urut berdasarkan waktu masuk (terbaru di atas)
-- Field yang ditampilkan: Jenis darurat, Alamat, GPS, Waktu masuk
-- Tombol aksi: "Dispatch Pos [X]" + input nama petugas yang dikirim
-- Response time counter (detik yang berlalu)
-```
-
-### Tab 3: RIWAYAT PENANGANAN
-```
-- Log semua penanganan dengan response time
-- Statistik: rata-rata response time hari ini
-- Filter: Kebakaran / Animal Rescue / Semua
-```
-
-### Audio Alert (WAJIB):
 ```typescript
-// Di GovDamkarWorkspace, subscribe real-time ke orders baru
-// Saat order baru dengan additionalRole === "gov_damkar" masuk:
-import { playOrderAlertSound } from "@/lib/sound";
+// ⚠️ Phase 2 — Tambahkan ini di DamkarPanicDispatchForm.tsx
+
+const [gpsLat, setGpsLat] = useState<number | null>(null);
+const [gpsLng, setGpsLng] = useState<number | null>(null);
+const [gpsStatus, setGpsStatus] = useState<"idle" | "detecting" | "found" | "error">("idle");
+const [jenisDarurat, setJenisDarurat] = useState("kebakaran");
+const [tingkatKeparahan, setTingkatKeparahan] = useState("besar");
+
+// Di useEffect saat komponen mount — auto-detect GPS:
 useEffect(() => {
-  if (newPanicOrder) {
-    playOrderAlertSound();
-    // Juga tampilkan browser notification jika tab tidak aktif
+  setGpsStatus("detecting");
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLat(pos.coords.latitude);
+        setGpsLng(pos.coords.longitude);
+        setGpsStatus("found");
+      },
+      () => setGpsStatus("error"),
+      { timeout: 8000, enableHighAccuracy: true }
+    );
+  } else {
+    setGpsStatus("error");
   }
-}, [newPanicOrder]);
+}, []);
+
+// GPS Status Banner di UI:
+{gpsStatus === "detecting" && <p>📡 Mendeteksi lokasi GPS Anda...</p>}
+{gpsStatus === "found" && <p className="text-emerald-600">✅ Lokasi GPS berhasil dideteksi</p>}
+{gpsStatus === "error" && <p className="text-amber-600">⚠️ GPS tidak tersedia, isi alamat manual</p>}
+
+// Tombol klik untuk call darurat:
+<a href="tel:02717630133" className="block text-center p-2 rounded-xl border border-red-300 text-red-600 text-sm font-bold">
+  📞 Hubungi Damkar: 0271-7630133
+</a>
+
+// Di citizenDetails yang disimpan ke Firestore:
+citizenDetails: {
+  serviceId: service.id,
+  serviceName: service.name,
+  gpsLat,            // ← Tambahkan
+  gpsLng,            // ← Tambahkan
+  jenisDarurat,      // ← Tambahkan (ganti emergencyCategory dengan enum)
+  tingkatKeparahan,  // ← Tambahkan
+  alamatManual: emergencyAddress,
+  reporterName,
+  kontakWa: phone,
+  submittedAt: new Date().toISOString()
+}
+
+// Status initial HARUS "pending" (skip verifikasi) — ubah di useCivicOrder atau form:
+// requiresOtp: false (sudah benar)
+// Pastikan useCivicOrder mendukung override status awal untuk emergency
+```
+
+## Phase 2 — DamkarAnimalRescueForm.tsx (BUAT BARU)
+
+```typescript
+// src/components/civic/forms/damkar/DamkarAnimalRescueForm.tsx
+// Buat form terpisah untuk animal rescue (bukan emergency)
+
+const jenisRescueOptions = [
+  "Sarang Tawon / Vespa Agresif",
+  "Ular Berbisa Masuk Rumah",
+  "Hewan Terjebak / Terperangkap",
+  "Cincin / Benda Terjepit (non-medis)",
+  "Lainnya (Jelaskan di keterangan)"
+];
+
+// citizenDetails:
+{
+  serviceId: "damkar_animal_rescue",
+  jenisRescue: selectedJenisRescue,
+  lokasiRescue: address,
+  deskripsiDetail: description,
+  waktuPilihan: preferredTime, // Opsional — bisa segera atau pilih jadwal
+  kontakWa: phone
+}
+
+// Daftarkan di CivicFormDispatcher.tsx:
+if (serviceId === "damkar_animal_rescue") {
+  return <DamkarAnimalRescueForm ... />;
+}
+// PENTING: Taruh SEBELUM catch-all damkar condition:
+// if (serviceId.includes("damkar") || serviceId.includes("panic"))
 ```
 
 ---
 
-## Registrasi di more/page.tsx
+## Phase 2 — DamkarWorkspace.tsx (UPGRADE)
+
+Tambahkan audio alert dan badge elapsed time:
 
 ```typescript
-// State yang perlu ditambahkan:
-const [isDamkarOpen, setIsDamkarOpen] = useState(false);
-const [damkarServiceId, setDamkarServiceId] = useState<string>("damkar_panic_button");
+// ⚠️ Phase 2 — Tambahkan ke DamkarWorkspace.tsx
+import { playOrderAlertSound } from "@/lib/sound";
 
-// Di handleCardClick():
-if (service.additionalRole === "gov_damkar" || service.id.startsWith("damkar_")) {
-  setDamkarServiceId(service.id);
-  setIsDamkarOpen(true);
-  return;
-}
+const previousOrderCountRef = useRef(0);
 
-// Render modal:
-<DamkarCivicModal
-  isOpen={isDamkarOpen}
-  onClose={() => setIsDamkarOpen(false)}
-  serviceId={damkarServiceId}
-/>
+useEffect(() => {
+  const currentPending = orders.filter(o =>
+    o.status === "pending" &&
+    (o.serviceType?.includes("damkar") || o.serviceType?.includes("panic"))
+  );
+  if (currentPending.length > previousOrderCountRef.current && previousOrderCountRef.current !== 0) {
+    playOrderAlertSound(); // 🔊 Bunyi alert saat laporan baru!
+  }
+  previousOrderCountRef.current = currentPending.length;
+}, [orders]);
+
+// Badge elapsed time per order:
+const getElapsedMinutes = (createdAt: any) => {
+  const created = createdAt?.toDate ? createdAt.toDate() : new Date(createdAt);
+  return Math.floor((Date.now() - created.getTime()) / 60000);
+};
+
+// Di render order:
+const elapsed = getElapsedMinutes(order.createdAt);
+<span className={`text-xs font-black ${elapsed > 5 ? "text-red-600 animate-pulse" : "text-emerald-600"}`}>
+  {elapsed} menit lalu {elapsed > 5 && "⚠️ LEWAT SLA!"}
+</span>
+
+// Tab triage:
+// - Tab "Aktif Darurat" (panic_button dengan badge merah)
+// - Tab "Animal Rescue" (animal_rescue)
+// - Tab "Riwayat" (completed)
 ```
 
-## Registrasi di gov/page.tsx
+---
+
+## citizenDetails Interface
 
 ```typescript
-// Di section 3 workspace, tambahkan:
-{selectedDinasId === "gov_damkar" && (
-  <GovDamkarWorkspace orders={citizenRequests} loading={loadingRequests} />
-)}
-
-// Hapus "gov_damkar" dari exclude list GovOpdModularWorkspace
+// Lihat DATA_CONTRACTS_EXTENDED.md → DamkarDetails
+interface DamkarDetails {
+  serviceId: string;
+  serviceName: string;
+  gpsLat?: number;               // ← Phase 2: wajib auto-detect
+  gpsLng?: number;
+  alamatManual: string;
+  jenisDarurat?: "kebakaran" | "ledakan" | "orang_terjebak" | "gas_bocor"; // ← Phase 2
+  tingkatKeparahan?: "besar" | "sedang" | "kecil"; // ← Phase 2
+  jenisRescue?: string;          // Hanya untuk animal_rescue
+  reporterName?: string;
+  kontakWa: string;
+  submittedAt: string;
+  // Response data (diisi petugas di workspace):
+  responseTimeMinutes?: number;
+  petugasDispatch?: string;
+}
 ```

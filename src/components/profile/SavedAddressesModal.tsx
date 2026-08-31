@@ -28,6 +28,8 @@ import {
 import { SavedAddress } from "@/types/user.types";
 import { addressService, DEFAULT_SOLO_ADDRESSES } from "@/services/address.service";
 import { POPULAR_SOLO_LANDMARKS } from "@/constants/merchants";
+import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
+import { MapLocationPickerModal } from "@/components/map/MapLocationPickerModal";
 
 interface SavedAddressesModalProps {
   isOpen: boolean;
@@ -55,11 +57,16 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
   const [label, setLabel] = useState("Rumah");
   const [customLabel, setCustomLabel] = useState("");
   const [addressText, setAddressText] = useState("");
+  const [addressLat, setAddressLat] = useState<number | undefined>();
+  const [addressLng, setAddressLng] = useState<number | undefined>();
   const [detailText, setDetailText] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [isDefault, setIsDefault] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Map Modal State
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   // Fetch saved addresses from service on open
   useEffect(() => {
@@ -86,6 +93,8 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
     setLabel("Rumah");
     setCustomLabel("");
     setAddressText("");
+    setAddressLat(undefined);
+    setAddressLng(undefined);
     setDetailText("");
     setContactName(userData?.displayName || "");
     setContactPhone(userData?.phone || "081234567891");
@@ -103,6 +112,8 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
       setCustomLabel(addr.label);
     }
     setAddressText(addr.address);
+    setAddressLat(addr.lat);
+    setAddressLng(addr.lng);
     setDetailText(addr.detail || "");
     setContactName(addr.contactName || userData?.displayName || "");
     setContactPhone(addr.contactPhone || userData?.phone || "");
@@ -112,6 +123,8 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
 
   const handleApplyPresetLandmark = (landmark: typeof POPULAR_SOLO_LANDMARKS[0]) => {
     setAddressText(landmark.address);
+    setAddressLat(landmark.lat);
+    setAddressLng(landmark.lng);
     setDetailText(`Patokan: ${landmark.name}`);
   };
 
@@ -132,8 +145,8 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
       contactName: contactName.trim(),
       contactPhone: contactPhone.trim(),
       isDefault: isDefault,
-      lat: -7.5621,
-      lng: 110.8547
+      lat: addressLat || -7.5621,
+      lng: addressLng || 110.8547
     };
 
     try {
@@ -211,6 +224,7 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
@@ -332,17 +346,19 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
                 </div>
 
                 {/* Address Full Text */}
-                <div>
+                <div className="z-20 relative">
                   <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 block mb-1">
-                    Alamat Lengkap (Nama Jalan, No. Rumah, RT/RW, Kelurahan)
+                    Alamat Lengkap (Pilih dari Peta atau Ketik)
                   </label>
-                  <textarea
+                  <PlaceAutocomplete
                     value={addressText}
-                    onChange={(e) => setAddressText(e.target.value)}
-                    rows={2}
-                    placeholder="Contoh: Jl. Kolonel Sutarto No. 45, RT 02/RW 04, Jebres, Surakarta"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                    required
+                    onLocationSelect={(loc) => {
+                      setAddressText(loc.address);
+                      setAddressLat(loc.lat);
+                      setAddressLng(loc.lng);
+                    }}
+                    onPickOnMapClick={() => setIsMapPickerOpen(true)}
+                    placeholder="Ketik lokasi atau pilih dari peta..."
                   />
                 </div>
 
@@ -576,5 +592,21 @@ export function SavedAddressesModal({ isOpen, onClose, onSelectAddressForRide }:
         </div>
       )}
     </AnimatePresence>
+    
+    <MapLocationPickerModal
+      isOpen={isMapPickerOpen}
+      onClose={() => setIsMapPickerOpen(false)}
+      initialLocation={
+        addressLat && addressLng 
+          ? { lat: addressLat, lng: addressLng, address: addressText }
+          : undefined
+      }
+      onSelect={(loc) => {
+        setAddressText(loc.address);
+        setAddressLat(loc.lat);
+        setAddressLng(loc.lng);
+      }}
+    />
+    </>
   );
 }

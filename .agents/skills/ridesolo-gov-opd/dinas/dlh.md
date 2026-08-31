@@ -1,9 +1,9 @@
-# Dinas Lingkungan Hidup (DLH) Surakarta — Blueprint Operasional
+# DLH (gov_dlh) — Blueprint Operasional
 
-**additionalRole**: `gov_dlh`  
-**Status Implementasi**: ❌ CivicModal BELUM ADA | ❌ Workspace BELUM ADA  
-**PRIORITAS**: 🟡 Sedang  
-**Tipe Interaksi**: Kelompok D — Pengaduan/Laporan + Jemput Sampah (Kelompok khusus dengan Eco Points)
+**additionalRole**: `gov_dlh`
+**Status Implementasi**: ✅ 2 Form ada | ✅ Workspace ada | ⚠️ Phase 2 gaps
+**PRIORITAS**: 🟡 MEDIUM — Eco Points System
+**Tipe Interaksi**: Kelompok D — Pengaduan/Laporan + Jemput Fisik
 
 ---
 
@@ -12,134 +12,201 @@
 | Atribut | Data |
 |---------|------|
 | Nama Lengkap | Dinas Lingkungan Hidup Kota Surakarta |
-| Alamat | Jl. Jend. Sudirman No. 2, Surakarta |
-| Telepon | (0271) 645839 |
+| Telepon | (0271) 714-488 |
+| Alamat | Jl. Jendral Urip Sumoharjo No. 5, Solo |
+| Jam Operasional | Senin–Jumat 08.00–16.00 |
 | Avatar/Emoji | 🌿 |
-| Warna Tema | Emerald (`text-emerald-500`, `bg-emerald-500/10`) |
+| Warna Tema | Teal (`text-teal-500`, `bg-teal-500/10`) |
+
+---
+
+## Arsitektur Saat Ini
+
+```
+Form Customer:
+  src/components/civic/forms/dlh/DlhBankSampahForm.tsx    ✅ (ada, ⚠️ multi-select belum)
+  src/components/civic/forms/dlh/DlhLaporPohonForm.tsx    ✅ (ada, sudah cukup)
+
+Workspace Admin:
+  src/components/government/workspaces/dlh/DlhWorkspace.tsx  ✅ (ada, ⚠️ eco points belum)
+
+Routing:
+  CivicFormDispatcher.tsx:
+    if (serviceId === "dlh_jemput_sampah_daur_ulang" || serviceId.includes("sampah")) → DlhBankSampahForm
+    if (serviceId === "dlh_lapor_pohon_tumbang" || serviceId.includes("pohon")) → DlhLaporPohonForm
+  GovWorkspaceDispatcher.tsx → case "gov_dlh"
+```
 
 ---
 
 ## Layanan yang Tersedia
 
-### 1. `dlh_jemput_sampah_daur_ulang` — Jemput Sampah Bank Sampah RW
-- **Sifat**: Scheduled (bukan darurat)
-- **Biaya untuk customer**: Gratis — customer justru mendapat **Eco Points**
-- **Biaya ongkir**: Dibayar dari program lingkungan DLH / koperasi
-- **Driver requirement**: Driver motor reguler (bawa kantong penampung)
-- **Flow unik**: Setelah jemput, driver menimbang → lapor ke workspace DLH → DLH award poin ke customer
+### 1. `dlh_jemput_sampah_daur_ulang` — Jemput Sampah Bank Sampah
 
-### 2. `dlh_lapor_pohon_tumbang` — Lapor Pohon Rawan Tumbang
-- **Sifat**: Laporan digital — tidak selalu butuh driver fisik
-- **Biaya**: Gratis
-- **Flow**: Laporan masuk → petugas DLH verifikasi → tim pemotongan pohon dikirim (bukan driver ojek!)
+- **Status awal**: `"pending_verification"` (petugas DLH assign jadwal driver)
+- **Flow khusus**: Setelah selesai, petugas input **berat aktual** → trigger **Eco Points** ke customer
+
+### 2. `dlh_lapor_pohon_tumbang` — Lapor Pohon Berbahaya
+
+- **Status awal**: `"pending_verification"` → `"in_progress"` (tanpa driver, tim lapangan langsung)
+- **SLA**: Urgensi tinggi dalam 1x24 jam, normal dalam 3 hari kerja
 
 ---
 
-## Eco Points System
+## Phase 2 — DlhBankSampahForm.tsx (UPGRADE)
+
+Tambahkan multi-select jenis sampah dan estimasi berat:
 
 ```typescript
-// Konversi eco points per kg jenis sampah
-const ECO_POINTS_PER_KG: Record<JenisSampah, number> = {
-  kardus:   200,   // 1 kg kardus = 200 poin ≈ Rp 200
-  plastik:  150,   // 1 kg plastik = 150 poin ≈ Rp 150
-  besi:     500,   // 1 kg besi = 500 poin ≈ Rp 500
-  kaca:     100,   // 1 kg kaca = 100 poin ≈ Rp 100
-  jelantah: 300,   // 1 liter jelantah = 300 poin ≈ Rp 300
-  kertas:   150,   // 1 kg kertas = 150 poin ≈ Rp 150
+// ⚠️ Phase 2 — Tambahkan ini di DlhBankSampahForm.tsx
+
+// State baru:
+const [jenisSampahDipilih, setJenisSampahDipilih] = useState<string[]>([]);
+const [estimasiBeratKg, setEstimasiBeratKg] = useState<number>(5);
+
+// Data pilihan jenis sampah:
+const JENIS_SAMPAH_OPTIONS = [
+  { id: "kardus", label: "Kardus / Karton", emoji: "📦" },
+  { id: "plastik", label: "Plastik (Botol, Ember)", emoji: "♻️" },
+  { id: "besi", label: "Besi / Logam", emoji: "⚙️" },
+  { id: "kaca", label: "Kaca / Botol Beling", emoji: "🍶" },
+  { id: "jelantah", label: "Minyak Jelantah", emoji: "🛢️" },
+  { id: "kertas", label: "Kertas / Koran", emoji: "📰" },
+];
+
+// Komponen multi-select checkbox (inline — belum ada di CivicFormControls):
+<div className="space-y-1.5">
+  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+    Jenis Sampah yang Disetor (pilih semua yang relevan)
+  </label>
+  <div className="grid grid-cols-2 gap-1.5">
+    {JENIS_SAMPAH_OPTIONS.map(jenis => (
+      <button
+        key={jenis.id}
+        type="button"
+        onClick={() => setJenisSampahDipilih(prev =>
+          prev.includes(jenis.id)
+            ? prev.filter(j => j !== jenis.id)
+            : [...prev, jenis.id]
+        )}
+        className={`p-2 rounded-xl text-xs font-medium border transition-all ${
+          jenisSampahDipilih.includes(jenis.id)
+            ? "bg-teal-500/15 border-teal-500/50 text-teal-700 dark:text-teal-300"
+            : "bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-400"
+        }`}
+      >
+        {jenis.emoji} {jenis.label}
+      </button>
+    ))}
+  </div>
+</div>
+
+// Estimasi berat — number input:
+<div className="space-y-1">
+  <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+    Estimasi Total Berat (kg)
+  </label>
+  <div className="flex items-center gap-2">
+    <input
+      type="number"
+      min={1} max={500}
+      value={estimasiBeratKg}
+      onChange={e => setEstimasiBeratKg(Number(e.target.value))}
+      className="w-24 h-8 px-3 rounded-xl border text-sm ..."
+    />
+    <span className="text-xs text-slate-500">kg (estimasi, min 1kg)</span>
+  </div>
+</div>
+
+// Eco Points preview (motivasi customer):
+const estimatedPoints = jenisSampahDipilih.length > 0
+  ? Math.floor(estimasiBeratKg * 200) // Estimasi kasar
+  : 0;
+{estimatedPoints > 0 && (
+  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+    <p className="text-xs text-amber-700 dark:text-amber-300">
+      🌱 Estimasi Eco Points: ~{estimatedPoints.toLocaleString()} poin
+      (dikonfirmasi setelah ditimbang)
+    </p>
+  </div>
+)}
+
+// citizenDetails yang disimpan:
+citizenDetails: {
+  serviceId: service.id,
+  jenisSampah: jenisSampahDipilih,    // ← array of string
+  estimasiBeratKg,                    // ← number
+  jadwalJemput: preferredDate,
+  rwBankSampah: selectedRW,
+  // ...
+}
+```
+
+---
+
+## Phase 2 — DlhWorkspace.tsx (UPGRADE)
+
+Tambahkan Eco Points calculator setelah verifikasi berat:
+
+```typescript
+// ⚠️ Phase 2 — Tambahkan Eco Points feature di DlhWorkspace.tsx
+import { doc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
+
+const ECO_POINTS_PER_KG: Record<string, number> = {
+  kardus: 200, plastik: 150, besi: 500, kaca: 100, jelantah: 300, kertas: 150
 };
 
-// Trigger award poin setelah petugas DLH konfirmasi berat aktual:
-// updateDoc order { beratAktualKg, ecoPointsAwarded }
-// increment(users/{customerId}.points, ecoPointsAwarded)
+const calculateEcoPoints = (jenisSampah: string[], beratKg: number): number => {
+  if (!jenisSampah.length) return Math.floor(beratKg * 150); // Default rate
+  const primaryRate = ECO_POINTS_PER_KG[jenisSampah[0]] || 150;
+  return Math.floor(beratKg * primaryRate);
+};
+
+// Di workspace — after approve, tampilkan input berat aktual:
+const [beratAktual, setBeratAktual] = useState<number>(0);
+
+const handleCompleteWithEcoPoints = async (order: OrderDocument) => {
+  const points = calculateEcoPoints(
+    (order.citizenDetails as any)?.jenisSampah || [],
+    beratAktual
+  );
+  // 1. Update order
+  await updateDoc(doc(db, COLLECTIONS.ORDERS, order.id!), {
+    status: "completed",
+    "citizenDetails.beratAktualKg": beratAktual,
+    "citizenDetails.ecoPointsAwarded": points,
+    completedAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  // 2. Award eco points ke customer
+  await updateDoc(doc(db, "users", order.customerId), {
+    points: increment(points)
+  });
+  alert(`✅ Selesai! ${points.toLocaleString()} Eco Points diberikan ke customer.`);
+};
 ```
 
 ---
 
-## Spesifikasi `DlhCivicModal.tsx` yang Harus Dibuat
-
-### Sub-service: Jemput Sampah
-
-```tsx
-// Form fields:
-<select jenisSampah multiple>  {/* checkbox: kardus, plastik, besi, dll */}
-<input estimasiBeratKg type="number" min={1} max={500} />
-<input rwBankSampah />          {/* RW bank sampah aktif */}
-<input jadwalJemput type="date" min={tomorrow} />
-<select slotWaktu>              {/* Pagi 07-10 / Siang 10-14 / Sore 14-17 */}
-<input alamatRumah />
-<input kontakWa />
-<textarea catatanTambahan />
-
-// Tampilkan estimasi poin yang akan didapat:
-// "Estimasi Eco Points: ~450 poin (Rp 450)"
-// Berdasarkan input estimasi berat dan jenis
-```
-
-### Sub-service: Lapor Pohon
-
-```tsx
-<select kondisiPohon>           {/* Miring berbahaya / Sudah tumbang / dll */}
-<input lokasiPohon />           {/* Nama jalan + nomor rumah terdekat */}
-<select kelurahan />
-<select tingkatUrgensi>         {/* Segera / Normal */}
-<input kontakWa />
-<FileUpload fotoUrl optional />  {/* Upload foto pohon */}
-```
-
----
-
-## Spesifikasi `GovDlhWorkspace.tsx` yang Harus Dibuat
-
-### Tab 1: JEMPUT SAMPAH QUEUE
-```
-- List permohonan dengan: Alamat, Jenis sampah, Estimasi berat, Jadwal
-- Clustering: Grouping berdasarkan RW/kelurahan yang sama hari itu
-- Tombol "Batch Dispatch": Kirim 1 driver untuk beberapa lokasi searah
-- Status: Menunggu / Driver dikirim / Selesai ditimbang
-```
-
-### Tab 2: VERIFIKASI TIMBANGAN & AWARD POIN
-```
-- Daftar order "in_progress" yang menunggu konfirmasi berat aktual
-- Input: Berat aktual per jenis sampah
-- Kalkulasi otomatis: eco points yang akan diberikan
-- Tombol "Konfirmasi & Award Poin" → trigger increment ke user.points
-```
-
-### Tab 3: LAPORAN POHON MAP
-```
-- Peta clustering lokasi pohon berbahaya
-- Filter: Urgensi tinggi / Sudah tumbang / Normal
-- Tombol "Assign Tim Pemotongan" (tim DLH sendiri, bukan driver ojek)
-- Status: Dilaporkan / Dalam pengecekan / Sudah ditangani
-```
-
-### Tab 4: ANALYTICS LINGKUNGAN
-```
-- Total kg sampah terkumpul bulan ini per jenis
-- RW paling aktif daur ulang (leaderboard)
-- Total eco points yang sudah dibagikan
-- Grafik tren bulanan
-```
-
----
-
-## Registrasi di more/page.tsx & gov/page.tsx
+## citizenDetails Interface
 
 ```typescript
-// more/page.tsx — tambahkan state:
-const [isDlhOpen, setIsDlhOpen] = useState(false);
-const [dlhServiceId, setDlhServiceId] = useState<string>("dlh_jemput_sampah_daur_ulang");
-
-// handleCardClick:
-if (service.additionalRole === "gov_dlh" || service.id.startsWith("dlh_")) {
-  setDlhServiceId(service.id);
-  setIsDlhOpen(true);
-  return;
+// Lihat DATA_CONTRACTS_EXTENDED.md → DlhDetails
+interface DlhDetails {
+  serviceId: string;
+  jenisSampah?: string[];        // ⚠️ Phase 2 — multi-select
+  estimasiBeratKg?: number;      // ⚠️ Phase 2 — number input
+  jadwalJemput?: string;
+  rwBankSampah?: string;
+  // Lapor pohon:
+  lokasiPohon?: string;
+  kondisiPohon?: "miring_berbahaya" | "sudah_tumbang" | "butuh_perantingan" | "menghalangi_kabel";
+  tingkatUrgensi?: "segera" | "normal";
+  // Hasil (diisi petugas):
+  beratAktualKg?: number;
+  ecoPointsAwarded?: number;
+  namaPemohon: string;
+  kontakWa: string;
+  submittedAt: string;
 }
-
-// gov/page.tsx — tambahkan:
-{selectedDinasId === "gov_dlh" && (
-  <GovDlhWorkspace orders={citizenRequests} loading={loadingRequests} />
-)}
 ```

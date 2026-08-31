@@ -1,0 +1,185 @@
+"use client";
+
+import React, { useState } from "react";
+import { OrderDocument } from "@/types/order.types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Truck, AlertTriangle, Compass, CheckCircle2, Loader2, MapPin, Phone , XCircle} from "lucide-react";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/constants/collections";
+
+interface GovWorkspaceProps {
+  orders: OrderDocument[];
+  loading: boolean;
+}
+
+export function DishubWorkspace({ orders, loading }: GovWorkspaceProps) {
+  const [activeTab, setActiveTab] = useState<"kir" | "lalin" | "cfd">("kir");
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+
+  const handleReject = async (orderId: string) => {
+    const reason = prompt("Masukkan alasan penolakan:");
+    if (!reason) return;
+    
+    setDispatchingId(orderId);
+    try {
+      await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+        status: "cancelled",
+        rejectionReason: reason,
+        updatedAt: serverTimestamp()
+      });
+      alert("Permohonan berhasil ditolak.");
+    } catch (err: any) {
+      alert(`Gagal menolak: ${err.message || err}`);
+    } finally {
+      setDispatchingId(null);
+    }
+  };
+
+  const kirOrders = orders.filter(o => o.serviceType?.includes("kir"));
+  const lalinOrders = orders.filter(o => o.serviceType?.includes("lalin") || o.serviceType?.includes("jalan"));
+
+  const handleResolveLalin = async (orderId: string) => {
+    setDispatchingId(orderId);
+    try {
+      await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+        status: "completed",
+        verifiedByDinasAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      alert("✅ Laporan Lalu Lintas Berhasil Ditindaklanjuti oleh Regu CCROOM Dishub!");
+    } catch (err: any) {
+      alert(`Gagal: ${err.message || err}`);
+    } finally {
+      setDispatchingId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* 1. METRICS */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-center space-y-0.5">
+          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Booking Uji KIR</span>
+          <div className="text-xl font-black text-slate-900 dark:text-white">{kirOrders.length}</div>
+        </div>
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-0.5">
+          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Laporan CCROOM</span>
+          <div className="text-xl font-black text-amber-600 dark:text-amber-400">{lalinOrders.length}</div>
+        </div>
+        <div className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-center space-y-0.5">
+          <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">Shelter CFD Aktif</span>
+          <div className="text-xl font-black text-teal-600 dark:text-teal-400">4 Shelter</div>
+        </div>
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-0.5">
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Integrasi Feeder BST</span>
+          <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1">12 Koridor</div>
+        </div>
+      </div>
+
+      {/* 2. TAB SELECTOR */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-zinc-800/80 rounded-2xl">
+        <button
+          onClick={() => setActiveTab("kir")}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeTab === "kir"
+              ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <Truck className="h-4 w-4" />
+          <span>Jadwal Uji KIR ({kirOrders.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("lalin")}
+          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeTab === "lalin"
+              ? "bg-white dark:bg-zinc-900 text-blue-600 dark:text-blue-400 shadow-sm"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          <span>Laporan CCROOM ({lalinOrders.length})</span>
+        </button>
+      </div>
+
+      {/* 3. ORDER CARDS */}
+      {loading ? (
+        <div className="p-8 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Memuat data operasional Dishub...</span>
+        </div>
+      ) : (activeTab === "kir" ? kirOrders : lalinOrders).length === 0 ? (
+        <div className="p-8 text-center text-xs text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
+          Tidak ada antrean pada kategori {activeTab}.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {(activeTab === "kir" ? kirOrders : lalinOrders).map((order) => {
+            const details = order.citizenDetails || {};
+            const isPending = order.status === "pending_verification" || order.status === "pending";
+            return (
+              <div
+                key={order.id}
+                className="p-4 rounded-2xl bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-xs space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">
+                        {order.customerName || "Pemilik Kendaraan / Pelapor"}
+                      </span>
+                      <Badge variant="blue" size="sm" className="text-[10px]">
+                        {details.licensePlate || details.trafficIssueType || order.serviceTitle}
+                      </Badge>
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                      {details.vehicleType && <span>Jenis: {details.vehicleType}</span>}
+                      {details.bookingDate && <span>Tanggal: {details.bookingDate}</span>}
+                      {details.locationName && <span>Lokasi: {details.locationName}</span>}
+                    </div>
+                  </div>
+
+                  <Badge variant={isPending ? "amber" : "emerald"} size="sm">
+                    {order.status}
+                  </Badge>
+                </div>
+
+                {isPending && activeTab === "lalin" && (
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.04]">
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => order.id && handleReject(order.id)}
+                      disabled={dispatchingId === order.id}
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-900/20 rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
+                    >
+                      <XCircle className="h-3.5 w-3.5 mr-1" />
+                      Tolak
+                    </Button>
+<Button
+                      size="sm"
+                      onClick={() => order.id && handleResolveLalin(order.id)}
+                      disabled={dispatchingId === order.id}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer shadow-xs"
+                    >
+                      {dispatchingId === order.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      <span>Tindak Lanjuti & Selesaikan</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

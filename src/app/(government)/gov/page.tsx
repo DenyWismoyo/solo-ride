@@ -46,18 +46,8 @@ import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
 import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 
-// Dedicated Dinas Workspaces
-import { GovDukcapilWorkspace } from "@/components/government/GovDukcapilWorkspace";
-import { GovDinsosWorkspace } from "@/components/government/GovDinsosWorkspace";
-import { GovDinkesWorkspace } from "@/components/government/GovDinkesWorkspace";
-import { GovDisparWorkspace } from "@/components/government/GovDisparWorkspace";
-import { GovDiskopWorkspace } from "@/components/government/GovDiskopWorkspace";
-import { GovDishubWorkspace } from "@/components/government/GovDishubWorkspace";
-import { GovBapendaWorkspace } from "@/components/government/GovBapendaWorkspace";
-import { GovDamkarWorkspace } from "@/components/government/GovDamkarWorkspace";
-import { GovBpbdWorkspace } from "@/components/government/GovBpbdWorkspace";
-import { GovDp3aWorkspace } from "@/components/government/GovDp3aWorkspace";
-import { GovOpdModularWorkspace } from "@/components/government/GovOpdModularWorkspace";
+// Central Modular Gov Workspace Dispatcher
+import { GovWorkspaceDispatcher } from "@/components/government/workspaces/GovWorkspaceDispatcher";
 
 export default function GovernmentDashboard() {
   const router = useRouter();
@@ -246,65 +236,11 @@ export default function GovernmentDashboard() {
             </h3>
           </div>
 
-          {selectedDinasId === "gov_dukcapil" && (
-            <GovDukcapilWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_dinsos" && (
-            <GovDinsosWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_dinkes" && (
-            <GovDinkesWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_dispar" && (
-            <GovDisparWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_diskop" && (
-            <GovDiskopWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_dishub" && (
-            <GovDishubWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_bapenda" && (
-            <GovBapendaWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_damkar" && (
-            <GovDamkarWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_bpbd" && (
-            <GovBpbdWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {selectedDinasId === "gov_dp3a" && (
-            <GovDp3aWorkspace orders={citizenRequests} loading={loadingRequests} />
-          )}
-
-          {/* Modular OPD Workspace for remaining agencies (Disdik, DLH, Dispusip, Dispertan, Disnaker, Diskominfo, Satpol PP, DPMPTSP) */}
-          {![
-            "gov_dukcapil", 
-            "gov_dinsos", 
-            "gov_dinkes", 
-            "gov_dispar", 
-            "gov_diskop", 
-            "gov_dishub",
-            "gov_bapenda",
-            "gov_damkar",
-            "gov_bpbd",
-            "gov_dp3a"
-          ].includes(selectedDinasId) && (
-            <GovOpdModularWorkspace 
-              sector={activeSector} 
-              orders={citizenRequests} 
-              loading={loadingRequests} 
-            />
-          )}
+          <GovWorkspaceDispatcher 
+            dinasId={selectedDinasId} 
+            orders={citizenRequests} 
+            loading={loadingRequests} 
+          />
         </div>
 
         {/* ========================================================================= */}

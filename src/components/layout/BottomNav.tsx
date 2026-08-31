@@ -40,13 +40,13 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
   const tabs = role === "driver" ? driverTabs : customerTabs;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 pb-[env(safe-area-inset-bottom,8px)] px-3 pointer-events-none">
-      <div className="max-w-md mx-auto pointer-events-auto">
+    <nav className="fixed bottom-4 inset-x-0 z-30 pb-[env(safe-area-inset-bottom,0px)] px-4 pointer-events-none flex justify-center">
+      <div className="w-full max-w-sm pointer-events-auto">
         <motion.div 
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="bg-white dark:bg-[#0c1220] shadow-[0_16px_45px_-10px_rgba(15,23,42,0.1)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.8)] rounded-[2.2rem] p-1.5 grid grid-cols-4 gap-1 relative overflow-hidden"
+          className="bg-white/80 dark:bg-[#0c1220]/80 backdrop-blur-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/50 dark:border-white/10 rounded-full p-2 grid grid-cols-4 gap-1 relative overflow-hidden"
         >
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -57,7 +57,7 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
                 key={tab.id}
                 onClick={tab.onClick}
                 whileTap={{ scale: 0.88 }}
-                className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-colors cursor-pointer z-10 select-none ${
+                className={`relative flex flex-col items-center justify-center h-14 px-1 rounded-full transition-colors cursor-pointer z-10 select-none ${
                   isActive 
                     ? "text-emerald-600 dark:text-emerald-400 font-black" 
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium"
@@ -68,7 +68,7 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
                   <motion.div
                     layoutId="activeBottomTabPill"
                     transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                    className="absolute inset-0 bg-emerald-500/15 dark:bg-emerald-500/20 rounded-[1.4rem] -z-10 shadow-xs"
+                    className="absolute inset-0 bg-emerald-500/15 dark:bg-emerald-500/20 rounded-full -z-10 shadow-xs border border-emerald-500/10"
                   />
                 )}
 

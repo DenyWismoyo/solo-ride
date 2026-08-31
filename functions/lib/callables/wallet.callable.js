@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateTopUpPayment = exports.buyKarcis = void 0;
+exports.devTopUpWallet = exports.generateTopUpPayment = exports.buyKarcis = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const firestore_1 = require("firebase-admin/firestore");
@@ -122,6 +122,40 @@ exports.generateTopUpPayment = (0, https_1.onCall)({ region: "asia-southeast1", 
     catch (error) {
         console.error("TopUp Payment Error:", error);
         throw new https_1.HttpsError("internal", error.message || "Gagal menghubungi Mayar");
+    }
+});
+// ============================================================================
+// DEV ONLY: AUTO TOP-UP WALLET (For testing phase)
+// ============================================================================
+exports.devTopUpWallet = (0, https_1.onCall)({ region: "asia-southeast1", cors: true }, async (request) => {
+    if (!request.auth)
+        throw new https_1.HttpsError("unauthenticated", "Akses ditolak.");
+    const userId = request.auth.uid;
+    const { amount } = request.data;
+    if (!amount) {
+        throw new https_1.HttpsError("invalid-argument", "Amount dibutuhkan");
+    }
+    try {
+        return await admin_1.db.runTransaction(async (transaction) => {
+            const walletRef = admin_1.db.collection("wallets").doc(userId);
+            transaction.set(walletRef, {
+                userId: userId,
+                balance: firestore_1.FieldValue.increment(amount),
+                updatedAt: firestore_1.FieldValue.serverTimestamp()
+            }, { merge: true });
+            const ledgerRef = admin_1.db.collection("ledger").doc();
+            transaction.set(ledgerRef, {
+                userId: userId,
+                amount: amount,
+                type: "top_up",
+                description: "Top-Up Otomatis (Mode Development)",
+                createdAt: firestore_1.FieldValue.serverTimestamp()
+            });
+            return { success: true, amountAdded: amount };
+        });
+    }
+    catch (err) {
+        throw new https_1.HttpsError("internal", err.message || "Gagal auto top-up.");
     }
 });
 //# sourceMappingURL=wallet.callable.js.map

@@ -1,93 +1,34 @@
-# Dinas Ketahanan Pangan & Pertanian Surakarta — Blueprint Operasional
+# Dinas Pertanian Surakarta (gov_dispertan) � Blueprint Operasional
 
-**additionalRole**: `gov_dispertan`  
-**Status Implementasi**: ❌ CivicModal BELUM ADA | ❌ Workspace BELUM ADA  
-**PRIORITAS**: 🟡 Sedang  
-**Tipe Interaksi**: Kelompok G — Booking/Reservasi (Homecare)
-
----
-
-## Profil Dinas
-
-| Atribut | Data |
-|---------|------|
-| Nama Lengkap | Dinas Ketahanan Pangan dan Pertanian Kota Surakarta |
-| Puskeswan | Puskeswan Surakarta — Jl. Yosodipuro No. 98 |
-| Telepon | (0271) 637934 |
-| Dokter Hewan | 4 dokter hewan ASN aktif |
-| Avatar/Emoji | 🐾 |
-| Warna Tema | Emerald (`text-emerald-500`, `bg-emerald-500/10`) |
+**additionalRole**: `gov_dispertan`
+**Status Implementasi**: ? 1 Form ada | ? Workspace ada | ?? Phase 2 gaps
+**Tipe Interaksi**: Kelompok H � Booking/Reservasi (Homecare Hewan)
 
 ---
 
-## Layanan yang Tersedia
+## Arsitektur Saat Ini
 
-### 1. `dispertan_klinik_hewan_homecare` — Dokter Hewan Homecare & Vaksin Rabies
-- **Target**: Pemilik hewan peliharaan di Surakarta
-- **Biaya**: Fasilitasi Pemkot (sangat terjangkau / subsidi sebagian)
-- **Kapasitas**: Terbatas — booking wajib, tidak bisa walk-in
-- **Hewan yang dilayani**: Kucing, anjing, kelinci, burung, unggas (ternak kecil)
+```
+Form Customer:
+  src/components/civic/forms/dispertan/DispertanPuskeswanForm.tsx  ?
 
----
+Workspace Admin:
+  src/components/government/workspaces/dispertan/ param($m) $m.Groups[1].Value.ToUpper() + $m.Groups[2].Value Workspace.tsx  ?
 
-## Spesifikasi `DispertanCivicModal.tsx`
-
-```tsx
-// Form booking homecare dokter hewan:
-<input namaHewan placeholder="Nama hewan peliharaan" />
-<select jenisHewan>          {/* Kucing / Anjing / Kelinci / Burung / Unggas / dll */}
-<input rasHewan optional />  {/* Persia / Kampung / Golden Retriever / dll */}
-<input usiaPerkiraanHewan /> {/* Contoh: 2 tahun 3 bulan */}
-<textarea keluhan>           {/* Gejala sakit / tujuan kunjungan */}
-<input riwayatVaksin optional />
-<input riwayatObat optional />
-<select layananDiminta>      {/* Pemeriksaan Umum / Vaksin Rabies / Sterilisasi / Konsultasi */}
-
-<input tanggalJadwal type="date" />
-<select slotWaktu>           {/* 08.00–10.00 / 10.00–12.00 / 13.00–15.00 */}
-
-<input alamatHomecare />
-<input kontakWa />
-<FileUpload fotoHewan optional />  {/* Foto kondisi hewan saat ini */}
+Routing:
+  CivicFormDispatcher.tsx ? routing per serviceId ke form yang sesuai
+  GovWorkspaceDispatcher.tsx ? case "gov_dispertan"
+  Customer page: /services/gov/gov_dispertan/[serviceId]
 ```
 
 ---
 
-## Spesifikasi `GovDispertanWorkspace.tsx`
+## Phase 2 Gaps
 
-### Tab 1: JADWAL KUNJUNGAN DOKTER HEWAN
-```
-- Kalender mingguan dengan booking per slot
-- Alokasi: Dokter hewan + driver pengantar
-- Konfirmasi booking dan kirim reminder H-1
-- Status: Booking / Dikonfirmasi / Sedang kunjungan / Selesai
-```
-
-### Tab 2: CATATAN MEDIS HEWAN
-```
-- Per booking: rekam diagnosis + treatment + resep
-- Notifikasi vaksin ulang (H-30 sebelum jatuh tempo)
-- Riwayat kunjungan per pemilik hewan
-```
-
-### Tab 3: GERAKAN PANGAN MURAH (GPM)
-```
-- Jadwal GPM (pasar murah bahan pokok) per kelurahan
-- Komoditas dan harga yang tersedia
-- Driver yang bertugas distribusi
-```
+Tambah layananDiminta dropdown enum (pemeriksaan_umum/vaksin_rabies/sterilisasi/konsultasi/grooming_medis); tambah riwayatVaksin text input opsional; tambah riwayatObat text input opsional; workspace: kalender jadwal kunjungan dokter hewan
 
 ---
 
-## Catatan Implementasi Dokter Hewan
+## citizenDetails Interface
 
-```typescript
-// Driver berperan sebagai pengantar dokter hewan ke lokasi:
-// 1. Driver jemput dokter hewan dari Puskeswan
-// 2. Driver antar dokter ke alamat homecare customer
-// 3. Dokter periksa hewan (30–60 menit)
-// 4. Driver tunggu dan antar dokter kembali ke Puskeswan
-
-// ATAU: Driver hanya sebagai kurir obat/vaksin jika pemeriksaan tidak diperlukan
-// Ini tergantung sub-layanan yang dipilih customer
-```
+Lihat `DATA_CONTRACTS_EXTENDED.md` untuk interface lengkap dinas ini.

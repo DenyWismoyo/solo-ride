@@ -282,6 +282,7 @@ export interface OrderDocument {
   };
 
   verifiedByDinasAt?: Timestamp | any;
+  otpCode?: string;
   createdAt: Timestamp | any;
   updatedAt: Timestamp | any;
   completedAt?: Timestamp | any;

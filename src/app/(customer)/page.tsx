@@ -153,16 +153,16 @@ export default function CustomerHome() {
                 whileTap={{ scale: 0.98 }}
                 whileHover={{ y: -2 }}
                 onClick={() => router.push(`/services/ride`)}
-                className="flex items-center gap-3 p-3.5 bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50/90 dark:hover:bg-[#11192e] rounded-[1.8rem] cursor-pointer transition-all shadow-[0_8px_30px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.7)] backdrop-blur-2xl group"
+                className="flex items-center gap-3 p-3 bg-white/70 dark:bg-[#0c1220]/70 hover:bg-white/90 dark:hover:bg-[#11192e]/90 rounded-[2rem] cursor-pointer transition-all shadow-[0_8px_30px_-4px_rgba(15,23,42,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_14px_36px_-8px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/50 dark:border-white/10 backdrop-blur-2xl group"
               >
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
-                  <Search className="h-4 w-4 stroke-[2.2]" />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/30 group-hover:bg-emerald-500/30 transition-all">
+                  <Search className="h-4 w-4 stroke-[2.5]" />
                 </div>
-                <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 flex-1">
-                  Mau ojek, makan apa, atau kirim barang hari ini?
+                <span className="text-xs font-medium text-slate-500 dark:text-zinc-400 flex-1 truncate">
+                  Ojek, makan, atau kirim barang?
                 </span>
-                <span className="text-[10px] font-black bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1.5 rounded-full shadow-xs">
-                  Cari
+                <span className="text-[10px] font-black bg-emerald-500 text-white px-3.5 py-2 rounded-full shadow-md shadow-emerald-500/20">
+                  CARI
                 </span>
               </motion.div>
             </div>
@@ -435,34 +435,37 @@ export default function CustomerHome() {
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="pt-20 px-4 max-w-lg w-full mx-auto flex-1 space-y-4 relative z-10 pb-24"
           >
-            {/* Identity Card */}
-            <div className="p-5.5 rounded-[2rem] bg-white/95 dark:bg-[#0c1220]/95 shadow-[0_10px_30px_-6px_rgba(15,23,42,0.05)] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.7)] space-y-4 relative overflow-hidden">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-[1.4rem] bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0">
+            {/* Identity Card (Bento Style) */}
+            <div className="p-5 rounded-[2rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_10px_30px_-6px_rgba(15,23,42,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] space-y-4 relative overflow-hidden">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-black text-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0 border-2 border-white dark:border-[#0c1220]">
                   {userData?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "W"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
                       {userData?.displayName || "Warga Surakarta"}
                     </h3>
-                    <Badge variant="emerald" size="sm">WARGA SOLO</Badge>
+                    <Badge variant="emerald" size="sm">WARGA</Badge>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 truncate mt-0.5">{user?.email}</p>
-                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                    📍 Kecamatan Jebres, Surakarta
-                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-white/[0.06]">
-                <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl shadow-xs">
-                  <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Dompet Warga</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-white/50 dark:bg-white/[0.02] border border-white/60 dark:border-white/5 rounded-[1.4rem] shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Wallet className="h-3 w-3 text-slate-400" />
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">Dompet Warga</span>
+                  </div>
                   <span className="text-sm font-black text-slate-900 dark:text-white">Rp 25.000</span>
                 </div>
-                <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl shadow-xs">
-                  <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Stamp Komunitas</span>
-                  <span className="text-sm font-black text-amber-500">{userData?.points || 120} Poin</span>
+                <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-[1.4rem] shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Gift className="h-3 w-3 text-amber-500" />
+                    <span className="text-[9px] text-amber-600/80 dark:text-amber-500/80 font-bold uppercase">Stamp Komunitas</span>
+                  </div>
+                  <span className="text-sm font-black text-amber-600 dark:text-amber-500">{userData?.points || 120} Poin</span>
                 </div>
               </div>
             </div>
@@ -476,10 +479,10 @@ export default function CustomerHome() {
               <div className="space-y-1.5">
                 <button
                   onClick={() => router.push("/services/more")}
-                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50/90 dark:hover:bg-white/[0.05] shadow-xs transition-all text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-4 min-h-[44px] rounded-[1.4rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/[0.05] shadow-[0_4px_15px_-3px_rgba(0,0,0,0.05)] transition-all text-left cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    <div className="p-2.5 rounded-[1.2rem] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
                       <Layers className="h-4 w-4" />
                     </div>
                     <div>
@@ -492,10 +495,10 @@ export default function CustomerHome() {
 
                 <button
                   onClick={() => setIsAddressesModalOpen(true)}
-                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/95 dark:bg-[#0c1220]/95 hover:bg-slate-50/90 dark:hover:bg-white/[0.05] shadow-xs transition-all text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-4 min-h-[44px] rounded-[1.4rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/[0.05] shadow-[0_4px_15px_-3px_rgba(0,0,0,0.05)] transition-all text-left cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    <div className="p-2.5 rounded-[1.2rem] bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20 transition-colors">
                       <MapPin className="h-4 w-4" />
                     </div>
                     <div>

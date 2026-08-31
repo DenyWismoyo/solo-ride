@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/AuthProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -9,12 +9,12 @@ import { functionsService } from "@/services/functions.service";
 import { RouteMap } from "@/components/map/RouteMap";
 import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
 import { SoloHeritageQuickPicker } from "@/components/map/SoloHeritageQuickPicker";
+import { SavedAddressQuickPick } from "@/components/map/SavedAddressQuickPick";
 import { Button } from "@/components/ui/button";
-import { 
-  MapPin, 
-  Navigation, 
-  Loader2, 
-  ArrowLeft,
+import {
+  MapPin,
+  Navigation,
+  Loader2,
   Bike,
   ShieldCheck,
   Sparkles,
@@ -23,11 +23,18 @@ import {
   Moon,
   Pencil,
   Map,
-  Check
+  Check,
+  ArrowLeft,
 } from "lucide-react";
 import { LocationPoint } from "@/types/order.types";
 import { DEFAULT_CENTER } from "@/constants/maps";
-import { reverseGeocodeSurakarta, getLocalNearestAddress } from "@/lib/geoResolver";
+import {
+  reverseGeocodeSurakarta,
+  getLocalNearestAddress,
+} from "@/lib/geoResolver";
+import { SoloAppLogoIcon } from "@/components/icons/SoloAppLogoIcon";
+import { useRecentDestinations } from "@/hooks/useRecentDestinations";
+import { RecentDestinationsList } from "@/components/map/RecentDestinationsList";
 import { motion } from "motion/react";
 
 export default function RideBookingPage() {
@@ -37,45 +44,63 @@ export default function RideBookingPage() {
 
   const [pickup, setPickup] = useState<LocationPoint | null>(null);
   const [dropoff, setDropoff] = useState<LocationPoint | null>(null);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [directions, setDirections] =
+    useState<google.maps.DirectionsResult | null>(null);
   const [price, setPrice] = useState<number>(0);
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [isOrdering, setIsOrdering] = useState(false);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
 
+  const { addRecentDestination } = useRecentDestinations();
+
   // Manual Map Pin Picker State
-  const [manualPickType, setManualPickType] = useState<"pickup" | "dropoff" | null>(null);
-  const [manualCoords, setManualCoords] = useState<{ lat: number; lng: number }>(DEFAULT_CENTER);
-  const [manualAddress, setManualAddress] = useState<string>("Memuat alamat titik...");
+  const [manualPickType, setManualPickType] = useState<
+    "pickup" | "dropoff" | null
+  >(null);
+  const [manualCoords, setManualCoords] = useState<{
+    lat: number;
+    lng: number;
+  }>(DEFAULT_CENTER);
+  const [manualAddress, setManualAddress] = useState<string>(
+    "Memuat alamat titik...",
+  );
   const [isResolvingAddress, setIsResolvingAddress] = useState<boolean>(false);
   const geocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Resilient Reverse Geocoding when map center moves during manual pin mode
-  const handleMapCenterChange = useCallback((coords: { lat: number; lng: number }) => {
-    setManualCoords(coords);
-    // Instant local estimate
-    setManualAddress(getLocalNearestAddress(coords.lat, coords.lng));
-    setIsResolvingAddress(true);
+  const handleMapCenterChange = useCallback(
+    (coords: { lat: number; lng: number }) => {
+      setManualCoords(coords);
+      // Instant local estimate
+      setManualAddress(getLocalNearestAddress(coords.lat, coords.lng));
+      setIsResolvingAddress(true);
 
-    if (geocodeTimeoutRef.current) {
-      clearTimeout(geocodeTimeoutRef.current);
-    }
-
-    geocodeTimeoutRef.current = setTimeout(async () => {
-      try {
-        const resolved = await reverseGeocodeSurakarta(coords.lat, coords.lng);
-        setManualAddress(resolved);
-      } finally {
-        setIsResolvingAddress(false);
+      if (geocodeTimeoutRef.current) {
+        clearTimeout(geocodeTimeoutRef.current);
       }
-    }, 300);
-  }, []);
+
+      geocodeTimeoutRef.current = setTimeout(async () => {
+        try {
+          const resolved = await reverseGeocodeSurakarta(
+            coords.lat,
+            coords.lng,
+          );
+          setManualAddress(resolved);
+        } finally {
+          setIsResolvingAddress(false);
+        }
+      }, 300);
+    },
+    [],
+  );
 
   const handleConfirmManualPin = () => {
     const point: LocationPoint = {
       lat: manualCoords.lat,
       lng: manualCoords.lng,
-      address: manualAddress || `Titik Peta (${manualCoords.lat.toFixed(4)}, ${manualCoords.lng.toFixed(4)})`,
+      address:
+        manualAddress ||
+        `Titik Peta (${manualCoords.lat.toFixed(4)}, ${manualCoords.lng.toFixed(4)})`,
     };
 
     if (manualPickType === "pickup") {
@@ -89,12 +114,12 @@ export default function RideBookingPage() {
     setPrice(0);
   };
 
-  const calculateRoute = async () => {
+  const calculateRoute = useCallback(async () => {
     if (!pickup || !dropoff) {
       alert("Harap tentukan titik jemput dan lokasi tujuan terlebih dahulu.");
       return;
     }
-    
+
     setIsCalculatingPrice(true);
 
     try {
@@ -108,7 +133,7 @@ export default function RideBookingPage() {
           travelMode: window.google.maps.TravelMode.DRIVING,
         });
         setDirections(results);
-        
+
         const distText = results.routes[0].legs[0].distance?.text || "0 km";
         const distVal = parseFloat(distText.replace(/[^0-9.]/g, "")) || 1;
         setDistanceKm(distVal);
@@ -117,7 +142,7 @@ export default function RideBookingPage() {
         try {
           const pricingResult = await functionsService.calculateFinalPrice({
             serviceType: "ojek",
-            distanceKm: distVal
+            distanceKm: distVal,
           });
           setPrice(pricingResult.finalPrice);
         } catch (priceErr) {
@@ -129,10 +154,13 @@ export default function RideBookingPage() {
         const rad = Math.PI / 180;
         const dLat = (dropoff.lat - pickup.lat) * rad;
         const dLon = (dropoff.lng - pickup.lng) * rad;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(pickup.lat * rad) * Math.cos(dropoff.lat * rad) * 
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(pickup.lat * rad) *
+            Math.cos(dropoff.lat * rad) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const estDist = Math.max(1, parseFloat((6371 * c * 1.3).toFixed(1)));
         setDistanceKm(estDist);
         setPrice(Math.max(10000, Math.round(estDist * 2500)));
@@ -145,7 +173,21 @@ export default function RideBookingPage() {
     } finally {
       setIsCalculatingPrice(false);
     }
-  };
+  }, [pickup, dropoff]);
+
+  const prevPickup = useRef(pickup);
+  const prevDropoff = useRef(dropoff);
+
+  // Auto calculate ONLY when pickup or dropoff actually changes
+  useEffect(() => {
+    if (pickup !== prevPickup.current || dropoff !== prevDropoff.current) {
+      if (pickup && dropoff) {
+        calculateRoute();
+      }
+      prevPickup.current = pickup;
+      prevDropoff.current = dropoff;
+    }
+  }, [pickup, dropoff, calculateRoute]);
 
   const handleOrder = async () => {
     if (!user) {
@@ -166,8 +208,9 @@ export default function RideBookingPage() {
         pickupLocation: pickup,
         dropoffLocation: dropoff,
         price: price,
-        paymentMethod: "cash"
+        paymentMethod: "cash",
       });
+      addRecentDestination(dropoff);
       router.push(`/order/${orderId}`);
     } catch (err: any) {
       alert(err.message || "Gagal membuat pesanan.");
@@ -179,6 +222,12 @@ export default function RideBookingPage() {
   const handleResetRoute = () => {
     setPrice(0);
     setDirections(null);
+  };
+
+  const handleSetDropoff = (point: LocationPoint) => {
+    setDropoff(point);
+    setDirections(null);
+    setPrice(0);
   };
 
   return (
@@ -213,18 +262,27 @@ export default function RideBookingPage() {
                 <span>Batal</span>
               </button>
 
-              <div className={`px-3.5 py-1.5 rounded-full text-white text-xs font-bold shadow-2xl backdrop-blur-xl flex items-center gap-1.5 ${
-                manualPickType === "pickup" ? "bg-emerald-600" : "bg-rose-600"
-              }`}>
-                {manualPickType === "pickup" ? <MapPin className="h-3.5 w-3.5" /> : <Navigation className="h-3.5 w-3.5" />}
-                <span>Geser Peta ke Titik {manualPickType === "pickup" ? "Jemput" : "Tujuan"}</span>
+              <div
+                className={`px-3.5 py-1.5 rounded-full text-white text-xs font-bold shadow-2xl backdrop-blur-xl flex items-center gap-1.5 ${
+                  manualPickType === "pickup" ? "bg-emerald-600" : "bg-rose-600"
+                }`}
+              >
+                {manualPickType === "pickup" ? (
+                  <MapPin className="h-3.5 w-3.5" />
+                ) : (
+                  <Navigation className="h-3.5 w-3.5" />
+                )}
+                <span>
+                  Geser Peta ke Titik{" "}
+                  {manualPickType === "pickup" ? "Jemput" : "Tujuan"}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Bottom Floating Address Preview & Confirmation Sheet */}
           <div className="relative z-30 max-w-lg w-full mx-auto px-4 pb-6 mt-auto">
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               className="bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.1] rounded-3xl shadow-2xl p-4 backdrop-blur-2xl space-y-3"
@@ -232,27 +290,41 @@ export default function RideBookingPage() {
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                    Titik {manualPickType === "pickup" ? "Penjemputan" : "Lokasi Tujuan"} Terpilih:
+                    Titik{" "}
+                    {manualPickType === "pickup"
+                      ? "Penjemputan"
+                      : "Lokasi Tujuan"}{" "}
+                    Terpilih:
                   </span>
                   {isResolvingAddress && (
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Membaca jalan...
+                      <Loader2 className="h-3 w-3 animate-spin" /> Membaca
+                      jalan...
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-start gap-2.5">
-                  <div className={`p-2 rounded-xl mt-0.5 shrink-0 ${
-                    manualPickType === "pickup" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
-                  }`}>
-                    {manualPickType === "pickup" ? <MapPin className="h-4 w-4" /> : <Navigation className="h-4 w-4" />}
+                  <div
+                    className={`p-2 rounded-xl mt-0.5 shrink-0 ${
+                      manualPickType === "pickup"
+                        ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                        : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                    }`}
+                  >
+                    {manualPickType === "pickup" ? (
+                      <MapPin className="h-4 w-4" />
+                    ) : (
+                      <Navigation className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-tight">
                       {manualAddress}
                     </p>
                     <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                      {manualCoords.lat.toFixed(5)}, {manualCoords.lng.toFixed(5)}
+                      {manualCoords.lat.toFixed(5)},{" "}
+                      {manualCoords.lng.toFixed(5)}
                     </p>
                   </div>
                 </div>
@@ -268,7 +340,10 @@ export default function RideBookingPage() {
                 }`}
               >
                 <Check className="h-4 w-4" />
-                <span>Pasang Sebagai Titik {manualPickType === "pickup" ? "Jemput" : "Tujuan"}</span>
+                <span>
+                  Pasang Sebagai Titik{" "}
+                  {manualPickType === "pickup" ? "Jemput" : "Tujuan"}
+                </span>
               </Button>
             </motion.div>
           </div>
@@ -304,7 +379,11 @@ export default function RideBookingPage() {
                   className="bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] p-2 rounded-full backdrop-blur-md text-slate-700 dark:text-zinc-300 shadow-md cursor-pointer hover:scale-105 transition-transform"
                   title="Ganti Tema Peta"
                 >
-                  {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-slate-700" />}
+                  {theme === "dark" ? (
+                    <Sun className="h-3.5 w-3.5 text-amber-400" />
+                  ) : (
+                    <Moon className="h-3.5 w-3.5 text-slate-700" />
+                  )}
                 </button>
 
                 <div className="bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] px-3 py-1 rounded-full backdrop-blur-md text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 shadow-md">
@@ -324,13 +403,20 @@ export default function RideBookingPage() {
                 <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center gap-1 text-[11px] font-bold text-slate-900 dark:text-white truncate">
                     <span className="text-emerald-500">📍</span>
-                    <span className="truncate">{pickup?.address.split(",")[0]}</span>
+                    <span className="truncate">
+                      {pickup?.address.split(",")[0]}
+                    </span>
                     <span className="text-slate-400">➔</span>
                     <span className="text-rose-500">🎯</span>
-                    <span className="truncate">{dropoff?.address.split(",")[0]}</span>
+                    <span className="truncate">
+                      {dropoff?.address.split(",")[0]}
+                    </span>
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-zinc-400">
-                    Jarak Tempuh: <strong className="text-emerald-600 dark:text-emerald-400">{distanceKm.toFixed(1)} KM</strong>
+                    Jarak Tempuh:{" "}
+                    <strong className="text-emerald-600 dark:text-emerald-400">
+                      {distanceKm.toFixed(1)} KM
+                    </strong>
                   </p>
                 </div>
 
@@ -351,37 +437,43 @@ export default function RideBookingPage() {
                 className="space-y-2 pointer-events-auto"
               >
                 <div className="bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-xl p-2.5 backdrop-blur-xl space-y-2">
-                  {/* Pickup Input */}
-                  <div className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200/60 dark:border-white/[0.06]">
-                    <div className="p-1.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0">
-                      <MapPin className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between pr-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Titik Jemput
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setManualPickType("pickup")}
-                          className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <Map className="h-2.5 w-2.5" />
-                          <span>Pilih di Peta</span>
-                        </button>
+                  {/* Pickup Input - ONLY visible if dropoff is set */}
+                  {dropoff && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200/60 dark:border-white/[0.06] overflow-hidden"
+                    >
+                      <div className="p-1.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded-lg shrink-0">
+                        <MapPin className="h-3.5 w-3.5" />
                       </div>
-                      <PlaceAutocomplete
-                        value={pickup?.address}
-                        placeholder="Cari jalan, kelurahan, atau titik jemput..."
-                        onPickOnMapClick={() => setManualPickType("pickup")}
-                        onLocationSelect={(point) => {
-                          setPickup(point);
-                          setDirections(null);
-                          setPrice(0);
-                        }}
-                      />
-                    </div>
-                  </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between pr-1">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Titik Jemput
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setManualPickType("pickup")}
+                            className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                          >
+                            <Map className="h-2.5 w-2.5" />
+                            <span>Pilih di Peta</span>
+                          </button>
+                        </div>
+                        <PlaceAutocomplete
+                          value={pickup?.address}
+                          placeholder="Lokasi penjemputan dari peta atau GPS..."
+                          onPickOnMapClick={() => setManualPickType("pickup")}
+                          onLocationSelect={(point) => {
+                            setPickup(point);
+                            setDirections(null);
+                            setPrice(0);
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Dropoff Input */}
                   <div className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200/60 dark:border-white/[0.06]">
@@ -404,31 +496,36 @@ export default function RideBookingPage() {
                       </div>
                       <PlaceAutocomplete
                         value={dropoff?.address}
-                        placeholder="Cari lokasi tujuan di Solo..."
+                        placeholder="Mau ke mana?"
                         onPickOnMapClick={() => setManualPickType("dropoff")}
-                        onLocationSelect={(point) => {
-                          setDropoff(point);
-                          setDirections(null);
-                          setPrice(0);
-                        }}
+                        onLocationSelect={handleSetDropoff}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Solo Heritage & Landmark Minimized Quick Picker Component */}
-                <SoloHeritageQuickPicker
-                  onSelectPickup={(point) => {
-                    setPickup(point);
-                    setDirections(null);
-                    setPrice(0);
-                  }}
-                  onSelectDropoff={(point) => {
-                    setDropoff(point);
-                    setDirections(null);
-                    setPrice(0);
-                  }}
-                />
+                {/* Quick Pickers - ONLY show if dropoff is not set */}
+                {!dropoff && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-3 mt-2"
+                  >
+                    <SavedAddressQuickPick
+                      onSelect={handleSetDropoff}
+                      className="px-1"
+                    />
+                    <RecentDestinationsList 
+                      onSelect={handleSetDropoff} 
+                    />
+                    <SoloHeritageQuickPicker
+                      onSelectDropoff={handleSetDropoff}
+                      onSelectPickup={(point) => {
+                        setPickup(point);
+                      }}
+                    />
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </div>
@@ -437,25 +534,35 @@ export default function RideBookingPage() {
           <div className="relative z-20 max-w-lg w-full mx-auto px-3.5 pb-5 mt-auto">
             <div className="bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-2xl p-3.5 backdrop-blur-2xl space-y-2.5">
               {price === 0 ? (
-                <Button 
+                <Button
                   onClick={calculateRoute}
                   disabled={!pickup || !dropoff || isCalculatingPrice}
                   className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all"
                 >
-                  {isCalculatingPrice ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Sparkles className="h-4 w-4 text-emerald-200" />}
-                  {isCalculatingPrice ? "Menghitung Rute..." : "Hitung Jarak & Tarif Rute"}
+                  {isCalculatingPrice ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-emerald-200" />
+                  )}
+                  {isCalculatingPrice
+                    ? "Menghitung Rute..."
+                    : "Hitung Jarak & Tarif Rute"}
                 </Button>
               ) : (
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-2.5 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-xl border border-emerald-500/20">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900 dark:text-white">Tarif Bersih</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          Tarif Bersih
+                        </span>
                         <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 rounded font-bold">
                           {distanceKm.toFixed(1)} KM
                         </span>
                       </div>
-                      <p className="text-[9px] text-slate-500 dark:text-zinc-400">100% Tunai Bebas Komisi</p>
+                      <p className="text-[9px] text-slate-500 dark:text-zinc-400">
+                        100% Tunai Bebas Komisi
+                      </p>
                     </div>
                     <div className="text-right">
                       <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">
@@ -464,7 +571,7 @@ export default function RideBookingPage() {
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl shadow-lg shadow-emerald-600/30 text-xs cursor-pointer flex items-center justify-center gap-2"
                     onClick={handleOrder}
                     disabled={isOrdering}

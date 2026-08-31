@@ -1,7 +1,10 @@
-# Spesifikasi Workspace OPD (Sisi Petugas Dinas) — Ride-Solo
+# Spesifikasi Workspace OPD (Sisi Petugas Dinas) — Ride-Solo Phase 2
 
-> Panduan ini mendefinisikan apa yang harus ditampilkan di setiap `Gov<Dinas>Workspace.tsx`
-> kepada petugas/operator dinas saat mereka login ke platform Ride-Solo.
+> **ARSITEKTUR SAAT INI**: Setiap dinas memiliki workspace di
+> `src/components/government/workspaces/<dinas>/<Dinas>Workspace.tsx`
+> Di-dispatch oleh `GovWorkspaceDispatcher.tsx` via switch-case `dinasId`.
+>
+> Format anotasi: ✅ Sudah ada | ⚠️ Phase 2 gap | ❌ Belum ada
 
 ---
 
@@ -9,23 +12,30 @@
 
 ### 3 Pilar Setiap Workspace
 
-Setiap workspace OPD harus memiliki 3 pilar fungsional:
-
 ```
-1. TRIAGE PANEL           → Daftar permohonan masuk, filter berdasarkan status
-2. ACTION PANEL           → Tools untuk memverifikasi, setujui, tolak permohonan
-3. ANALYTICS PANEL        → Statistik layanan dinas (opsional, per kebutuhan)
+1. TRIAGE PANEL     → Daftar permohonan masuk, filter berdasarkan status
+2. ACTION PANEL     → Tools untuk memverifikasi, setujui, tolak permohonan
+3. ANALYTICS PANEL  → Statistik layanan dinas (metrik bento grid di atas)
 ```
 
 ### Tab Standar Workspace
 
 ```typescript
-type WorkspaceTab = 
+type WorkspaceTab =
   | "triage"       // WAJIB: Permohonan masuk yang butuh tindakan
   | "inprogress"   // WAJIB: Permohonan yang sedang diproses/driver sedang bertugas
   | "completed"    // WAJIB: Riwayat selesai
-  | "features"     // Opsional: Fitur khusus dinas (e.g., broadcast area, EWS monitor)
+  | "features"     // Opsional: Fitur khusus dinas
   | "reports"      // Opsional: Laporan & statistik
+```
+
+### Props Standard
+
+```typescript
+interface GovWorkspaceProps {
+  orders: OrderDocument[];
+  loading: boolean;
+}
 ```
 
 ### Status Handling Standard
@@ -33,9 +43,27 @@ type WorkspaceTab =
 ```typescript
 // Semua workspace menggunakan siklus status yang sama:
 "pending_verification" → "pending" → "accepted" → "in_progress" → "completed"
-//     ^                     ^
-//  Masuk dari     Petugas OPD setujui → masuk radar driver
+//     ↑                     ↑
+//  Masuk dari     Petugas OPD approve → masuk radar driver
 //  form customer
+
+// Aksi tombol Approve di workspace:
+const handleApprove = async (orderId: string) => {
+  await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+    status: "pending", // Masuk radar driver!
+    verifiedByDinasAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+};
+
+// Aksi tombol Tolak di workspace:
+const handleReject = async (orderId: string, reason: string) => {
+  await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+    status: "rejected",
+    rejectionReason: reason,
+    updatedAt: serverTimestamp()
+  });
+};
 ```
 
 ---
@@ -44,369 +72,489 @@ type WorkspaceTab =
 
 ---
 
-### Dukcapil Workspace — ✅ SUDAH ADA `GovDukcapilWorkspace.tsx`
+### Dukcapil Workspace ✅ Paling Lengkap (Jadikan Template)
+
+File: `src/components/government/workspaces/dukcapil/DukcapilWorkspace.tsx`
 
 Tab yang ada:
-- **Triage Dokumen**: Verifikasi NIK dan jenis dokumen sebelum dispatch driver
-- **OTP Monitor**: Pantau kode OTP serah terima dokumen fisik
-- **Riwayat Berkas**: Log dokumen yang sudah diantarkan
+- ✅ **Pending Verification**: Verifikasi NIK dan jenis dokumen
+- ✅ **Dispatched/Kurir Bergerak**: Monitor pengiriman aktif
+- ✅ **Completed/Selesai OTP**: Log dokumen selesai diantarkan
 
 Aksi yang tersedia per permohonan:
-- [x] Verifikasi NIK valid
-- [x] Setujui dispatch ke driver
-- [x] Tolak dengan keterangan
-- [x] Generate OTP serah terima
+- ✅ Verifikasi NIK + jenis dokumen
+- ✅ Setujui & dispatch ke driver (`status → "pending"`)
+- ✅ OTP serah terima monitoring
 
----
-
-### Dinkes Workspace — ✅ SUDAH ADA `GovDinkesWorkspace.tsx`
-
-Tab yang ada:
-- **Triage Resep**: Cek nomor rekam medis dan asal Puskesmas
-- **Prolanis Monitor**: Daftar pasien lansia yang perlu obat rutin
-- **PMI Kurir Darah**: Khusus dispatch darurat PMI
-
-Aksi:
-- [x] Verifikasi nomor rekam medis & BPJS
-- [x] Tandai sebagai "Sudah Disiapkan Farmasi" sebelum dispatch driver
-- [x] Dispatch darurat untuk kurir darah (prioritas tertinggi)
-
----
-
-### Dinsos Workspace — ✅ SUDAH ADA `GovDinsosWorkspace.tsx`
-
-Tab yang ada:
-- **Bansos Queue**: Verifikasi penerima bansos
-- **Difabel/Lansia**: Daftar armada khusus difabel aktif
-- **Tagana Bencana**: Koordinasi logistik darurat
-
-Aksi:
-- [x] Verifikasi kelayakan penerima bansos (cek database PKH)
-- [x] Alokasi driver khusus ramah difabel
-- [x] Dispatch logistik bencana ke kelurahan
-
----
-
-### Diskop Workspace — ✅ SUDAH ADA `GovDiskopWorkspace.tsx`
-
-Tab yang ada:
-- **NIB Pendampingan**: Jadwal kunjungan pendamping ke UMKM
-- **Modal Bergulir**: Review aplikasi dana bergulir
-- **SHU Dashboard**: Monitor alokasi dividen koperasi
-
----
-
-### Dispar Workspace — ✅ SUDAH ADA `GovDisparWorkspace.tsx`
-
-Tab yang ada:
-- **Tour Booking**: Konfirmasi paket tour heritage
-- **Event Calendar**: Kelola kalender event budaya
-- **Guide Roster**: Daftar pemandu wisata aktif
-
----
-
-### Dishub Workspace — ✅ SUDAH ADA `GovDishubWorkspace.tsx`
-
-Tab yang ada:
-- **Laporan Lalin**: Triage laporan dari warga dan driver
-- **KIR Queue**: Antrian booking uji KIR
-
----
-
-### Bapenda Workspace — ✅ SUDAH ADA `GovBapendaWorkspace.tsx`
-
-Tab yang ada:
-- **PBB Monitor**: Konfirmasi pembayaran PBB
-- **Retribusi Pasar**: Monitor pembayaran retribusi kios
-- **Konsultasi Queue**: Daftar sesi konsultasi pajak
-
----
-
-### Damkar Workspace — ❌ HARUS DIBUAT `GovDamkarWorkspace.tsx`
-
-**Prioritas: TINGGI** — ini layanan darurat!
-
-Tab yang dibutuhkan:
-1. **LIVE PANIC MAP** (Tab Utama — auto-selected)
-   - Peta real-time koordinat panic button masuk
-   - Marker animasi + sound alert saat ada laporan baru
-   - Tampilkan waktu laporan (detik yang lalu)
-   
-2. **TRIAGE DARURAT**
-   - Filter berdasarkan jenis: Kebakaran / Rescue Non-Api
-   - Badge merah berkedip untuk laporan < 5 menit lalu
-   - Tombol "Dispatch Pos Damkar Terdekat" + konfirmasi nama petugas
-
-3. **RIWAYAT PENANGANAN**
-   - Log semua penanganan: waktu masuk, waktu dispatch, waktu selesai
-   - Kalkulasi response time rata-rata
-
-Aksi khusus:
+**Phase 2 Gap:**
 ```typescript
-// Damkar butuh notifikasi AUDIO di browser saat ada laporan baru
-// Gunakan Web Audio API — jangan file audio eksternal (sesuai AGENTS.md)
-import { playOrderAlertSound } from "@/lib/sound";
-
-// Saat laporan panic masuk:
-onNewPanicReport(() => {
-  playOrderAlertSound(); // Alert suara
-  showBrowserNotification("🔥 DARURAT: Laporan kebakaran/rescue masuk!");
-});
+// ⚠️ Belum ada tombol "Tolak" dengan field alasan penolakan
+// ⚠️ Belum ada filter per kecamatan
 ```
 
 ---
 
-### DLH Workspace — ❌ HARUS DIBUAT `GovDlhWorkspace.tsx`
+### Dinkes Workspace ✅ Sudah Ada
 
-Tab yang dibutuhkan:
-1. **JEMPUT SAMPAH QUEUE**
-   - List permohonan jemput sampah dengan estimasi berat
-   - Clustering otomatis berdasarkan RW/kelurahan
-   - Tombol "Batch Dispatch" — kirim satu driver untuk beberapa lokasi searah
+File: `src/components/government/workspaces/dinkes/DinkesWorkspace.tsx`
 
-2. **LAPORAN POHON**
-   - Peta laporan pohon berbahaya
-   - Tingkat urgensi (tumbang/miring)
-   - Assign tim pemotongan
+Tab yang ada:
+- ✅ Triage Resep (pending_verification)
+- ✅ In Progress (driver bergerak)
+- ✅ Completed
 
-3. **BANK SAMPAH ANALYTICS**
-   - Total berat sampah terkumpul bulan ini (kg)
-   - Jenis sampah terbanyak
-   - RW paling aktif
-
-Fitur khusus DLH — **Eco Points Calculator**:
+**Phase 2 Gap:**
 ```typescript
-// Setiap kg sampah = poin tertentu untuk warga
-const ecoPointsPerKg = {
-  kardus: 200,    // Rp/kg → konversi ke poin
+// ⚠️ Tambah tab "Prolanis Monitor" khusus pasien lansia rutin
+// ⚠️ Tambah flag "Obat Sudah Disiapkan Farmasi" sebelum dispatch driver
+//    - Petugas farmasi harus centang checkbox ini dulu
+//    - Status intermediate: "ready_for_dispatch" (opsional)
+// ⚠️ Priority badge merah untuk donor_darah (PMI emergency)
+```
+
+---
+
+### Dinsos Workspace ✅ Sudah Ada (Tabs Difabel/Bansos/Bencana)
+
+File: `src/components/government/workspaces/dinsos/DinsosWorkspace.tsx`
+
+Tab yang ada:
+- ✅ Tab Difabel & Lansia
+- ✅ Tab Klaim Bansos Sembako
+- ✅ Tab Logistik Bencana Tagana
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tab Bansos: tambah verifikasi PKH/KKS
+//    - Cek nomor kartu PKH valid (format dari Kemensos)
+//    - Tandai "Terverifikasi DTKS" sebelum dispatch
+// ⚠️ Tab Difabel: tambah filter driver ramah difabel
+//    (saat ini driver dipilih random dari pool tersedia)
+```
+
+---
+
+### Diskop Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/diskop/DiskopWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tambah tab "SHU Dashboard" yang tampilkan:
+//    - Total poin koperasi yang terkumpul
+//    - Estimasi dividen SHU per anggota
+//    - Grafik pertumbuhan UMKM mitra per bulan
+```
+
+---
+
+### Dispar Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/dispar/DisparWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tambah "Event Calendar" view — kalender bulanan event budaya Solo
+// ⚠️ Tambah "Guide Roster" — daftar pemandu aktif yang available
+```
+
+---
+
+### Dishub Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/dishub/DishubWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tambah view peta untuk laporan lalin (cluster per kelurahan)
+// ⚠️ Tab KIR Queue: estimasi waktu antrian per slot
+```
+
+---
+
+### Bapenda Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/bapenda/BapendaWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Jika BapendaRetribusiPasarForm dan BapendaKonsultasiPajakForm dibuat (Phase 2),
+//    tambahkan tab di workspace:
+//    - Tab "Retribusi Pasar": antrian pembayaran kios
+//    - Tab "Konsultasi Pajak": jadwal sesi konsultasi
+```
+
+---
+
+### Damkar Workspace ⚠️ BUTUH UPGRADE SIGNIFIKAN (Prioritas P1)
+
+File: `src/components/government/workspaces/damkar/DamkarWorkspace.tsx`
+
+Status saat ini: ✅ Ada, tapi minimal (hanya list order + 1 tombol resolve)
+
+**Phase 2 Gaps KRITIKAL:**
+
+```typescript
+// ⚠️ 1. AUDIO ALERT — WAJIB! (lihat Aturan 7 di SKILL.md)
+import { playOrderAlertSound } from "@/lib/sound";
+const previousOrderCount = useRef(0);
+
+useEffect(() => {
+  const newOrders = orders.filter(o =>
+    o.status === "pending" &&
+    o.serviceType?.includes("damkar") &&
+    o.createdAt // Hanya order baru
+  );
+  if (newOrders.length > 0 && previousOrderCount.current < orders.length) {
+    playOrderAlertSound(); // Bunyi alert saat laporan panic baru masuk
+  }
+  previousOrderCount.current = orders.length;
+}, [orders]);
+
+// ⚠️ 2. PETA KOORDINAT — tampilkan lokasi panic di peta mini
+// Gunakan data gpsLat/gpsLng dari citizenDetails order
+// Tampilkan sebagai embeddable Google Maps link atau StaticMap
+
+// ⚠️ 3. TABS: Pisahkan Darurat vs Animal Rescue vs Riwayat
+// Tab "DARURAT AKTIF" — badge merah berkedip, waktu elapsed
+// Tab "Animal Rescue" — laporan non-api
+// Tab "Riwayat" — log penanganan + response time
+
+// ⚠️ 4. BADGE WAKTU ELAPSED — tampilkan sudah berapa menit sejak laporan
+const elapsedMinutes = Math.floor(
+  (Date.now() - order.createdAt.toDate().getTime()) / 60000
+);
+// Badge merah berkedip jika elapsed > 5 menit (melewati SLA)
+
+// ⚠️ 5. RESPONSE TIME METRICS — tampilkan di bento grid:
+// - Laporan aktif yang belum ditangani
+// - Rata-rata response time hari ini
+// - Armada siaga di Mako (hardcoded sementara)
+```
+
+---
+
+### BPBD Workspace ⚠️ Butuh Upgrade
+
+File: `src/components/government/workspaces/bpbd/BpbdWorkspace.tsx`
+
+**Phase 2 Gaps:**
+
+```typescript
+// ⚠️ 1. EWS DASHBOARD — Tab utama berisi status siaga sungai
+// Tampilkan panel info statis (Phase 2 — data real dari BBWS Phase 3):
+const EWS_STATUS = {
+  bengawanSolo: { level: "Normal", status: "Siaga 4" },
+  kaliPepe: { level: "Waspada", status: "Siaga 3" },
+  kaliJenes: { level: "Normal", status: "Siaga 4" },
+};
+
+// UI: card berwarna per level (hijau/kuning/oranye/merah)
+
+// ⚠️ 2. LOGISTIK INVENTORY — bisa hardcoded Phase 2:
+const LOGISTIK_STOK = {
+  tendaDarurat: { stok: 45, threshold: 10 },
+  selimut: { stok: 200, threshold: 50 },
+  airMineralDus: { stok: 150, threshold: 30 },
+  sembakoDarurat: { stok: 80, threshold: 20 },
+};
+// Alert visual jika stok < threshold
+
+// ⚠️ 3. Tab "Permintaan Bantuan" — triage lokasi terdampak
+// Tampilkan bantuanDiminta[] dari citizenDetails sebagai badge list
+```
+
+---
+
+### DP3A Workspace ⚠️ BUTUH UPGRADE KRITIKAL (Privacy!)
+
+File: `src/components/government/workspaces/dp3a/Dp3aWorkspace.tsx`
+
+Status saat ini: ✅ Ada, tapi **identitas terbuka penuh — ini risiko privasi!**
+
+**Phase 2 Gaps KRITIKAL:**
+
+```typescript
+// ⚠️ 1. DATA MASKING — Semua identitas harus masked by default
+// Nama pelapor: tampilkan kode kasus, bukan nama asli
+const displayName = (order: OrderDocument) => {
+  const details = order.citizenDetails || {};
+  if (details.isAnonymous) return details.reporterName; // "Pemohon-XXXX"
+  return "**Klik untuk lihat**"; // Butuh aksi verifikasi identitas
+};
+
+// Nomor WA: selalu masked
+const maskedPhone = (phone: string) =>
+  phone ? `${phone.slice(0, 4)}****${phone.slice(-4)}` : "—";
+
+// ⚠️ 2. Tab "Kasus Aktif" — tampilkan dengan kode kasus
+// ⚠️ 3. Tab "Jadwal Konseling Puspaga" — kalender sesi psikolog
+// ⚠️ 4. Aksi "Verifikasi Identitas" — reveal data asli hanya setelah konfirmasi
+```
+
+---
+
+### DLH Workspace ⚠️ Butuh Upgrade
+
+File: `src/components/government/workspaces/dlh/DlhWorkspace.tsx`
+
+**Phase 2 Gaps:**
+
+```typescript
+// ⚠️ 1. ECO POINTS CALCULATOR
+// Setelah verifikasi berat sampah oleh petugas DLH:
+const ECO_POINTS_PER_KG: Record<string, number> = {
+  kardus: 200,
   plastik: 150,
   besi: 500,
   kaca: 100,
   jelantah: 300,
-  kertas: 150
+  kertas: 150,
 };
-// Workspace DLH bisa trigger award poin ke akun customer setelah verifikasi berat
+
+// Petugas input berat aktual → sistem kalkulasi poin
+// Tombol "Award Eco Points" → update UserDocument.points
+
+// ⚠️ 2. BANK SAMPAH ANALYTICS (bento metrics)
+// - Total berat terkumpul bulan ini (kg)
+// - Jenis sampah terbanyak
+// - RW paling aktif dalam bulan ini
+
+// ⚠️ 3. LAPORAN POHON MAP — cluster pohon berbahaya per kelurahan
+// Tampilkan dengan badge urgensi (segera/normal)
 ```
 
 ---
 
-### Disdik Workspace — ❌ HARUS DIBUAT `GovDisdikWorkspace.tsx`
+### Disdik Workspace ✅ Sudah Ada
 
-Tab yang dibutuhkan:
-1. **JEMPUT SEKOLAH QUEUE**
-   - Daftar siswa berdasarkan sekolah dan jadwal
-   - Filter: jam berangkat pagi / jam pulang siang
-   - Batch dispatch berdasarkan rute yang sama
+File: `src/components/government/workspaces/disdik/DisdikWorkspace.tsx`
 
-2. **LEGALISIR DOKUMEN**
-   - Verifikasi NISN sebelum dispatch
-   - Status dokumen: "Sudah disiapkan sekolah" sebelum driver datang
-
-3. **ROSTER SEKOLAH**
-   - Daftar sekolah mitra yang terdaftar di program
-
----
-
-### Dispusip Workspace — ❌ HARUS DIBUAT `GovDispusipWorkspace.tsx`
-
-Tab yang dibutuhkan:
-1. **PERMINTAAN BUKU**
-   - Verifikasi nomor kartu anggota dan ketersediaan buku
-   - Toggle "Tersedia" / "Tidak Tersedia" (tawarkan alternatif)
-   - Dispatch driver untuk ambil buku dari perpustakaan → antar ke pembaca
-
-2. **BUKU AKAN KEMBALI**
-   - Daftar buku yang masa pinjem hampir habis (alert H-3, H-1)
-   - Kirim reminder WA otomatis ke peminjam
-   - Dispatch driver jemput buku kembali
-
-3. **KOLEKSI DIGITAL**
-   - Link ke e-book yang tersedia (integrasi eksternal)
-
----
-
-### Dispertan Workspace — ❌ HARUS DIBUAT `GovDispertanWorkspace.tsx`
-
-Tab yang dibutuhkan:
-1. **JADWAL KUNJUNGAN DOKTER HEWAN**
-   - Kalender booking homecare per tanggal
-   - Alokasi dokter hewan yang bertugas (roster Puskeswan)
-   - Status kunjungan: booking / dikonfirmasi / selesai
-
-2. **CATATAN MEDIS RINGKAS**
-   - Rekam gejala + diagnosis + treatment per hewan
-   - Notif vaksin ulang (H-30 sebelum jatuh tempo)
-
-3. **GERAKAN PANGAN MURAH (GPM)**
-   - Jadwal GPM keliling per kelurahan
-   - Stok komoditas tersedia
-
----
-
-### Disnaker Workspace — ❌ HARUS DIBUAT `GovDisnakerWorkspace.tsx`
-
-Tab yang dibutuhkan:
-1. **KARTU KUNING QUEUE**
-   - Verifikasi NIK dan pendidikan terakhir
-   - Dispatch driver antar kartu AK-1 ke rumah pencari kerja
-
-2. **PENDAFTARAN BLK**
-   - Daftar antrian kursus BLK per jurusan
-   - Kapasitas: slot tersedia vs terisi
-   - Konfirmasi pendaftaran dan kirim jadwal via WA
-
-3. **PENGADUAN KETENAGAKERJAAN**
-   - Triage laporan: UMK tidak dibayar, THR, PHK
-   - Forward ke mediator ketenagakerjaan
-
----
-
-### Diskominfo Workspace — ❌ HARUS DIBUAT `GovDiskominfoWorkspace.tsx`
-
-Tab yang dibutuhkan:
-1. **ULAS ADUAN TRIAGE**
-   - Daftar aduan masuk dengan kategori
-   - Filter: Belum ditindak / Sedang diproses / Selesai
-   - Tombol "Forward ke Dinas Terkait" (bisa dispatch ke dinas lain)
-
-2. **TRACKING SLA**
-   - Monitor SLA 1x24 jam response time
-   - Alert aduan yang hampir melewati SLA
-   - Statistik rata-rata penyelesaian per kategori
-
-3. **BROADCAST ANTI-HOAKS**
-   - Buat siaran klarifikasi hoaks yang beredar di Solo
-
----
-
-### Satpol PP Workspace — ❌ HARUS DIBUAT `GovSatpolppWorkspace.tsx`
-
-Tab yang dibutuhkan:
-1. **LAPORAN TRANTIB MAP**
-   - Peta clustering laporan per kelurahan
-   - Heatmap zona rawan pelanggaran
-   - Dispatch tim patroli ke lokasi laporan
-
-2. **IZIN KERAMAIAN**
-   - Queue permohonan izin acara
-   - Verifikasi persyaratan (KTP penyelenggara, lokasi, estimasi peserta)
-   - Jadwal pengawalan petugas
-
-3. **PATROLI LOG**
-   - Riwayat patroli per hari
-   - Jumlah penertiban
-
----
-
-### BPBD Workspace — ❌ HARUS DIBUAT `GovBpbdWorkspace.tsx`
-
-**Prioritas: TINGGI** — layanan bencana
-
-Tab yang dibutuhkan:
-1. **EWS DASHBOARD** (Tab Utama)
-   - Status level siaga Bengawan Solo real-time (embed data BBWS)
-   - Status level siaga Kali Pepe dan Kali Jenes
-   - Peta titik rawan banjir Surakarta
-   - Alert otomatis via broadcast saat naik ke Siaga 2
-
-2. **PERMINTAAN BANTUAN DARURAT**
-   - Triage lokasi terdampak bencana
-   - Alokasi logistik dari gudang BPBD
-   - Koordinasi driver untuk distribusi logistik
-
-3. **LOGISTIK INVENTORY**
-   - Stok tenda darurat, selimut, sembako
-   - Alert saat stok < threshold
-
----
-
-### DP3APM Workspace — ❌ HARUS DIBUAT `GovDp3aWorkspace.tsx`
-
-> ⚠️ PRIVACY CRITICAL: Workspace ini harus lebih terbatas aksesnya
-
-Tab yang dibutuhkan:
-1. **KASUS AKTIF** (data harus terenkripsi / anonim di display)
-   - Tampilkan kode kasus (bukan nama asli) kecuali petugas sudah verify identitasnya
-   - Status penanganan
-   - Level urgensi
-
-2. **PENDAMPINGAN AKTIF**
-   - Psikolog yang sedang menangani kasus
-   - Jadwal sesi konseling Puspaga
-   - Status safe house jika butuh perlindungan fisik
-
-3. **BOOKING KONSELING PUSPAGA**
-   - Kalender sesi psikolog tersedia
-   - Konfirmasi booking
-
-Aturan tambahan untuk DP3A workspace:
+**Phase 2 Gap:**
 ```typescript
-// Workspace ini WAJIB memiliki audit log akses:
-// Siapa yang mengakses, kapan, dari device apa
-// Data kasus tidak boleh di-export/screenshot tanpa autentikasi ulang
+// ⚠️ Jika DisdikAntarIjazahForm dibuat (Phase 2):
+//    Tambah tab "Legalisir Dokumen" dengan verifikasi NISN
+// ⚠️ Tab "Jemput Sekolah": filter per jam berangkat pagi vs siang
 ```
 
 ---
 
-### DPMPTSP Workspace — ❌ HARUS DIBUAT `GovDpmptspWorkspace.tsx`
+### Dispusip Workspace ⚠️ Butuh Upgrade
 
-Tab yang dibutuhkan:
-1. **SK SIAP ANTAR**
-   - Daftar SK izin usaha yang sudah terbit dan siap diantar
-   - Verifikasi nomor registrasi MPP
-   - Dispatch driver untuk antar SK ke kantor pemohon
+File: `src/components/government/workspaces/dispusip/DispusipWorkspace.tsx`
 
-2. **ANTREAN MPP DIGITAL**
-   - Monitor antrean walk-in MPP hari ini
-   - Estimasi waktu tunggu per loket
+**Phase 2 Gaps:**
+```typescript
+// ⚠️ 1. REMINDER H-3/H-1 — Alert buku yang hampir habis masa pinjam
+const getBooksNearDue = (orders: OrderDocument[]) => {
+  return orders.filter(o => {
+    const details = o.citizenDetails || {};
+    const borrowDate = new Date(details.submittedAt);
+    const durationDays = details.durasiPeminjaman || 14;
+    const dueDate = new Date(borrowDate);
+    dueDate.setDate(dueDate.getDate() + durationDays);
+    const daysUntilDue = Math.floor((dueDate.getTime() - Date.now()) / 86400000);
+    return daysUntilDue <= 3; // H-3 atau kurang
+  });
+};
 
-3. **STATISTIK PENERBITAN**
-   - Jumlah izin diterbitkan per bulan
-   - Jenis izin terbanyak
+// ⚠️ 2. Toggle "Buku Tersedia" / "Tidak Tersedia" — saat verifikasi
+//    Jika tidak tersedia, bisa input nama alternatif buku
+```
+
+---
+
+### Dispertan Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/dispertan/DispertanWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tambah kalender view jadwal kunjungan dokter hewan per tanggal
+// ⚠️ Roster dokter hewan yang bertugas (Puskeswan aktif)
+```
+
+---
+
+### Disnaker Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/disnaker/DisnakerWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tab "Pendaftaran BLK": tampilkan slot tersedia vs terisi per jurusan
+// ⚠️ Tab "Pengaduan Ketenagakerjaan": triage laporan UMK/THR/PHK
+```
+
+---
+
+### Diskominfo Workspace ⚠️ Butuh Upgrade
+
+File: `src/components/government/workspaces/diskominfo/DiskominfoWorkspace.tsx`
+
+**Phase 2 Gaps:**
+
+```typescript
+// ⚠️ 1. SLA TRACKER — Monitor 1x24 jam response time
+const getSLAStatus = (order: OrderDocument) => {
+  const createdAt = order.createdAt?.toDate();
+  if (!createdAt) return "unknown";
+  const elapsed = (Date.now() - createdAt.getTime()) / 3600000; // jam
+  if (elapsed > 24) return "overdue";    // Melewati SLA
+  if (elapsed > 18) return "warning";   // Hampir melewati SLA
+  return "ontrack";
+};
+
+// Badge per order: hijau (on track) / kuning (< 6 jam lagi) / merah (overdue)
+// Metrik: "Rata-rata penyelesaian: X jam" di bento grid
+
+// ⚠️ 2. "FORWARD KE DINAS TERKAIT" — untuk aduan yang bukan kewenangan Diskominfo
+// Dropdown pilih dinas tujuan → update additionalRole order
+// Contoh: laporan jalan rusak → forward ke Dishub
+
+// ⚠️ 3. Filter aduan by kategori (jalan_rusak, sampah, lampu, dll)
+```
+
+---
+
+### Satpol PP Workspace ⚠️ Butuh Upgrade
+
+File: `src/components/government/workspaces/satpolpp/SatpolppWorkspace.tsx`
+
+**Phase 2 Gaps:**
+
+```typescript
+// ⚠️ 1. Tab terpisah: "Laporan Trantib" vs "Izin Keramaian"
+//    Saat ini mungkin hanya 1 list campur semua jenis
+
+// ⚠️ 2. Heatmap zona rawan (Phase 3 — butuh peta)
+//    Phase 2: tampilkan tabel per kelurahan + jumlah laporan
+
+// ⚠️ 3. Tab "Izin Keramaian" — verifikasi persyaratan:
+//    Nama penyelenggara, KTP, lokasi, estimasi peserta, tanggal
+//    Aksi: Setujui / Tolak / Minta Dokumen Tambahan
+```
+
+---
+
+### DPMPTSP Workspace ✅ Sudah Ada
+
+File: `src/components/government/workspaces/dpmptsp/DpmptspWorkspace.tsx`
+
+**Phase 2 Gap:**
+```typescript
+// ⚠️ Tambah verifikasi nomorRegistrasiMPP dari citizenDetails
+// ⚠️ Tab "SK Siap Antar" vs "Antrean Sedang Diproses"
+// ⚠️ Statistik izin diterbitkan per bulan + jenis terbanyak
+```
 
 ---
 
 ## Template Komponen Workspace Baru
 
-Gunakan template ini sebagai starting point untuk membuat workspace baru:
-
 ```tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { OrderDocument } from "@/types/order.types";
-import { SectorDefinition } from "@/constants/ecosystemSectors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-// ... import icons sesuai kebutuhan
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/constants/collections";
 
-interface Gov<DinasName>WorkspaceProps {
+interface GovWorkspaceProps {
   orders: OrderDocument[];
   loading: boolean;
 }
 
-export function Gov<DinasName>Workspace({ orders, loading }: Gov<DinasName>WorkspaceProps) {
-  const [activeTab, setActiveTab] = useState<"triage" | "inprogress" | "completed" | "features">("triage");
+export function <DinasName>Workspace({ orders, loading }: GovWorkspaceProps) {
+  const [activeTab, setActiveTab] = useState<"triage" | "inprogress" | "completed">("triage");
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const pendingOrders = orders.filter(o => o.status === "pending_verification");
   const inProgressOrders = orders.filter(o => ["in_progress", "accepted", "pending"].includes(o.status));
   const completedOrders = orders.filter(o => o.status === "completed");
 
+  const handleApprove = async (orderId: string) => {
+    if (!orderId) return;
+    setProcessingId(orderId);
+    try {
+      await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+        status: "pending",
+        verifiedByDinasAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } catch (err: any) {
+      alert(`Gagal: ${err.message}`);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const currentList =
+    activeTab === "triage" ? pendingOrders :
+    activeTab === "inprogress" ? inProgressOrders :
+    completedOrders;
+
   return (
-    <div className="space-y-4">
-      {/* Executive Metrics */}
-      <div className="grid grid-cols-3 gap-3">
-        <MetricCard label="Perlu Tindakan" value={pendingOrders.length} color="rose" />
-        <MetricCard label="Sedang Diproses" value={inProgressOrders.length} color="amber" />
-        <MetricCard label="Selesai Hari Ini" value={completedOrders.length} color="emerald" />
+    <div className="space-y-5">
+      {/* Metrik Bento 4 kolom */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Isi dengan metrik relevan dinas */}
       </div>
 
       {/* Tab Selector */}
-      {/* Sesuaikan tab dengan kebutuhan spesifik dinas */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-zinc-800/80 rounded-2xl">
+        {(["triage", "inprogress", "completed"] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition-all ${
+              activeTab === tab
+                ? "bg-white dark:bg-zinc-700 shadow-sm text-slate-900 dark:text-white"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {tab === "triage" ? `Perlu Tindakan (${pendingOrders.length})` :
+             tab === "inprogress" ? `Diproses (${inProgressOrders.length})` :
+             `Selesai (${completedOrders.length})`}
+          </button>
+        ))}
+      </div>
 
-      {/* Tab Content */}
-      {activeTab === "triage" && (
-        <TriagePanel orders={pendingOrders} loading={loading} />
+      {/* Order List */}
+      {loading ? (
+        <div className="p-8 text-center flex items-center justify-center gap-2 text-xs text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Memuat data...
+        </div>
+      ) : currentList.length === 0 ? (
+        <div className="p-8 text-center text-xs text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
+          Tidak ada permohonan di kategori ini.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {currentList.map(order => {
+            const details = order.citizenDetails || {};
+            return (
+              <div key={order.id} className="p-4 rounded-2xl bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] space-y-3">
+                {/* Render detail order yang relevan dari details */}
+                {activeTab === "triage" && (
+                  <Button
+                    size="sm"
+                    onClick={() => order.id && handleApprove(order.id)}
+                    disabled={processingId === order.id}
+                    className="w-full h-8 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    {processingId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "✓ Verifikasi & Dispatch ke Driver"}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

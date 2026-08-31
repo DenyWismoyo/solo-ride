@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/AuthProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -9,6 +9,7 @@ import { functionsService } from "@/services/functions.service";
 import { RouteMap } from "@/components/map/RouteMap";
 import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
 import { SoloHeritageQuickPicker } from "@/components/map/SoloHeritageQuickPicker";
+import { SavedAddressQuickPick } from "@/components/map/SavedAddressQuickPick";
 import { Button } from "@/components/ui/button";
 import { 
   MapPin, 
@@ -28,6 +29,9 @@ import {
 import { LocationPoint } from "@/types/order.types";
 import { DEFAULT_CENTER } from "@/constants/maps";
 import { reverseGeocodeSurakarta, getLocalNearestAddress } from "@/lib/geoResolver";
+import { SoloAppLogoIcon } from "@/components/icons/SoloAppLogoIcon";
+import { useRecentDestinations } from "@/hooks/useRecentDestinations";
+import { RecentDestinationsList } from "@/components/map/RecentDestinationsList";
 import { motion } from "motion/react";
 
 export default function CarBookingPage() {
@@ -42,6 +46,8 @@ export default function CarBookingPage() {
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [isOrdering, setIsOrdering] = useState(false);
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+
+  const { addRecentDestination } = useRecentDestinations();
 
   // Manual Map Pin Picker State
   const [manualPickType, setManualPickType] = useState<"pickup" | "dropoff" | null>(null);
@@ -89,7 +95,7 @@ export default function CarBookingPage() {
     setPrice(0);
   };
 
-  const calculateRoute = async () => {
+  const calculateRoute = useCallback(async () => {
     if (!pickup || !dropoff) {
       alert("Harap tentukan titik jemput dan lokasi tujuan terlebih dahulu.");
       return;
@@ -144,7 +150,21 @@ export default function CarBookingPage() {
     } finally {
       setIsCalculatingPrice(false);
     }
-  };
+  }, [pickup, dropoff]);
+
+  const prevPickup = useRef(pickup);
+  const prevDropoff = useRef(dropoff);
+
+  // Auto calculate ONLY when pickup or dropoff actually changes
+  useEffect(() => {
+    if (pickup !== prevPickup.current || dropoff !== prevDropoff.current) {
+      if (pickup && dropoff) {
+        calculateRoute();
+      }
+      prevPickup.current = pickup;
+      prevDropoff.current = dropoff;
+    }
+  }, [pickup, dropoff, calculateRoute]);
 
   const handleOrder = async () => {
     if (!user) {
@@ -167,6 +187,7 @@ export default function CarBookingPage() {
         price: price,
         paymentMethod: "cash"
       });
+      addRecentDestination(dropoff);
       router.push(`/order/${orderId}`);
     } catch (err: any) {
       alert(err.message || "Gagal membuat pesanan.");
@@ -178,6 +199,12 @@ export default function CarBookingPage() {
   const handleResetRoute = () => {
     setPrice(0);
     setDirections(null);
+  };
+
+  const handleSetDropoff = (point: LocationPoint) => {
+    setDropoff(point);
+    setDirections(null);
+    setPrice(0);
   };
 
   return (
@@ -350,37 +377,43 @@ export default function CarBookingPage() {
                 className="space-y-2 pointer-events-auto"
               >
                 <div className="bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-xl p-2.5 backdrop-blur-xl space-y-2">
-                  {/* Pickup Input */}
-                  <div className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200/60 dark:border-white/[0.06]">
-                    <div className="p-1.5 bg-teal-500/15 text-teal-600 dark:text-teal-400 rounded-lg shrink-0">
-                      <MapPin className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between pr-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Titik Jemput Mobil
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setManualPickType("pickup")}
-                          className="text-[9px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <Map className="h-2.5 w-2.5" />
-                          <span>Pilih di Peta</span>
-                        </button>
+                  {/* Pickup Input - ONLY visible if dropoff is set */}
+                  {dropoff && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200/60 dark:border-white/[0.06] overflow-hidden"
+                    >
+                      <div className="p-1.5 bg-teal-500/15 text-teal-600 dark:text-teal-400 rounded-lg shrink-0">
+                        <MapPin className="h-3.5 w-3.5" />
                       </div>
-                      <PlaceAutocomplete
-                        value={pickup?.address}
-                        placeholder="Pilih lokasi penjemputan mobil..."
-                        onPickOnMapClick={() => setManualPickType("pickup")}
-                        onLocationSelect={(point) => {
-                          setPickup(point);
-                          setDirections(null);
-                          setPrice(0);
-                        }}
-                      />
-                    </div>
-                  </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between pr-1">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Titik Jemput Mobil
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setManualPickType("pickup")}
+                            className="text-[9px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                          >
+                            <Map className="h-2.5 w-2.5" />
+                            <span>Pilih di Peta</span>
+                          </button>
+                        </div>
+                        <PlaceAutocomplete
+                          value={pickup?.address}
+                          placeholder="Lokasi penjemputan mobil dari peta atau GPS..."
+                          onPickOnMapClick={() => setManualPickType("pickup")}
+                          onLocationSelect={(point) => {
+                            setPickup(point);
+                            setDirections(null);
+                            setPrice(0);
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Dropoff Input */}
                   <div className="flex items-center gap-2 p-1.5 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200/60 dark:border-white/[0.06]">
@@ -403,31 +436,36 @@ export default function CarBookingPage() {
                       </div>
                       <PlaceAutocomplete
                         value={dropoff?.address}
-                        placeholder="Pilih lokasi tujuan di Solo..."
+                        placeholder="Mau ke mana dengan mobil?"
                         onPickOnMapClick={() => setManualPickType("dropoff")}
-                        onLocationSelect={(point) => {
-                          setDropoff(point);
-                          setDirections(null);
-                          setPrice(0);
-                        }}
+                        onLocationSelect={handleSetDropoff}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Solo Heritage & Landmark Minimized Quick Picker Component */}
-                <SoloHeritageQuickPicker
-                  onSelectPickup={(point) => {
-                    setPickup(point);
-                    setDirections(null);
-                    setPrice(0);
-                  }}
-                  onSelectDropoff={(point) => {
-                    setDropoff(point);
-                    setDirections(null);
-                    setPrice(0);
-                  }}
-                />
+                {/* Quick Pickers - ONLY show if dropoff is not set */}
+                {!dropoff && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-3 mt-2"
+                  >
+                    <SavedAddressQuickPick
+                      onSelect={handleSetDropoff}
+                      className="px-1"
+                    />
+                    <RecentDestinationsList 
+                      onSelect={handleSetDropoff} 
+                    />
+                    <SoloHeritageQuickPicker
+                      onSelectDropoff={handleSetDropoff}
+                      onSelectPickup={(point) => {
+                        setPickup(point);
+                      }}
+                    />
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </div>
