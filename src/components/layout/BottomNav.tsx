@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 import { 
   Home, 
   Clock, 
@@ -9,7 +10,7 @@ import {
   User, 
   Radio, 
   Wallet, 
-  History, 
+  TrendingUp, 
   ShieldCheck 
 } from "lucide-react";
 
@@ -30,42 +31,61 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
   ];
 
   const driverTabs = [
-    { id: "radar", label: "Radar Order", icon: Radio, onClick: () => { onTabChange("radar"); router.push("/driver"); } },
-    { id: "history", label: "Riwayat", icon: History, onClick: () => onTabChange("history") },
-    { id: "wallet", label: "Dompet", icon: Wallet, onClick: () => onTabChange("wallet") },
-    { id: "profile", label: "Mitra", icon: User, onClick: () => onTabChange("profile") },
+    { id: "radar", label: "Radar", icon: Radio, onClick: () => onTabChange("radar") },
+    { id: "income", label: "Pendapatan", icon: Wallet, onClick: () => onTabChange("income") },
+    { id: "performance", label: "Performa", icon: TrendingUp, onClick: () => onTabChange("performance") },
+    { id: "partner", label: "Mitra", icon: ShieldCheck, onClick: () => onTabChange("partner") },
   ];
 
   const tabs = role === "driver" ? driverTabs : customerTabs;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 bg-white/90 dark:bg-[#030712]/90 backdrop-blur-xl border-t border-slate-200 dark:border-zinc-800/80 px-2 py-2 transition-colors">
-      <div className="max-w-md mx-auto grid grid-cols-4 gap-1">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+    <nav className="fixed bottom-0 inset-x-0 z-30 pb-[env(safe-area-inset-bottom,8px)] px-3 pointer-events-none">
+      <div className="max-w-md mx-auto pointer-events-auto">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 350, damping: 25 }}
+          className="bg-white/90 dark:bg-[#080d1a]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.7)] rounded-[2rem] p-1.5 grid grid-cols-4 gap-1 relative overflow-hidden"
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
 
-          return (
-            <button
-              key={tab.id}
-              onClick={tab.onClick}
-              className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all cursor-pointer ${
-                isActive 
-                  ? "text-emerald-600 dark:text-emerald-400 font-bold" 
-                  : "text-slate-500 hover:text-slate-800 dark:text-zinc-500 dark:hover:text-zinc-300 font-medium"
-              }`}
-            >
-              <div className={`p-1 rounded-xl transition-all ${
-                isActive ? "bg-emerald-500/10 scale-110" : ""
-              }`}>
-                <Icon className={`h-5 w-5 ${isActive ? "text-emerald-600 dark:text-emerald-400 stroke-[2.5]" : "text-slate-400 dark:text-zinc-500"}`} />
-              </div>
-              <span className="text-[11px] mt-0.5 tracking-tight">
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={tab.onClick}
+                whileTap={{ scale: 0.88 }}
+                className={`relative flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-colors cursor-pointer z-10 select-none ${
+                  isActive 
+                    ? "text-emerald-600 dark:text-emerald-400 font-bold" 
+                    : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium"
+                }`}
+              >
+                {/* Active Sliding Capsule Indicator with Spring Physics */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeBottomTabPill"
+                    transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                    className="absolute inset-0 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 rounded-2xl -z-10 shadow-sm"
+                  />
+                )}
+
+                <motion.div 
+                  animate={{ scale: isActive ? 1.08 : 1, y: isActive ? -1 : 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? "text-emerald-600 dark:text-emerald-400 stroke-[2.5]" : "text-slate-400 dark:text-zinc-500"}`} />
+                </motion.div>
+                
+                <span className="text-[11px] mt-0.5 tracking-tight font-semibold">
+                  {tab.label}
+                </span>
+              </motion.button>
+            );
+          })}
+        </motion.div>
       </div>
     </nav>
   );

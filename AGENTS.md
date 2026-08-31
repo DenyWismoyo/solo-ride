@@ -223,13 +223,55 @@ interface DriverDocument {
 ## 7. Google Maps Integration Rules
 
 - **Gunakan Places API (New)** — bukan Places API legacy. Proyek baru diblokir dari API lama.
-- Komponen autocomplete: gunakan Web Component `<gmp-place-autocomplete>` via `PlaceAutocomplete.tsx`
+- Komponen autocomplete: gunakan Web Component `<gmp-place-autocomplete>` via `PlaceAutocomplete.tsx`.
+- Parsing objek Place wajib menggunakan `place.location.lat()` / `place.location.lat` dan `place.formattedAddress` / `place.displayName`, jangan pernah mengakses `place.geometry`.
+- Gunakan `GoogleMapsProvider` tunggal sebagai wrapper global daripada memanggil `useJsApiLoader` secara terpencar di setiap child component.
 - Library array **wajib** dideklarasikan sebagai `const` di luar komponen:
   ```typescript
-  const LIBRARIES: ("places")[] = ["places"]; // Di luar component
+  const MAP_LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"]; // Di luar component
   ```
-- Kalkulasi rute: gunakan `DirectionsService` dari `@react-google-maps/api`
-- Jangan panggil `google.maps.*` tanpa pengecekan `isLoaded` dari `useJsApiLoader`
+- Kalkulasi rute: gunakan `DirectionsService` dari `@react-google-maps/api`.
+- Jangan panggil `google.maps.*` tanpa pengecekan `isLoaded` dari `useGoogleMaps()`.
+
+### Concurrency & Location Best Practices
+- Setiap mutasi perubahan status pesanan yang diperebutkan (seperti driver mengambil order) **wajib** menggunakan Firestore `runTransaction`.
+- Broadcast koordinat GPS driver (`useLiveGPS` -> Firestore) **wajib** melalui mekanisme throttling (minimal interval 4 detik atau perpindahan > 5 meter) untuk mencegah pemborosan kuota write database.
+
+### Driver Order Dispatch & Audio Alert Rules
+- Notifikasi audio driver **wajib** menggunakan Web Audio API synthesizer di `src/lib/sound.ts` (`playOrderAlertSound()`, `playSuccessChime()`) untuk performa tinggi tanpa ketergantungan file aset audio eksternal.
+- Komponen dispatch modal driver `IncomingOrderModal` wajib memiliki timer mundur visual (30 detik), rincian pendapatan tunai bersih driver, dan rute lokasi penjemputan/tujuan.
+- Fitur `Auto-Accept` memungkinkan pesanan masuk langsung dieksekusi secara otomatis saat driver mengaktifkannya di dashboard.
+
+### Dedicated Driver Navigation & Workspace Pillars
+Menu navigasi driver **berbeda total** dari navigasi customer. Terdiri dari 4 pilar operasional:
+1. **`radar`**: Power online/offline, preferensi order, auto-accept, incoming order modal, hotspot demand Solo.
+2. **`income`**: Transparansi 100% tunai, status karcis harian flat 24 jam, saldo dompet koperasi, mutasi ledger.
+3. **`performance`**: Rating mitra, tingkat penyelesaian, tabungan poin stamp, estimasi dividen SHU koperasi tahunan, riwayat trip detail.
+4. **`partner`**: KTA digital koperasi, verifikasi legalitas KYC (KTP/SIM), tombol darurat Satgas 24 jam, posko basecamp Solo.
+
+### Super Admin Ecosystem Persona Sandbox & Seeding
+Untuk memfasilitasi pengujian multi-role yang realistis tanpa login-logout:
+- Super Admin dilengkapi dengan **12 Persona Sandbox Surakarta**:
+  1. `sandbox-customer-solo` (Danu Setyawan - Warga Jebres)
+  2. `sandbox-driver-solo` (Joko Santoso - Driver Balapan, Karcis Aktif, Saldo Rp 150rb, ⭐ 4.9)
+  3. `sandbox-merchant-manto` (`merch_kuliner` - Sate Pak Manto Sriwedari)
+  4. `sandbox-merchant-pasar` (`merch_pasar` - Kios Sayur Mbok Darmi Pasar Gede)
+  5. `sandbox-industry-solo` (`ind_kargo` - PT Bengawan Kargo Logistik)
+  6. `sandbox-ind-klinik` (`ind_klinik` - Klinik Medika Pratama Solo - Spesimen Lab & E-Resep)
+  7. `sandbox-ind-travel` (`ind_travel` - Solo Wisata Trans - Shuttle Balapan & Bandara)
+  8. `sandbox-gov-solo` (`gov_diskop` - Diskop & UKM Kota Surakarta - Cadangan SHU)
+  9. `sandbox-gov-dispar` (`gov_dispar` - Dinas Pariwisata Surakarta - Kalender Heritage & Event)
+  10. `sandbox-gov-dukcapil` (`gov_dukcapil` - Disdukcapil - Antar KTP/KK ke Rumah)
+  11. `sandbox-gov-dinsos` (`gov_dinsos` - Dinas Sosial - Bansos Sembako Pasar & Difabel)
+  12. `sandbox-gov-bapenda` (`gov_bapenda` - Bapenda - Retribusi Pasar Digital & PAD)
+- Modul `seedEcosystemSandbox()` di `src/lib/seedSandbox.ts` menginisialisasi seluruh data di atas ke Firestore dalam 1-Click.
+
+### Hierarchical Additional Roles Architecture
+Setiap pengguna dapat memiliki `role` primer dan `additionalRole` spesifik:
+- **`government`**: `gov_diskop`, `gov_dispar`, `gov_dukcapil`, `gov_dinsos`, `gov_bapenda`, `gov_dinkes`, `gov_dishub`
+- **`industry`**: `ind_klinik`, `ind_travel`, `ind_kargo`, `ind_hotel`, `ind_pabrik`, `ind_agro`
+- **`merchant`**: `merch_kuliner`, `merch_pasar`, `merch_mart`, `merch_apotek`, `merch_batik`
+Didefinisikan secara modular di `src/constants/ecosystemSectors.ts`.
 
 ---
 

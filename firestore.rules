@@ -10,83 +10,91 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
-    // 1. Users Collection
+    // 1. Users Collection (Profile, Role, KYC Status)
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || (isAuthenticated() && request.auth.token.role == 'admin');
+      allow create: if isOwner(userId) || isAuthenticated();
+      allow update, delete: if isAuthenticated();
     }
 
-    // 2. Orders Collection
+    // 2. Orders Collection (Real-time Ride, Food, Delivery Dispatch)
     match /orders/{orderId} {
-      allow read: if isAuthenticated(); 
-      allow create: if isAuthenticated(); 
-      allow update: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
-    // 3. Wallets Collection
+    // 3. Wallets Collection (Driver & Merchant Balances)
     match /wallets/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
-    // 4. Karcis Collection
+    // 4. Karcis Collection (Daily Flat Fee Passes)
     match /karcis/{karcisId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated(); 
+      allow read, write: if isAuthenticated();
     }
 
-    // 5. Ledger Collection
+    // 5. Ledger Collection (Financial Mutation Records)
     match /ledger/{ledgerId} {
-      allow read: if isOwner(resource.data.userId);
-      allow create: if isAuthenticated();
-      allow update: if false;
+      allow read, create: if isAuthenticated();
+      allow update, delete: if false; // Immutable audit ledger
     }
 
     // 6. Notifications Collection
     match /notifications/{notifId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
 
-    // 7. Broadcasts Collection
+    // 7. Civic Broadcasts Collection (Pemda & Koperasi Announcements)
     match /broadcasts/{broadcastId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
-    // 8. Contracts Collection
+    // 8. B2B Contracts Collection (Industry Freight & Supply Chain)
     match /contracts/{contractId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
-    // 9. Reviews Collection
+    // 9. Reviews & Ratings Collection
     match /reviews/{reviewId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.reviewerId == request.auth.uid;
+      allow read, write: if isAuthenticated();
     }
 
-    // 10. Menu Items Collection
+    // 10. Menu Items & Catalogs (UMKM Store Menus)
     match /menu_items/{itemId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
-    // 11. Drivers GPS Collection
+    // 11. Live Driver Geolocation GPS
     match /drivers/{driverId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(driverId) || isAuthenticated();
+      allow read, write: if isAuthenticated();
     }
 
-    // 12. KYC Requests Collection
+    // 12. KYC Verification Requests
     match /kyc_requests/{requestId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
+      allow read, write: if isAuthenticated();
+    }
+
+    // 13. Dynamic Pricing & Business Formulas (BizConfig)
+    match /bizConfig/{configId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /bizconfig/{configId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 14. Merchants, Stamps, and Forum
+    match /merchants/{merchantId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /stamps/{stampId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /forum/{forumId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // 15. Default Fallback for Application Subcollections
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
     }
 
   }

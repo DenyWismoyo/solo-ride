@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/AuthProvider";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { authService } from "@/services/auth.service";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   User, 
@@ -24,9 +23,23 @@ import {
   ExternalLink,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  MapPin,
+  Wallet,
+  Gift,
+  FileText,
+  Clock,
+  Award,
+  AlertTriangle,
+  QrCode,
+  Sparkles,
+  Phone,
+  CheckCircle2,
+  Lock,
+  Layers
 } from "lucide-react";
-import { UserRole } from "@/types/user.types";
+import { GOVERNMENT_SECTORS, INDUSTRY_SECTORS } from "@/constants/ecosystemSectors";
+import { SavedAddressesModal } from "@/components/profile/SavedAddressesModal";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -35,8 +48,11 @@ interface ProfileDrawerProps {
 
 export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
   const router = useRouter();
-  const { user, userData, activeRole, setImpersonatedRole } = useAuthContext();
+  const { user, userData, activeRole, setImpersonatedRole, isImpersonating } = useAuthContext();
   const { theme, setTheme } = useTheme();
+
+  // Saved Addresses Modal State
+  const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await authService.logout();
@@ -45,218 +61,502 @@ export function ProfileDrawer({ isOpen, onClose }: ProfileDrawerProps) {
     router.push("/login");
   };
 
+  // Determine if user has admin privileges or is currently impersonating
+  const isSuperAdminOrImpersonating = userData?.role === "admin" || isImpersonating;
+
+  const currentSectorInfo = 
+    activeRole === "government" 
+      ? GOVERNMENT_SECTORS.find(s => s.id === (userData?.additionalRole || "gov_dukcapil"))
+      : activeRole === "industry"
+      ? INDUSTRY_SECTORS.find(s => s.id === (userData?.additionalRole || "ind_kargo"))
+      : null;
+
   const roleNavigation = [
     { role: "customer", label: "Mode Pelanggan (Warga)", desc: "Pesan ojek, kuliner & belanja UMKM", icon: User, path: "/", color: "text-emerald-500 bg-emerald-500/10" },
     { role: "driver", label: "Mode Mitra Driver", desc: "Radar order & karcis harian bebas komisi", icon: Bike, path: "/driver", color: "text-amber-500 bg-amber-500/10" },
     { role: "merchant", label: "Mode Mitra UMKM", desc: "Kelola toko, menu & Flash Sale Pasar Warga", icon: Store, path: "/merchant", color: "text-orange-500 bg-orange-500/10" },
     { role: "industry", label: "Mode Industri B2B", desc: "Logistik kargo & pasokan bahan baku lokal", icon: Building2, path: "/industry", color: "text-blue-500 bg-blue-500/10" },
-    { role: "government", label: "Mode Pemerintah", desc: "Smart City & broadcast resmi kecamatan", icon: Landmark, path: "/gov", color: "text-teal-500 bg-teal-500/10" },
+    { role: "government", label: "Mode Pemerintah", desc: "Smart City & broadcast resmi dinas", icon: Landmark, path: "/gov", color: "text-teal-500 bg-teal-500/10" },
   ];
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} className="max-w-md mx-auto max-h-[85vh] overflow-y-auto">
-      <div className="space-y-5 pb-6">
-        {/* Profile Header */}
-        {user ? (
-          <div className="flex items-center gap-3.5 pb-4 border-b border-zinc-200 dark:border-zinc-800">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-emerald-500/20 shrink-0">
-              {userData?.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-zinc-900 dark:text-white truncate">
-                  {userData?.displayName || "Pengguna Ride-Solo"}
-                </h3>
-                <Badge variant="emerald" size="sm">
-                  {activeRole}
-                </Badge>
-              </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">{user.email}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 bg-zinc-100 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 text-center space-y-3">
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Belum Masuk ke Akun</h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Masuk untuk mengakses ekosistem lokal tanpa perantara.</p>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                className="flex-1 h-9 text-xs border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200"
-                onClick={() => { onClose(); router.push("/login"); }}
-              >
-                Masuk
-              </Button>
-              <Button 
-                className="flex-1 h-9 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
-                onClick={() => { onClose(); router.push("/register"); }}
-              >
-                Daftar
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Poin Stamp Summary */}
-        {user && (
-          <div className="bg-gradient-to-r from-amber-500/10 via-zinc-100 dark:via-zinc-900 to-zinc-100 dark:to-zinc-900 border border-amber-500/25 p-4 rounded-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-amber-500/20 rounded-xl text-amber-600 dark:text-amber-400">
-                  <Coins className="h-5 w-5" />
+    <>
+      <BottomSheet isOpen={isOpen} onClose={onClose} className="max-w-md mx-auto max-h-[88vh] overflow-y-auto">
+        <div className="space-y-4 pb-6">
+          {/* ========================================================================= */}
+          {/* 1. PROFILE HEADER CARD */}
+          {/* ========================================================================= */}
+          {user ? (
+            <div className="p-4 rounded-3xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.08] space-y-3">
+              <div className="flex items-center gap-3.5">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md shrink-0 ${
+                  activeRole === "driver" 
+                    ? "bg-gradient-to-tr from-amber-600 to-orange-500" 
+                    : activeRole === "merchant"
+                    ? "bg-gradient-to-tr from-orange-600 to-red-500"
+                    : activeRole === "government"
+                    ? "bg-gradient-to-tr from-teal-600 to-emerald-500"
+                    : activeRole === "industry"
+                    ? "bg-gradient-to-tr from-blue-600 to-indigo-500"
+                    : "bg-gradient-to-tr from-emerald-600 to-teal-500"
+                }`}>
+                  {userData?.displayName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "U"}
                 </div>
-                <div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Poin Stamp Komunitas</p>
-                  <p className="text-base font-extrabold text-zinc-900 dark:text-white">{userData?.points || 0} Poin</p>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
+                      {userData?.displayName || "Pengguna Ride-Solo"}
+                    </h3>
+                    <Badge 
+                      variant={
+                        activeRole === "driver" ? "amber" :
+                        activeRole === "merchant" ? "orange" :
+                        activeRole === "government" ? "teal" :
+                        activeRole === "industry" ? "blue" : "emerald"
+                      } 
+                      size="sm"
+                    >
+                      {activeRole.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 truncate mt-0.5">{user.email}</p>
+                  {currentSectorInfo && (
+                    <p className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold mt-0.5">
+                      {currentSectorInfo.avatar} {currentSectorInfo.name}
+                    </p>
+                  )}
                 </div>
               </div>
-              <Badge variant="amber" size="sm">
-                Surakarta
-              </Badge>
+
+              {/* Quick Status / Identity Metric Pill */}
+              {activeRole === "customer" && (
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-amber-500" />
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase">Stamp Belanja UMKM</span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">{userData?.points || 0} Poin</span>
+                    </div>
+                  </div>
+                  <Badge variant="emerald" size="sm">Warga Surakarta</Badge>
+                </div>
+              )}
+
+              {activeRole === "driver" && (
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Karcis Harian 24 Jam</span>
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">Aktif (Bebas Komisi)</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Rating Koperasi</span>
+                    <span className="text-xs font-black text-amber-500">⭐ 4.9 (184 Trip)</span>
+                  </div>
+                </div>
+              )}
+
+              {activeRole === "merchant" && (
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Status Kios / Warung</span>
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">🟢 Buka Menerima Pesanan</span>
+                  </div>
+                  <Badge variant="orange" size="sm">0% Komisi</Badge>
+                </div>
+              )}
+
+              {activeRole === "government" && (
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">SKPD / Instansi</span>
+                    <span className="text-xs font-black text-teal-600 dark:text-teal-400">{currentSectorInfo?.name || "Pemkot Surakarta"}</span>
+                  </div>
+                  <Badge variant="teal" size="sm">Akses Resmi</Badge>
+                </div>
+              )}
+
+              {activeRole === "industry" && (
+                <div className="p-3 bg-white dark:bg-[#0c1220] rounded-2xl border border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block uppercase">Entitas B2B Mitra</span>
+                    <span className="text-xs font-black text-blue-600 dark:text-blue-400">{currentSectorInfo?.agencyOrCompanyName || "Mitra Industri Solo"}</span>
+                  </div>
+                  <Badge variant="blue" size="sm">Kontrak Aktif</Badge>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="p-4 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl border border-slate-200 dark:border-zinc-700/60 text-center space-y-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Belum Masuk ke Akun</h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Masuk untuk mengakses ekosistem lokal tanpa perantara.</p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-9 text-xs"
+                  onClick={() => { onClose(); router.push("/login"); }}
+                >
+                  Masuk
+                </Button>
+                <Button 
+                  className="flex-1 h-9 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                  onClick={() => { onClose(); router.push("/register"); }}
+                >
+                  Daftar
+                </Button>
+              </div>
+            </div>
+          )}
 
-        {/* Theme Mode Selector */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
-            Tampilan & Tema Aplikasi:
-          </h4>
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
-            <button
-              onClick={() => setTheme("light")}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                theme === "light"
-                  ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400"
-              }`}
-            >
-              <Sun className="h-3.5 w-3.5 text-amber-500" />
-              <span>Terang</span>
-            </button>
+          {/* ========================================================================= */}
+          {/* 2. ROLE-SPECIFIC MENU ITEMS */}
+          {/* ========================================================================= */}
+          {user && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
+                Menu & Pengaturan {activeRole.toUpperCase()}:
+              </h4>
 
-            <button
-              onClick={() => setTheme("dark")}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                theme === "dark"
-                  ? "bg-zinc-800 text-white shadow-sm border border-zinc-700"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400"
-              }`}
-            >
-              <Moon className="h-3.5 w-3.5 text-amber-400" />
-              <span>Gelap</span>
-            </button>
-
-            <button
-              onClick={() => setTheme("system")}
-              className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                theme === "system"
-                  ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm border border-zinc-200 dark:border-zinc-700"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400"
-              }`}
-            >
-              <Laptop className="h-3.5 w-3.5 text-blue-500" />
-              <span>Sistem</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Multi-Role Quick Jumps */}
-        {user && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
-              Jelajahi Portal Ekosistem:
-            </h4>
-            <div className="space-y-1.5">
-              {roleNavigation.map((item) => {
-                const Icon = item.icon;
-                const isCurrent = activeRole === item.role;
-
-                return (
+              {/* A. MENU KHUSUS CUSTOMER (WARGA) */}
+              {activeRole === "customer" && (
+                <div className="space-y-1.5">
                   <button
-                    key={item.role}
-                    onClick={() => {
-                      onClose();
-                      router.push(item.path);
-                    }}
-                    className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left ${
-                      isCurrent
-                        ? "bg-zinc-100 dark:bg-zinc-800/80 border-emerald-500/40"
-                        : "bg-zinc-50 dark:bg-zinc-900/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-800/80"
-                    }`}
+                    onClick={() => { onClose(); router.push("/services/more"); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-xl ${item.color}`}>
-                        <Icon className="h-4 w-4" />
+                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <Layers className="h-4 w-4" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-zinc-900 dark:text-white">{item.label}</p>
-                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{item.desc}</p>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Semua Layanan Warga Solo</p>
+                        <p className="text-[10px] text-slate-500">16 Layanan Mobilitas, UMKM & Dinas</p>
                       </div>
                     </div>
-                    {isCurrent ? (
-                      <Badge variant="emerald" size="sm">
-                        Aktif
-                      </Badge>
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-zinc-400 dark:text-zinc-600" />
-                    )}
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
                   </button>
-                );
-              })}
 
-              {userData?.role === "admin" && (
+                  <button
+                    onClick={() => setIsAddressesModalOpen(true)}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Alamat Favorit Tersimpan</p>
+                        <p className="text-[10px] text-slate-500">Kelola titik jemput rumah & kantor</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </button>
+
+                  <button
+                    onClick={() => alert("Formulir Pendaftaran Mitra Driver Koperasi Solo. Hubungi Koperasi di Balai Kota.")}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <Bike className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Daftar Jadi Mitra Driver Solo</p>
+                        <p className="text-[10px] text-slate-500">Pendapatan 100% tunai bersih tanpa komisi</p>
+                      </div>
+                    </div>
+                    <Badge variant="amber" size="sm">Buka Pendaftaran</Badge>
+                  </button>
+                </div>
+              )}
+
+              {/* B. MENU KHUSUS DRIVER (MITRA PENGEMUDI) */}
+              {activeRole === "driver" && (
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => { onClose(); router.push("/driver"); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <Bike className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Pusat Radar & Order Driver</p>
+                        <p className="text-[10px] text-slate-500">Peta hotspot keramaian & pesanan masuk</p>
+                      </div>
+                    </div>
+                    <Badge variant="amber" size="sm">Utama</Badge>
+                  </button>
+
+                  <button
+                    onClick={() => alert("KTA Digital Koperasi Angkutan Mitra Surakarta (Terverifikasi).")}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        <ShieldCheck className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">KTA Digital Koperasi Mitra</p>
+                        <p className="text-[10px] text-slate-500">ID Anggota: KOP-SOLO-08892</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </button>
+
+                  <button
+                    onClick={() => alert("Nomor Darurat Satgas Koperasi Solo 24 Jam: 0811-2345-678")}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-rose-500/10 border border-rose-500/25 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400">
+                        <AlertTriangle className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400">Tombol Darurat & Satgas 24 Jam</p>
+                        <p className="text-[10px] text-slate-500">Bantuan kecelakaan / mogok / keamanan</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-rose-500" />
+                  </button>
+                </div>
+              )}
+
+              {/* C. MENU KHUSUS MERCHANT (UMKM) */}
+              {activeRole === "merchant" && (
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => { onClose(); router.push("/merchant"); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                        <Store className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Dashboard Toko & Kelola Menu</p>
+                        <p className="text-[10px] text-slate-500">Pesanan makanan, stok & Flash Sale</p>
+                      </div>
+                    </div>
+                    <Badge variant="orange" size="sm">Buka Kios</Badge>
+                  </button>
+
+                  <button
+                    onClick={() => alert("Pendampingan Sertifikasi Halal Gratis & NIB Diskop Surakarta.")}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <Award className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Program NIB & Halal Diskop</p>
+                        <p className="text-[10px] text-slate-500">Legalitas usaha mikro difasilitasi Pemkot</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  </button>
+                </div>
+              )}
+
+              {/* D. MENU KHUSUS GOVERNMENT (PEMERINTAH) */}
+              {activeRole === "government" && (
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => { onClose(); router.push("/gov"); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400">
+                        <Landmark className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Pusat Komando Dinas Pemkot</p>
+                        <p className="text-[10px] text-slate-500">Kelola berkas masuk & siaran darurat</p>
+                      </div>
+                    </div>
+                    <Badge variant="teal" size="sm">Buka Portal</Badge>
+                  </button>
+                </div>
+              )}
+
+              {/* E. MENU KHUSUS INDUSTRY (B2B) */}
+              {activeRole === "industry" && (
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => { onClose(); router.push("/industry"); }}
+                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">Portal Logistik B2B Industri</p>
+                        <p className="text-[10px] text-slate-500">Dispatch kargo, kurir lab & shuttle</p>
+                      </div>
+                    </div>
+                    <Badge variant="blue" size="sm">Buka Portal</Badge>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* 3. TAMPILAN & TEMA APLIKASI (SEMUA ROLE) */}
+          {/* ========================================================================= */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-1">
+              Tampilan & Tema Aplikasi:
+            </h4>
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.06] rounded-2xl">
+              <button
+                onClick={() => setTheme("light")}
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  theme === "light"
+                    ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                    : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
+                }`}
+              >
+                <Sun className="h-3.5 w-3.5 text-amber-500" />
+                <span>Terang</span>
+              </button>
+
+              <button
+                onClick={() => setTheme("dark")}
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  theme === "dark"
+                    ? "bg-zinc-800 text-white shadow-sm border border-zinc-700"
+                    : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
+                }`}
+              >
+                <Moon className="h-3.5 w-3.5 text-amber-400" />
+                <span>Gelap</span>
+              </button>
+
+              <button
+                onClick={() => setTheme("system")}
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  theme === "system"
+                    ? "bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-zinc-700"
+                    : "text-slate-500 hover:text-slate-900 dark:text-zinc-400"
+                }`}
+              >
+                <Laptop className="h-3.5 w-3.5 text-blue-500" />
+                <span>Sistem</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* 4. SUPER ADMIN & IMPERSONATE SWITCHER (HANYA MUNCUL UNTUK ADMIN/TESTER) */}
+          {/* ========================================================================= */}
+          {isSuperAdminOrImpersonating && (
+            <div className="space-y-2 p-3.5 rounded-3xl bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4 text-rose-500" />
+                  <h4 className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                    Admin & Sandbox Switcher:
+                  </h4>
+                </div>
+                <Badge variant="rose" size="sm">TEST DEV</Badge>
+              </div>
+
+              <div className="space-y-1.5">
+                {roleNavigation.map((item) => {
+                  const Icon = item.icon;
+                  const isCurrent = activeRole === item.role;
+
+                  return (
+                    <button
+                      key={item.role}
+                      onClick={() => {
+                        onClose();
+                        router.push(item.path);
+                      }}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                        isCurrent
+                          ? "bg-white dark:bg-zinc-800 border-rose-500/40 shadow-sm"
+                          : "bg-white/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/[0.06] border-slate-200/60 dark:border-white/[0.05]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-1.5 rounded-xl ${item.color}`}>
+                          <Icon className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 dark:text-white">{item.label}</p>
+                          <p className="text-[9px] text-slate-500 dark:text-zinc-400">{item.desc}</p>
+                        </div>
+                      </div>
+                      {isCurrent ? (
+                        <Badge variant="rose" size="sm">
+                          Aktif
+                        </Badge>
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                      )}
+                    </button>
+                  );
+                })}
+
                 <button
                   onClick={() => {
                     onClose();
                     router.push("/admin");
                   }}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-all text-left"
+                  className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-rose-600 text-white font-bold text-xs shadow-md cursor-pointer hover:bg-rose-500 transition-colors mt-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-rose-500/20 text-rose-500">
-                      <ShieldAlert className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-rose-600 dark:text-rose-300">Super Admin Control Hub</p>
-                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Ubah role user & impersonate tester</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4" />
+                    <span>Buka Super Admin Control Hub</span>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-rose-500" />
+                  <ChevronRight className="h-4 w-4" />
                 </button>
-              )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* WhatsApp Help */}
-        <button
-          onClick={() => window.open("https://wa.me/6281234567890?text=Halo%20Admin%20Ride-Solo%20Surakarta", "_blank")}
-          className="w-full flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors text-left"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
-              <HelpCircle className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-zinc-900 dark:text-white">Pusat Bantuan Komunitas</p>
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">WhatsApp resmi pengurus koperasi</p>
-            </div>
-          </div>
-          <ExternalLink className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500" />
-        </button>
-
-        {/* Logout */}
-        {user && (
-          <Button
-            variant="danger"
-            className="w-full h-11 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold text-xs flex items-center justify-center gap-2"
-            onClick={handleLogout}
+          {/* ========================================================================= */}
+          {/* 5. WHATSAPP BANTUAN & LOGOUT */}
+          {/* ========================================================================= */}
+          <button
+            onClick={() => window.open("https://wa.me/6281234567890?text=Halo%20Admin%20Ride-Solo%20Surakarta", "_blank")}
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-slate-200/80 dark:border-white/[0.06] transition-colors text-left cursor-pointer"
           >
-            <LogOut className="h-4 w-4" />
-            Keluar dari Akun
-          </Button>
-        )}
-      </div>
-    </BottomSheet>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
+                <HelpCircle className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">Pusat Bantuan & Komunitas</p>
+                <p className="text-[10px] text-slate-500 dark:text-zinc-400">WhatsApp resmi pengurus koperasi Solo</p>
+              </div>
+            </div>
+            <ExternalLink className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+          </button>
+
+          {user && (
+            <Button
+              variant="danger"
+              className="w-full h-11 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Keluar dari Akun
+            </Button>
+          )}
+        </div>
+      </BottomSheet>
+
+      {/* Dedicated Saved Addresses Modal */}
+      <SavedAddressesModal 
+        isOpen={isAddressesModalOpen} 
+        onClose={() => setIsAddressesModalOpen(false)} 
+      />
+    </>
   );
 }

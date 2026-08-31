@@ -1,4 +1,8 @@
-/* --- LIGHT MODE (CRISP ENTERPRISE CANVAS) --- */
+/* ========================================================================= */
+/* SIGAP SLATE & OBSIDIAN DESIGN SYSTEM (ULTRA-REFINED MOBILE-FIRST THEME)    */
+/* ========================================================================= */
+
+/* --- LIGHT MODE (CLEAN APPLE / IOS CANVAS) --- */
 :root {
     --background: #f8fafc;
     --foreground: #0f172a;
@@ -10,12 +14,12 @@
     --primary: #10b981;
     --primary-foreground: #ffffff;
     
-    --header-height: 60px;
-    --bottom-nav-height: calc(64px + env(safe-area-inset-bottom, 0px));
+    --header-height: 64px;
+    --bottom-nav-height: calc(70px + env(safe-area-inset-bottom, 0px));
     
     --secondary: #f1f5f9;
     --secondary-foreground: #0f172a;
-    --muted: #f1f5f9;
+    --muted: #f8fafc;
     --muted-foreground: #64748b;
     
     --accent: #10b981;
@@ -24,33 +28,37 @@
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
     
-    --border: #e2e8f0;
-    --input: #e2e8f0;
+    --border: rgba(226, 232, 240, 0.8);
+    --input: rgba(226, 232, 240, 0.8);
     --ring: #10b981;
     
-    --radius: 1rem;
+    --radius: 1.25rem;
 
-    --sg-glass: rgba(255, 255, 255, 0.92);
-    --sg-glass-border: rgba(226, 232, 240, 0.9);
-    --sg-shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-    --sg-shadow-bento: 0 8px 30px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+    /* Seamless Borderless Glass Tokens (Light Mode) */
+    --sg-glass: rgba(255, 255, 255, 0.94);
+    --sg-glass-subtle: rgba(255, 255, 255, 0.75);
+    --sg-glass-border: rgba(226, 232, 240, 0.7);
+    --sg-shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    --sg-shadow-card: 0 10px 30px -4px rgba(15, 23, 42, 0.06), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
+    --sg-shadow-bento: 0 16px 40px -8px rgba(15, 23, 42, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+    --sg-shadow-floating: 0 20px 45px -10px rgba(16, 185, 129, 0.2), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
 }
 
 /* --- DARK MODE (STEALTH OBSIDIAN & CYBER-GLASS) --- */
 .dark, [data-theme="dark"] {
     --background: #030712;
     --foreground: #f8fafc;
-    --card: #0b0f19;
+    --card: #090d16;
     --card-foreground: #f8fafc;
-    --popover: #0b0f19;
+    --popover: #090d16;
     --popover-foreground: #f8fafc;
     
     --primary: #10b981;
     --primary-foreground: #ffffff;
     
-    --secondary: #1e293b;
+    --secondary: #111827;
     --secondary-foreground: #f8fafc;
-    --muted: #1e293b;
+    --muted: #0b0f19;
     --muted-foreground: #94a3b8;
     
     --accent: #10b981;
@@ -59,50 +67,59 @@
     --destructive: #f43f5e;
     --destructive-foreground: #ffffff;
     
-    --border: rgba(255, 255, 255, 0.08);
-    --input: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.07);
+    --input: rgba(255, 255, 255, 0.07);
     --ring: #10b981;
 
-    --sg-glass: rgba(11, 15, 25, 0.85);
+    /* Seamless Borderless Glass Tokens (Dark Mode) */
+    --sg-glass: rgba(11, 15, 25, 0.88);
+    --sg-glass-subtle: rgba(11, 15, 25, 0.65);
     --sg-glass-border: rgba(255, 255, 255, 0.08);
-    --sg-shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-    --sg-shadow-bento: 0 12px 32px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    --sg-shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    --sg-shadow-card: 0 12px 35px -5px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    --sg-shadow-bento: 0 20px 45px -8px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    --sg-shadow-floating: 0 20px 50px -10px rgba(16, 185, 129, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.8);
 }
 
 /* Background Atmosphere Grid */
 .bg-grid-pattern {
-  background-size: 32px 32px;
+  background-size: 36px 36px;
   background-image: 
-    linear-gradient(to right, rgba(148, 163, 184, 0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+    linear-gradient(to right, rgba(148, 163, 184, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.09) 1px, transparent 1px);
 }
 
 .dark .bg-grid-pattern {
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
 }
 
 /* Ambient Radial Glow Lighting */
 .ambient-glow {
   position: absolute;
-  width: 380px;
-  height: 380px;
+  width: 420px;
+  height: 420px;
   border-radius: 9999px;
-  filter: blur(80px);
+  filter: blur(90px);
   pointer-events: none;
-  opacity: 0.12;
+  opacity: 0.15;
+  transition: opacity 0.5s ease;
 }
 
 .dark .ambient-glow {
-  opacity: 0.22;
+  opacity: 0.25;
 }
 
-/* Luxury Card Class */
+/* ========================================================================= */
+/* SEAMLESS BORDERLESS & GLASS SURFACE UTILITIES                             */
+/* ========================================================================= */
+
+/* Luxury Borderless Glass Card */
 .sg-card {
   background: var(--sg-glass);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--sg-glass-border);
   box-shadow: var(--sg-shadow-card);
   border-radius: var(--radius);
@@ -110,8 +127,19 @@
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.sg-card:hover {
-  border-color: rgba(16, 185, 129, 0.4);
+.sg-card-borderless {
+  background: var(--sg-glass);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--sg-shadow-soft);
+  border-radius: var(--radius);
+  position: relative;
+}
+
+.dark .sg-card-borderless {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 100%), rgba(9, 13, 22, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Bento Card Style */
@@ -119,13 +147,13 @@
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow: var(--sg-shadow-bento);
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark .sg-bento-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 15, 25, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 15, 25, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .sg-bento-card:hover {
@@ -150,7 +178,7 @@
   width: 3.5px;
   background: linear-gradient(to bottom, #10b981, #06b6d4);
   border-radius: 4px;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
 }
 
 /* Text Gradient */
@@ -190,25 +218,34 @@
 }
 
 .sg-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .sg-btn-primary {
   background: linear-gradient(135deg, #10b981 0%, #0d9488 100%);
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
 }
 
 .sg-btn-primary:hover {
-  box-shadow: 0 6px 28px -2px rgba(16, 185, 129, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 28px -2px rgba(16, 185, 129, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
 }
 
-/* Glass Panel */
+/* Glass Panel Floating Capsule */
+.sg-floating-capsule {
+  background: var(--sg-glass);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--sg-glass-border);
+  box-shadow: var(--sg-shadow-floating);
+  border-radius: 9999px;
+}
+
 .sg-glass-panel {
   background: var(--sg-glass);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--sg-glass-border);
   box-shadow: var(--sg-shadow-card);
 }

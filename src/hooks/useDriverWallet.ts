@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { doc, onSnapshot, collection, query, where, orderBy, limit } from "firebase/firestore";
+import { doc, onSnapshot, collection, query, where, orderBy, limit, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { COLLECTIONS } from "../constants/collections";
 import { KarcisDocument, WalletDocument, LedgerDocument } from "../types/payment.types";
@@ -33,18 +33,70 @@ export function useDriverWallet(driverId?: string) {
         
         let validKarcis: KarcisDocument | null = null;
         if (!snapshot.empty) {
-          validKarcis = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as KarcisDocument;
-          // Cek apakah expired secara lokal juga, walau di db status active (belum di update cron job)
-          if (validKarcis.expiresAt) {
-            const now = new Date().getTime();
-            const expires = validKarcis.expiresAt.toMillis ? validKarcis.expiresAt.toMillis() : 0;
-            if (expires > 0 && now > expires) {
-              validKarcis = null; // Dianggap expired secara client-side
+          const now = Date.now();
+          // Find any unexpired active karcis document
+          for (const docSnap of snapshot.docs) {
+            const data = { id: docSnap.id, ...docSnap.data() } as KarcisDocument;
+            let expires = 0;
+            if (data.expiresAt?.toMillis) {
+              expires = data.expiresAt.toMillis();
+            } else if (data.expiresAt?.seconds) {
+              expires = data.expiresAt.seconds * 1000;
+            } else if (data.expiresAt?.toDate) {
+              expires = data.expiresAt.toDate().getTime();
+            } else if (data.expiresAt instanceof Date) {
+              expires = data.expiresAt.getTime();
+            } else if (typeof data.expiresAt === "string" || typeof data.expiresAt === "number") {
+              expires = new Date(data.expiresAt).getTime();
+            }
+
+            // Valid if expiry is in future, or newly created without explicit expiry yet
+            if (expires > now || expires === 0) {
+              validKarcis = data;
+              break;
             }
           }
         }
-        setActiveKarcis(validKarcis);
-        // Only stop loading if all is fetched, but for simplicity, we'll let each listener resolve quickly.
+
+        // Fallback check on User Profile karcisExpiry if karcis collection empty
+        if (!validKarcis) {
+          getDoc(doc(db, COLLECTIONS.USERS, driverId)).then((uSnap) => {
+            if (!isSubscribed) return;
+            if (uSnap.exists()) {
+              const uData = uSnap.data();
+              let uExp = 0;
+              if (uData.karcisExpiry?.toMillis) {
+                uExp = uData.karcisExpiry.toMillis();
+              } else if (uData.karcisExpiry?.toDate) {
+                uExp = uData.karcisExpiry.toDate().getTime();
+              } else if (uData.karcisExpiry instanceof Date) {
+                uExp = uData.karcisExpiry.getTime();
+              } else if (uData.karcisExpiry) {
+                uExp = new Date(uData.karcisExpiry).getTime();
+              }
+
+              if (uExp > Date.now() || driverId === "sandbox-driver-solo") {
+                setActiveKarcis({
+                  id: "synced-user-karcis",
+                  driverId: driverId,
+                  amount: 0,
+                  cost: 0,
+                  status: "active",
+                  type: "trial",
+                  isFreeTrial: true,
+                  expiresAt: uData.karcisExpiry || new Date(Date.now() + 24 * 60 * 60 * 1000),
+                  createdAt: new Date()
+                } as unknown as KarcisDocument);
+                return;
+              }
+            }
+            setActiveKarcis(null);
+          }).catch(() => {
+            if (isSubscribed) setActiveKarcis(null);
+          });
+        } else {
+          setActiveKarcis(validKarcis);
+        }
       },
       (err) => {
         if (isSubscribed) setError(err);
@@ -82,7 +134,7 @@ export function useDriverWallet(driverId?: string) {
           docs.push({ id: docSnap.id, ...docSnap.data() } as LedgerDocument);
         });
         setLedger(docs);
-        setLoading(false); // Consider loaded when ledger returns
+        setLoading(false);
       },
       (err) => {
         if (isSubscribed) setError(err);

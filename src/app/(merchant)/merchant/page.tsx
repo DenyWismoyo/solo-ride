@@ -14,43 +14,47 @@ import { authService } from "@/services/auth.service";
 import { ProfileDrawer } from "@/components/layout/ProfileDrawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { 
   Store, 
   ShoppingBag, 
   Zap, 
-  TrendingUp, 
   Clock, 
   Plus, 
-  Tag, 
   Star, 
   Power, 
   CheckCircle2, 
   Radio,
-  ArrowRight,
   Sparkles,
   Loader2,
   Megaphone,
   X,
   Trash2,
-  Edit2
+  Edit2,
+  ChefHat,
+  Bike,
+  PackageCheck,
+  MessageSquare
 } from "lucide-react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
 import { MenuItemDocument } from "@/types/merchant.types";
+import { playOrderAlertSound, playSuccessChime } from "@/lib/sound";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function MerchantDashboard() {
   const router = useRouter();
-  const { user, userData } = useAuthContext();
+  const { user, userData, effectiveUid, impersonatedPersona, isImpersonating } = useAuthContext();
+  const activeMerchantId = effectiveUid || user?.uid;
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [isFlashSaleActive, setIsFlashSaleActive] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   
   // Custom Store ID
-  const [storeSlug, setStoreSlug] = useState(userData?.storeSlug || "selat-mbak-lies");
+  const [storeSlug, setStoreSlug] = useState(impersonatedPersona?.attributes?.storeSlug || userData?.storeSlug || "pak-manto");
   const [isEditingSlug, setIsEditingSlug] = useState(false);
 
   // Modal Add Menu
@@ -71,9 +75,10 @@ export default function MerchantDashboard() {
   // Live incoming culinary orders
   const [merchantOrders, setMerchantOrders] = useState<OrderDocument[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   // Real-time menu items from Firestore
-  const { menuItems, loading: loadingMenu } = useMerchantMenu(user?.uid);
+  const { menuItems, loading: loadingMenu } = useMerchantMenu(activeMerchantId);
 
   // Civic Broadcasts from Government
   const { broadcasts } = useBroadcasts("merchant");
@@ -98,15 +103,37 @@ export default function MerchantDashboard() {
 
     const unsub = onSnapshot(q, (snapshot) => {
       const docs: OrderDocument[] = [];
+      let hasNewPending = false;
+
       snapshot.forEach((d) => {
-        docs.push({ id: d.id, ...d.data() } as OrderDocument);
+        const orderData = { id: d.id, ...d.data() } as OrderDocument;
+        // Filter by active status and matching merchant if defined
+        const isMatchingMerchant = 
+          !orderData.merchantId || 
+          orderData.merchantId === activeMerchantId || 
+          orderData.merchantId === storeSlug ||
+          orderData.merchantId === "m-1" ||
+          orderData.merchantId === "sandbox-merchant-manto" ||
+          orderData.merchantId === "pak-manto";
+
+        if (isMatchingMerchant && orderData.status !== "completed" && orderData.status !== "cancelled") {
+          docs.push(orderData);
+          if (orderData.status === "pending") {
+            hasNewPending = true;
+          }
+        }
       });
+
+      if (hasNewPending && docs.length > merchantOrders.length) {
+        playOrderAlertSound();
+      }
+
       setMerchantOrders(docs);
       setLoadingOrders(false);
     });
 
     return () => unsub();
-  }, [user]);
+  }, [user, activeMerchantId, storeSlug]);
 
   const handleToggleProduct = async (item: MenuItemDocument) => {
     if (item.id && menuItems.some(m => m.id === item.id)) {
@@ -132,6 +159,7 @@ export default function MerchantDashboard() {
       setNewItemName("");
       setNewItemDesc("");
       setNewItemPrice(20000);
+      playSuccessChime();
       alert("✅ Menu baru berhasil ditambahkan ke katalog warung Anda!");
     } catch (err) {
       alert("Gagal menambahkan menu.");
@@ -178,11 +206,29 @@ export default function MerchantDashboard() {
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: "accepted" | "in_progress") => {
+  const handleStartCooking = async (order: OrderDocument) => {
+    if (!order.id || !user) return;
+    setUpdatingOrderId(order.id);
     try {
-      await orderService.updateOrderStatus(orderId, newStatus);
+      await orderService.merchantStartCooking(order.id, activeMerchantId || user.uid, order.customerId, order.driverId || undefined);
+      playSuccessChime();
     } catch (err) {
-      alert("Gagal mengupdate status pesanan.");
+      alert("Gagal mengupdate status memasak.");
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleMarkReady = async (order: OrderDocument) => {
+    if (!order.id || !user) return;
+    setUpdatingOrderId(order.id);
+    try {
+      await orderService.merchantMarkFoodReady(order.id, activeMerchantId || user.uid, order.customerId, order.driverId || undefined);
+      playSuccessChime();
+    } catch (err) {
+      alert("Gagal menandai makanan siap.");
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
@@ -194,7 +240,7 @@ export default function MerchantDashboard() {
         await broadcastService.createBroadcast({
           authorId: user.uid,
           institutionName: userData?.businessName || "Warung Mitra UMKM Solo",
-          title: `⚡ Flash Sale 30% — ${userData?.businessName || "Warung Selat Mbak Lies"}`,
+          title: `⚡ Flash Sale 30% — ${userData?.businessName || "Warung Selat Solo"}`,
           body: "Flash Sale stok kuliner lezat diskon spesial untuk warga radius 2 km. Pesan sekarang sebelum kehabisan!",
           target: "customer",
           geofence: {
@@ -204,6 +250,7 @@ export default function MerchantDashboard() {
           }
         });
         setIsFlashSaleActive(true);
+        playSuccessChime();
         alert("⚡ Flash Sale Pasar Warga AKTIF! Notifikasi siaran diskon 30% sedang dibroadcast ke warga radius 2 km di Surakarta.");
       } else {
         setIsFlashSaleActive(false);
@@ -221,10 +268,10 @@ export default function MerchantDashboard() {
       <AdminImpersonationBar />
       <AppHeader onOpenProfile={() => setIsProfileOpen(true)} />
 
-      <main className="pt-20 px-4 max-w-lg w-full mx-auto space-y-5 flex-1">
+      <main className="pt-20 px-4 max-w-lg w-full mx-auto space-y-4 flex-1">
         {/* Active Civic Broadcast Ticker if available */}
         {broadcasts.length > 0 && (
-          <div className="p-3 rounded-2xl bg-teal-500/10 dark:bg-teal-950/30 border border-teal-500/30 flex items-start gap-2.5 shadow-sm">
+          <div className="p-3 rounded-2xl bg-teal-500/10 dark:bg-teal-950/30 border border-teal-500/30 flex items-start gap-2.5 shadow-xs">
             <Megaphone className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5 animate-bounce" />
             <div className="flex-1 min-w-0 space-y-0.5">
               <div className="flex items-center justify-between">
@@ -243,69 +290,21 @@ export default function MerchantDashboard() {
         )}
 
         {/* Store Profile Card */}
-        <div className="sg-card p-5 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-gradient-to-tr dark:from-orange-950/30 dark:via-zinc-900 dark:to-zinc-900 space-y-4 shadow-sm">
+        <div className="p-4 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c1220]/95 space-y-3 shadow-sm">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center border border-orange-500/30 shrink-0">
                 <Store className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-slate-900 dark:text-white leading-snug">
+                <h2 className="text-sm font-black text-slate-900 dark:text-white leading-snug">
                   {userData?.businessName || "Warung Selat Mbak Lies"}
                 </h2>
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Pasar Gede, Surakarta</span>
+                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Pasar Gede, Solo</span>
                   <span>•</span>
                   <div className="flex items-center text-amber-500 dark:text-amber-400 font-bold">
                     <Star className="h-3 w-3 fill-amber-400 mr-0.5" /> 4.9
-                  </div>
-                </div>
-                
-                {/* Store Link Customization */}
-                <div className="mt-2">
-                  <label className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold">Store Link Anda:</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    {isEditingSlug ? (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-slate-400 hidden md:inline">ridesolo.com/store/</span>
-                        <input
-                          type="text"
-                          value={storeSlug}
-                          onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                          className="px-2 py-1 bg-slate-100 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md text-xs w-32 focus:outline-none focus:border-orange-500"
-                        />
-                        <button 
-                          onClick={async () => {
-                            if (!user) return;
-                            try {
-                              await authService.updateUserProfile(user.uid, { storeSlug });
-                              setIsEditingSlug(false);
-                              alert("Store ID berhasil diperbarui!");
-                            } catch(err) {
-                              alert("Gagal memperbarui Store ID.");
-                            }
-                          }}
-                          className="bg-emerald-500 text-white px-2 py-1 rounded-md text-xs font-bold"
-                        >
-                          Simpan
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-zinc-800 px-2 py-1 rounded-md cursor-pointer hover:bg-slate-200 dark:hover:bg-zinc-700" onClick={() => {
-                          navigator.clipboard.writeText("ridesolo.com/store/" + storeSlug);
-                          alert("Link Toko Disalin!");
-                        }}>
-                          ridesolo.com/store/<span className="text-orange-500">{storeSlug}</span>
-                        </span>
-                        <button 
-                          onClick={() => setIsEditingSlug(true)}
-                          className="text-[10px] text-slate-500 hover:text-orange-500 underline"
-                        >
-                          Ubah ID
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -313,7 +312,7 @@ export default function MerchantDashboard() {
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
                 isOpen 
                   ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40"
                   : "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500 border border-slate-300 dark:border-zinc-700"
@@ -325,32 +324,32 @@ export default function MerchantDashboard() {
           </div>
 
           {/* Quick Metrics Grid */}
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200 dark:border-zinc-800/80 text-center">
-            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-zinc-800/40">
-              <span className="text-[10px] text-slate-500 dark:text-zinc-400 block font-medium">Omset Hari Ini</span>
-              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">Rp 640.000</span>
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-white/[0.04] text-center">
+            <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
+              <span className="text-[9px] text-slate-400 block font-bold uppercase">Omset Hari Ini</span>
+              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">Rp 640.000</span>
             </div>
-            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-zinc-800/40">
-              <span className="text-[10px] text-slate-500 dark:text-zinc-400 block font-medium">Pesanan Selesai</span>
-              <span className="text-sm font-black text-slate-900 dark:text-white">28 Order</span>
+            <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
+              <span className="text-[9px] text-slate-400 block font-bold uppercase">Pesanan Selesai</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">28 Order</span>
             </div>
-            <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-zinc-800/40">
-              <span className="text-[10px] text-slate-500 dark:text-zinc-400 block font-medium">Potongan Komisi</span>
-              <span className="text-sm font-black text-teal-600 dark:text-teal-400">Rp 0 (Bebas)</span>
+            <div className="p-2 rounded-2xl bg-slate-50 dark:bg-white/[0.03]">
+              <span className="text-[9px] text-slate-400 block font-bold uppercase">Potongan Komisi</span>
+              <span className="text-xs font-black text-orange-600 dark:text-orange-400">Rp 0 (100% Utuh)</span>
             </div>
           </div>
         </div>
 
         {/* Pasar Warga Flash Sale Launcher */}
-        <div className={`p-4 rounded-3xl border transition-all ${
+        <div className={`p-3.5 rounded-2xl border transition-all ${
           isFlashSaleActive 
-            ? "bg-rose-500/10 dark:bg-gradient-to-r dark:from-rose-950/60 dark:via-zinc-900 dark:to-rose-950/60 border-rose-500/40 shadow-sm" 
-            : "bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 shadow-sm"
+            ? "bg-rose-500/10 border-rose-500/40 shadow-xs" 
+            : "bg-white/95 dark:bg-[#0c1220]/95 border-slate-200/80 dark:border-white/[0.08] shadow-xs"
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className={`p-2 rounded-xl ${isFlashSaleActive ? "bg-rose-500 text-white" : "bg-rose-500/20 text-rose-500"}`}>
-                <Zap className="h-5 w-5" />
+                <Zap className="h-4 w-4" />
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white">Pasar Warga Flash Sale</h4>
@@ -373,92 +372,166 @@ export default function MerchantDashboard() {
           </div>
         </div>
 
-        {/* Live Incoming Orders */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Live Incoming Orders Section */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between pl-1">
             <div className="flex items-center gap-2">
-              <Radio className="h-4 w-4 text-emerald-500 dark:text-emerald-400 animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white sg-editorial-title">Pesanan Masuk (Live)</h3>
+              <Radio className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
+              <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                Pesanan Kuliner Masuk ({merchantOrders.length})
+              </h3>
             </div>
-            <Badge variant="emerald" size="sm" withDot>
-              {merchantOrders.length} Pesanan Aktif
+            <Badge variant="orange" size="sm" withDot>
+              Live Radar
             </Badge>
           </div>
 
           {loadingOrders ? (
-            <div className="p-6 text-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl">
-              <Loader2 className="h-5 w-5 text-emerald-500 animate-spin mx-auto mb-1.5" />
+            <div className="p-6 text-center bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl">
+              <Loader2 className="h-5 w-5 text-orange-500 animate-spin mx-auto mb-1.5" />
               <p className="text-xs text-slate-500">Memeriksa pesanan kuliner...</p>
             </div>
           ) : merchantOrders.length === 0 ? (
-            <div className="sg-card p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 text-center space-y-1 shadow-sm">
-              <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">Belum Ada Pesanan Masuk</p>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c1220]/95 text-center space-y-1 shadow-xs">
+              <ChefHat className="h-6 w-6 text-slate-400 mx-auto" />
+              <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">Belum Ada Pesanan Kuliner Aktif</p>
+              <p className="text-[10px] text-slate-500 dark:text-zinc-400">
                 Pesanan kuliner dari pelanggan warga Solo akan langsung tampil di sini secara real-time.
               </p>
             </div>
           ) : (
             <div className="space-y-2.5">
               {merchantOrders.map((order) => (
-                <div key={order.id} className="sg-card p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 space-y-3 shadow-sm">
+                <div key={order.id} className="p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c1220]/95 space-y-3 shadow-sm">
                   <div className="flex justify-between items-start">
                     <div>
-                      <Badge variant="amber" size="sm">
-                        Kuliner Warga #{order.id?.slice(0, 6)}
-                      </Badge>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="orange" size="sm">
+                          Kuliner #{order.id?.slice(0, 6)}
+                        </Badge>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {order.paymentMethod === "cash" ? "💵 Tunai" : "📱 QRIS"}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">
                         Tujuan: {order.dropoffLocation?.address}
                       </p>
                     </div>
-                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    <span className="text-sm font-black text-orange-600 dark:text-orange-400">
                       Rp {order.price.toLocaleString("id-ID")}
                     </span>
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 flex items-center justify-between border-t border-slate-200 dark:border-zinc-800 pt-2">
-                    <span>Status: <b className="text-slate-800 dark:text-zinc-200 uppercase">{order.status}</b></span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                      {order.driverId ? "Driver Ditugaskan" : "Menunggu Driver"}
-                    </span>
-                  </div>
 
-                  {/* Order Items List */}
+                  {/* Order Items List with Customer Cooking Notes */}
                   {order.items && order.items.length > 0 && (
-                    <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-xl p-3 mt-2 border border-slate-200 dark:border-zinc-700/50">
-                      <p className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Daftar Pesanan:</p>
-                      <ul className="space-y-1">
+                    <div className="bg-slate-50 dark:bg-white/[0.03] rounded-xl p-3 border border-slate-200/60 dark:border-white/[0.06] space-y-1.5">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        Menu yang Harus Dimasak:
+                      </p>
+                      <ul className="space-y-1.5">
                         {order.items.map((item, idx) => (
-                          <li key={idx} className="flex justify-between items-start text-xs text-slate-700 dark:text-zinc-300">
-                            <span>- {item.name} <strong className="ml-1 text-slate-900 dark:text-white">x{item.qty}</strong></span>
-                            {item.notes && <span className="text-[10px] text-amber-600 dark:text-amber-400 block w-full ml-2">Catatan: {item.notes}</span>}
+                          <li key={idx} className="text-xs text-slate-700 dark:text-zinc-300">
+                            <div className="flex justify-between items-center">
+                              <span><strong>{item.qty}x</strong> {item.name}</span>
+                              <span className="text-[10px] font-semibold text-slate-500">Rp {(item.price * item.qty).toLocaleString("id-ID")}</span>
+                            </div>
+                            {item.notes && (
+                              <div className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded mt-0.5 flex items-center gap-1">
+                                <MessageSquare className="h-2.5 w-2.5 shrink-0" />
+                                <span>Catatan: "{item.notes}"</span>
+                              </div>
+                            )}
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {/* Order Status Actions */}
-                  <div className="pt-3 border-t border-slate-200 dark:border-zinc-800 flex gap-2">
+                  {/* Driver Status Info */}
+                  <div className="bg-slate-50 dark:bg-white/[0.03] rounded-xl p-2.5 border border-slate-200/60 dark:border-white/[0.06] text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={`p-1.5 rounded-lg shrink-0 ${order.driverId ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/20 text-amber-600 dark:text-amber-400"}`}>
+                        <Bike className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        {order.driverId ? (
+                          <>
+                            <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
+                              Kurir: {order.driverName || "Mitra Driver Solo"}
+                            </p>
+                            <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                              {order.status === "in_progress" ? "Sedang Mengantar ke Pelanggan" : "Sedang Menuju ke Warung"}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                              Mencari Kurir Terdekat...
+                            </p>
+                            <p className="text-[9px] text-slate-400">
+                              Kurir akan langsung merapat ke warung
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <Badge 
+                      variant={
+                        order.status === "cooking" ? "amber" :
+                        order.status === "ready_for_pickup" ? "purple" :
+                        order.status === "accepted" ? "blue" :
+                        order.status === "in_progress" ? "emerald" :
+                        "orange"
+                      }
+                      size="sm"
+                      className="text-[9px] capitalize shrink-0"
+                    >
+                      {order.status === "cooking" ? "🍳 Dimasak" :
+                       order.status === "ready_for_pickup" ? "🔔 Siap Diambil" :
+                       order.status === "accepted" ? "🛵 Kurir OTW" :
+                       order.status === "in_progress" ? "🚀 Diantar" :
+                       "Menunggu"}
+                    </Badge>
+                  </div>
+
+                  {/* Multi-Stage Order Action Buttons */}
+                  <div className="pt-1">
                     {order.status === "pending" && (
                       <Button 
                         size="sm" 
-                        onClick={() => handleUpdateOrderStatus(order.id!, "accepted")}
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold h-9 cursor-pointer"
+                        disabled={updatingOrderId === order.id}
+                        onClick={() => handleStartCooking(order)}
+                        className="w-full bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold h-10 rounded-xl cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
                       >
-                        Terima & Siapkan Pesanan
+                        {updatingOrderId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ChefHat className="h-4 w-4" />}
+                        <span>Terima & Mulai Memasak 🍳</span>
                       </Button>
                     )}
-                    {order.status === "accepted" && (
+
+                    {(order.status === "cooking" || (order.status === "accepted" && !order.completedAt)) && (
                       <Button 
                         size="sm" 
-                        onClick={() => handleUpdateOrderStatus(order.id!, "in_progress")}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold h-9 cursor-pointer"
+                        disabled={updatingOrderId === order.id}
+                        onClick={() => handleMarkReady(order)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold h-10 rounded-xl cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Makanan Siap Diambil Driver
+                        {updatingOrderId === order.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PackageCheck className="h-4 w-4" />}
+                        <span>Makanan Siap / Ready to Pickup ✅</span>
                       </Button>
                     )}
+
+                    {order.status === "ready_for_pickup" && (
+                      <div className="w-full text-center p-2.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl text-xs font-bold border border-purple-500/20 flex items-center justify-center gap-2">
+                        <PackageCheck className="h-4 w-4" />
+                        <span>Makanan Siap di Kasir! Menunggu Driver Mengambil</span>
+                      </div>
+                    )}
+
                     {order.status === "in_progress" && (
-                      <div className="w-full text-center p-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/20">
-                        Menunggu Driver Tiba
+                      <div className="w-full text-center p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold border border-emerald-500/20 flex items-center justify-center gap-2">
+                        <Bike className="h-4 w-4" />
+                        <span>Driver Sedang Mengantar ke Rumah Pelanggan</span>
                       </div>
                     )}
                   </div>
@@ -469,13 +542,15 @@ export default function MerchantDashboard() {
         </div>
 
         {/* Product & Catalog Management */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white sg-editorial-title">Kelola Menu & Stok</h3>
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              Kelola Menu & Stok Warung
+            </h3>
             <Button 
               size="sm" 
               onClick={() => setIsAddMenuOpen(true)}
-              className="h-7 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg gap-1 cursor-pointer"
+              className="h-7 text-xs bg-orange-600 hover:bg-orange-500 text-white rounded-xl gap-1 cursor-pointer"
             >
               <Plus className="h-3 w-3" /> Tambah Menu
             </Button>
@@ -485,18 +560,18 @@ export default function MerchantDashboard() {
             {displayedProducts.map((item) => (
               <div
                 key={item.id}
-                className="sg-card p-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/80 flex items-center justify-between shadow-sm"
+                className="p-3 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white/95 dark:bg-[#0c1220]/95 flex items-center justify-between shadow-xs"
               >
                 <div className="space-y-0.5">
                   <p className="text-xs font-bold text-slate-900 dark:text-white">{item.name}</p>
                   <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-zinc-400">
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Rp {item.price.toLocaleString("id-ID")}</span>
+                    <span className="text-orange-600 dark:text-orange-400 font-bold">Rp {item.price.toLocaleString("id-ID")}</span>
                     <span>•</span>
                     <span>Terjual: {item.soldToday || 0}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleToggleProduct(item)}
                     className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition-colors cursor-pointer ${
@@ -509,15 +584,15 @@ export default function MerchantDashboard() {
                   </button>
                   <button 
                     onClick={() => handleOpenEditMenu(item)}
-                    className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors cursor-pointer"
+                    className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-500/10 rounded-lg transition-colors cursor-pointer"
                   >
-                    <Edit2 className="h-4 w-4" />
+                    <Edit2 className="h-3.5 w-3.5" />
                   </button>
                   <button 
                     onClick={() => item.id && handleDeleteMenu(item.id)}
                     className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -528,61 +603,61 @@ export default function MerchantDashboard() {
 
       {/* Modal Tambah Menu Baru */}
       {isAddMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Plus className="h-4 w-4 text-emerald-500" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.1] rounded-3xl p-4 max-w-sm w-full space-y-3 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-white/[0.06] pb-2">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Plus className="h-4 w-4 text-orange-500" />
                 Tambah Menu Makanan Baru
               </h3>
               <button 
                 onClick={() => setIsAddMenuOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAddMenu} className="space-y-3 text-xs">
+            <form onSubmit={handleAddMenu} className="space-y-2.5 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-zinc-300">Nama Menu:</label>
+                <label className="font-bold text-slate-700 dark:text-zinc-300 text-[11px]">Nama Menu:</label>
                 <input
                   type="text"
                   placeholder="Misal: Selat Galantin Daging Segar"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-zinc-300">Harga (Rp):</label>
+                <label className="font-bold text-slate-700 dark:text-zinc-300 text-[11px]">Harga (Rp):</label>
                 <input
                   type="number"
                   step="1000"
                   value={newItemPrice}
                   onChange={(e) => setNewItemPrice(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-zinc-300">Deskripsi Singkat:</label>
+                <label className="font-bold text-slate-700 dark:text-zinc-300 text-[11px]">Deskripsi Singkat:</label>
                 <input
                   type="text"
                   placeholder="Porsi komplit dengan sayur dan kuah segar khas Solo"
                   value={newItemDesc}
                   onChange={(e) => setNewItemDesc(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={isSavingMenu}
-                className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl mt-2 cursor-pointer"
+                className="w-full h-10 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl mt-2 cursor-pointer text-xs"
               >
                 {isSavingMenu ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                 Simpan Menu ke Warung
@@ -594,59 +669,59 @@ export default function MerchantDashboard() {
 
       {/* Modal Edit Menu */}
       {isEditMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Edit2 className="h-4 w-4 text-emerald-500" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.1] rounded-3xl p-4 max-w-sm w-full space-y-3 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-white/[0.06] pb-2">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Edit2 className="h-4 w-4 text-orange-500" />
                 Edit Menu Makanan
               </h3>
               <button 
                 onClick={() => setIsEditMenuOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleEditMenu} className="space-y-3 text-xs">
+            <form onSubmit={handleEditMenu} className="space-y-2.5 text-xs">
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-zinc-300">Nama Menu:</label>
+                <label className="font-bold text-slate-700 dark:text-zinc-300 text-[11px]">Nama Menu:</label>
                 <input
                   type="text"
                   value={editItemName}
                   onChange={(e) => setEditItemName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-zinc-300">Harga (Rp):</label>
+                <label className="font-bold text-slate-700 dark:text-zinc-300 text-[11px]">Harga (Rp):</label>
                 <input
                   type="number"
                   step="1000"
                   value={editItemPrice}
                   onChange={(e) => setEditItemPrice(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-zinc-300">Deskripsi Singkat:</label>
+                <label className="font-bold text-slate-700 dark:text-zinc-300 text-[11px]">Deskripsi Singkat:</label>
                 <input
                   type="text"
                   value={editItemDesc}
                   onChange={(e) => setEditItemDesc(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={isEditingMenu}
-                className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl mt-2 cursor-pointer"
+                className="w-full h-10 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl mt-2 cursor-pointer text-xs"
               >
                 {isEditingMenu ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                 Simpan Perubahan

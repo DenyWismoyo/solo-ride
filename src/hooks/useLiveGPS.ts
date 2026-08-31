@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { calculateDistance } from "@/lib/utils";
 import { DEFAULT_CENTER } from "@/constants/maps";
 
@@ -19,32 +19,51 @@ export function useLiveGPS() {
     distanceFromCenter: null,
   });
 
+  const lastPosRef = useRef<{ lat: number; lng: number } | null>(null);
+
   useEffect(() => {
-    if (!navigator.geolocation) {
+    if (typeof window === "undefined" || !navigator.geolocation) {
       setGpsData((prev) => ({ ...prev, error: "Geolocation tidak didukung oleh browser Anda." }));
       return;
     }
 
+    const updateCoords = (latitude: number, longitude: number) => {
+      lastPosRef.current = { lat: latitude, lng: longitude };
+      const dist = calculateDistance(latitude, longitude, DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+      const isWithin = dist <= GEOFENCE_RADIUS_KM;
+
+      setGpsData({
+        location: { lat: latitude, lng: longitude },
+        error: null,
+        isWithinGeofence: isWithin,
+        distanceFromCenter: dist,
+      });
+    };
+
+    // 1. Initial quick fetch
+    navigator.geolocation.getCurrentPosition(
+      (pos) => updateCoords(pos.coords.latitude, pos.coords.longitude),
+      (err) => {
+        // Ignored if watchPosition succeeds
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
+    );
+
+    // 2. Watch updates
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        const dist = calculateDistance(latitude, longitude, DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
-        const isWithin = dist <= GEOFENCE_RADIUS_KM;
-
-        setGpsData({
-          location: { lat: latitude, lng: longitude },
-          error: null,
-          isWithinGeofence: isWithin,
-          distanceFromCenter: dist,
-        });
+        updateCoords(position.coords.latitude, position.coords.longitude);
       },
       (error) => {
-        setGpsData((prev) => ({ ...prev, error: error.message }));
+        // Jangan hapus location terakhir jika hanya timeout sementara
+        if (!lastPosRef.current) {
+          setGpsData((prev) => ({ ...prev, error: error.message }));
+        }
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 5000,
+        maximumAge: 4000,
+        timeout: 10000,
       }
     );
 

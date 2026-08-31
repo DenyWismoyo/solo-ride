@@ -1,6 +1,14 @@
 import { Timestamp } from "firebase/firestore";
 
-export type OrderStatus = "pending" | "accepted" | "in_progress" | "completed" | "cancelled";
+export type OrderStatus = 
+  | "pending_verification" 
+  | "pending" 
+  | "cooking" 
+  | "ready_for_pickup" 
+  | "accepted" 
+  | "in_progress" 
+  | "completed" 
+  | "cancelled";
 export type PaymentMethod = "cash" | "qris" | "wallet";
 
 export type ServiceType = 
@@ -10,7 +18,12 @@ export type ServiceType =
   | "kuliner" 
   | "titip" 
   | "pasar" 
-  | "mart";
+  | "mart"
+  | "ride"
+  | "car"
+  | "send"
+  | "food"
+  | string;
 
 export interface OrderItem {
   id: string;
@@ -29,23 +42,42 @@ export interface LocationPoint {
 export interface OrderDocument {
   id?: string;
   customerId: string;
-  driverId: string | null;
+  customerName?: string;
+  customerPhone?: string;
+  driverId?: string | null;
+  driverName?: string;
+  driverPhone?: string;
   merchantId?: string;
+  merchantName?: string;
   contractId?: string;
   
   serviceType: ServiceType;
+  serviceTitle?: string;
+  targetRole?: string;
+  additionalRole?: string;
+  agencyName?: string;
+  
   items?: OrderItem[];
 
   pickupLocation: LocationPoint;
   dropoffLocation: LocationPoint;
   price: number;
   status: OrderStatus;
-  paymentMethod: PaymentMethod;
+  paymentMethod?: PaymentMethod;
   
+  citizenDetails?: {
+    nikOrRef?: string;
+    notes?: string;
+    submittedAt?: string;
+    [key: string]: any;
+  };
+
+  verifiedByDinasAt?: Timestamp | any;
   createdAt: Timestamp | any;
   updatedAt: Timestamp | any;
   completedAt?: Timestamp | any;
 
+  distanceKm?: number;
   customerRatingForDriver?: number;
   driverRatingForCustomer?: number;
   customerNote?: string;

@@ -1,14 +1,40 @@
-import { collection, addDoc, doc, updateDoc, serverTimestamp, increment, writeBatch } from "firebase/firestore";
+import { 
+  collection, 
+  addDoc, 
+  doc, 
+  updateDoc, 
+  serverTimestamp, 
+  increment, 
+  writeBatch,
+  runTransaction 
+} from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { COLLECTIONS } from "../constants/collections";
 import { OrderDocument, OrderStatus } from "../types/order.types";
 import { notificationService } from "./notification.service";
 
+function cleanUndefined<T>(obj: T): T {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(cleanUndefined) as unknown as T;
+  }
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      result[key] = cleanUndefined(value);
+    }
+  }
+  return result;
+}
+
 export const orderService = {
   createOrder: async (orderData: Omit<OrderDocument, "id" | "status" | "createdAt" | "updatedAt" | "driverId">): Promise<string> => {
     try {
+      const sanitized = cleanUndefined(orderData);
       const newOrder = await addDoc(collection(db, COLLECTIONS.ORDERS), {
-        ...orderData,
+        ...sanitized,
         driverId: null,
         status: "pending",
         createdAt: serverTimestamp(),
@@ -20,27 +46,157 @@ export const orderService = {
     }
   },
 
-  acceptOrder: async (orderId: string, driverId: string, customerId?: string): Promise<void> => {
+  acceptOrder: async (
+    orderId: string, 
+    driverId: string, 
+    customerId?: string,
+    driverInfo?: { driverName?: string; driverPhone?: string }
+  ): Promise<void> => {
     try {
       const orderRef = doc(db, COLLECTIONS.ORDERS, orderId);
-      await updateDoc(orderRef, {
-        driverId: driverId,
-        status: "accepted",
-        updatedAt: serverTimestamp()
+      let merchantIdToNotify: string | null = null;
+      let serviceType: string | null = null;
+
+      // Atomic Transaction: Guarantee only one driver can claim the order
+      await runTransaction(db, async (transaction) => {
+        const orderSnap = await transaction.get(orderRef);
+        if (!orderSnap.exists()) {
+          throw new Error("Pesanan tidak ditemukan.");
+        }
+
+        const data = orderSnap.data();
+        
+        // Allowed statuses for driver to claim
+        const claimableStatuses = ["pending", "cooking", "ready_for_pickup", "pending_verification"];
+        if (data.driverId && data.driverId !== driverId) {
+          throw new Error("Pesanan sudah diambil oleh mitra driver lain.");
+        }
+        if (!claimableStatuses.includes(data.status)) {
+          throw new Error("Pesanan tidak dalam status yang dapat diambil.");
+        }
+
+        merchantIdToNotify = data.merchantId || null;
+        serviceType = data.serviceType || null;
+
+        const updatePayload: any = {
+          driverId: driverId,
+          updatedAt: serverTimestamp()
+        };
+
+        if (driverInfo?.driverName) updatePayload.driverName = driverInfo.driverName;
+        if (driverInfo?.driverPhone) updatePayload.driverPhone = driverInfo.driverPhone;
+
+        // If order was pending, advance to accepted
+        if (data.status === "pending") {
+          updatePayload.status = "accepted";
+        }
+
+        transaction.update(orderRef, updatePayload);
       });
 
-      // Send notification to customer if customerId provided
+      // Send notification to customer
       if (customerId) {
         await notificationService.sendNotification(
           customerId,
           "order_accepted",
           "Mitra Driver Ditemukan!",
-          "Driver sedang menuju ke titik penjemputan Anda.",
+          serviceType === "kuliner" 
+            ? "Driver sedang menuju ke warung untuk mengambil pesanan kuliner Anda."
+            : "Driver sedang menuju ke titik penjemputan Anda.",
+          orderId
+        ).catch(() => {});
+      }
+
+      // Send notification to merchant if kuliner
+      if (merchantIdToNotify) {
+        await notificationService.sendNotification(
+          merchantIdToNotify,
+          "driver_assigned",
+          "Kurir Ditemukan!",
+          `Driver ${driverInfo?.driverName || "Mitra"} sedang menuju ke warung Anda.`,
+          orderId
+        ).catch(() => {});
+      }
+    } catch (err: any) {
+      throw new Error(err.message || `Gagal menerima pesanan: ${err}`);
+    }
+  },
+
+  // Merchant starts cooking the order
+  merchantStartCooking: async (
+    orderId: string, 
+    merchantId: string, 
+    customerId?: string,
+    driverId?: string
+  ): Promise<void> => {
+    try {
+      const orderRef = doc(db, COLLECTIONS.ORDERS, orderId);
+      await updateDoc(orderRef, {
+        status: "cooking",
+        cookingStartedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      if (customerId) {
+        await notificationService.sendNotification(
+          customerId,
+          "order_cooking",
+          "Warung Mulai Memasak! 🍳",
+          "Pesanan kuliner Anda sedang disiapkan dan dimasak oleh warung mitra.",
+          orderId
+        ).catch(() => {});
+      }
+
+      if (driverId) {
+        await notificationService.sendNotification(
+          driverId,
+          "order_cooking",
+          "Warung Sedang Memasak 🍳",
+          "Pesanan sedang dimasak. Anda bisa langsung menuju ke lokasi warung.",
           orderId
         ).catch(() => {});
       }
     } catch (err) {
-      throw new Error(`Gagal menerima pesanan: ${err}`);
+      throw new Error(`Gagal memperbarui status memasak: ${err}`);
+    }
+  },
+
+  // Merchant marks food as ready for pickup
+  merchantMarkFoodReady: async (
+    orderId: string, 
+    merchantId: string, 
+    customerId?: string,
+    driverId?: string
+  ): Promise<void> => {
+    try {
+      const orderRef = doc(db, COLLECTIONS.ORDERS, orderId);
+      await updateDoc(orderRef, {
+        status: "ready_for_pickup",
+        foodReadyAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      if (customerId) {
+        await notificationService.sendNotification(
+          customerId,
+          "order_ready",
+          "Makanan Sudah Siap! ✅",
+          "Masakan telah matang dan siap diambil oleh kurir pengantar.",
+          orderId
+        ).catch(() => {});
+      }
+
+      if (driverId) {
+        await notificationService.sendNotification(
+          driverId,
+          "order_ready",
+          "Makanan Siap Diambil! 🔔",
+          "Pesanan sudah matang dan siap diambil di meja kasir warung.",
+          orderId
+        ).catch(() => {});
+      }
+    } catch (err) {
+      throw new Error(`Gagal memperbarui status makanan siap: ${err}`);
     }
   },
 
@@ -56,8 +212,8 @@ export const orderService = {
         await notificationService.sendNotification(
           customerId,
           "order_arrived",
-          "Perjalanan Dimulai",
-          "Driver sedang dalam perjalanan mengantar ke lokasi tujuan.",
+          "Perjalanan Dimulai 🛵",
+          "Driver sedang dalam perjalanan mengantar ke lokasi tujuan Anda.",
           orderId
         ).catch(() => {});
       }
@@ -113,9 +269,27 @@ export const orderService = {
   cancelOrder: async (orderId: string, customerId?: string): Promise<void> => {
     try {
       const orderRef = doc(db, COLLECTIONS.ORDERS, orderId);
-      await updateDoc(orderRef, {
-        status: "cancelled",
-        updatedAt: serverTimestamp()
+      let assignedDriverId: string | null = null;
+
+      await runTransaction(db, async (transaction) => {
+        const orderSnap = await transaction.get(orderRef);
+        if (!orderSnap.exists()) {
+          throw new Error("Pesanan tidak ditemukan.");
+        }
+
+        const data = orderSnap.data();
+        
+        // Cancellation is strictly allowed ONLY when status is pending
+        if (data.status !== "pending") {
+          throw new Error("Pesanan tidak dapat dibatalkan karena sudah diproses atau dimasak oleh warung mitra / driver.");
+        }
+
+        assignedDriverId = data.driverId || null;
+
+        transaction.update(orderRef, {
+          status: "cancelled",
+          updatedAt: serverTimestamp()
+        });
       });
 
       if (customerId) {
@@ -123,12 +297,22 @@ export const orderService = {
           customerId,
           "order_cancelled",
           "Pesanan Dibatalkan",
-          "Pesanan perjalanan Anda telah dibatalkan.",
+          "Pesanan kuliner / perjalanan Anda telah dibatalkan.",
           orderId
         ).catch(() => {});
       }
-    } catch (err) {
-      throw new Error(`Gagal membatalkan pesanan: ${err}`);
+
+      if (assignedDriverId) {
+        await notificationService.sendNotification(
+          assignedDriverId,
+          "order_cancelled",
+          "Pesanan Dibatalkan Pelanggan",
+          "Pelanggan telah membatalkan pesanan ini.",
+          orderId
+        ).catch(() => {});
+      }
+    } catch (err: any) {
+      throw new Error(err.message || `Gagal membatalkan pesanan: ${err}`);
     }
   },
 };

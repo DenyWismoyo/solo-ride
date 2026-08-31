@@ -4,13 +4,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/AuthProvider";
 import { orderService } from "@/services/order.service";
+import { functionsService } from "@/services/functions.service";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { RouteMap } from "@/components/map/RouteMap";
 import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
-import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { functionsService } from "@/services/functions.service";
-import { DEFAULT_CENTER, DEFAULT_ZOOM, MAP_LIBRARIES, MAP_DARK_STYLE } from "@/constants/maps";
+import { LocationPoint } from "@/types/order.types";
 import { 
   ShoppingBag, 
   MapPin, 
@@ -18,7 +18,7 @@ import {
   ArrowLeft, 
   Store, 
   Banknote, 
-  MessageSquare,
+  MessageSquare, 
   Loader2, 
   ArrowRight
 } from "lucide-react";
@@ -27,8 +27,9 @@ export default function TitipTetanggaPage() {
   const router = useRouter();
   const { user, userData } = useAuthContext();
 
-  const [pickup, setPickup] = useState<{ lat: number; lng: number; address: string } | null>(null);
-  const [dropoff, setDropoff] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [pickup, setPickup] = useState<LocationPoint | null>(null);
+  const [dropoff, setDropoff] = useState<LocationPoint | null>(null);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   
   const [errandNotes, setErrandNotes] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState("");
@@ -39,17 +40,19 @@ export default function TitipTetanggaPage() {
   const [distanceKm, setDistanceKm] = useState<number>(0);
 
   const calculateRoute = async () => {
-    if (!pickup || !dropoff) return;
+    if (!pickup || !dropoff || typeof window === "undefined" || !window.google?.maps) return;
     setIsCalculatingPrice(true);
+
     // @gmaps-interop
-    const directionsService = new google.maps.DirectionsService();
+    const directionsService = new window.google.maps.DirectionsService();
     try {
       const results = await directionsService.route({
         origin: { lat: pickup.lat, lng: pickup.lng },
         destination: { lat: dropoff.lat, lng: dropoff.lng },
         // @gmaps-interop
-        travelMode: google.maps.TravelMode.DRIVING,
+        travelMode: window.google.maps.TravelMode.DRIVING,
       });
+      setDirections(results);
       
       const distText = results.routes[0].legs[0].distance?.text || "0 km";
       const distVal = parseFloat(distText.replace(/[^0-9.]/g, "")) || 1;
@@ -63,13 +66,13 @@ export default function TitipTetanggaPage() {
         });
         setServiceFee(pricingResult.finalPrice);
       } catch (priceErr) {
-        console.error("Gagal menghitung harga server", priceErr);
+        console.warn("Gagal kalkulasi harga titip server, fallback ke formula lokal:", priceErr);
         // Fallback local calculation
         setServiceFee(Math.max(12000, Math.round(distVal * 3000)));
       }
     } catch (err) {
-      console.error("Gagal menghitung rute", err);
-      alert("Gagal menghitung rute antara lokasi penjemputan dan tujuan.");
+      console.error("Gagal menghitung rute titip beli:", err);
+      alert("Gagal menghitung rute antara toko dan alamat Anda.");
     } finally {
       setIsCalculatingPrice(false);
     }
@@ -81,13 +84,18 @@ export default function TitipTetanggaPage() {
       router.push("/login");
       return;
     }
-    if (!pickup || !dropoff || !errandNotes || !estimatedPrice) {
-      alert("Harap lengkapi semua data pesanan!");
+    if (userData?.role === "driver") {
+      router.push("/driver");
+      return;
+    }
+    if (!pickup || !dropoff || !errandNotes || !estimatedPrice || serviceFee === 0) {
+      alert("Harap lengkapi catatan belanjaan dan hitung biaya jasa titip!");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const talanganVal = parseInt(estimatedPrice.replace(/\D/g, "")) || 0;
       const orderId = await orderService.createOrder({
         customerId: user.uid,
         serviceType: "titip",
@@ -95,20 +103,20 @@ export default function TitipTetanggaPage() {
         dropoffLocation: dropoff,
         price: serviceFee,
         paymentMethod: "cash",
-        // Additional metadata could be stored in a flexible schema, but we'll use items array as a proxy or just rely on core fields
+        customerNote: `Titip: ${errandNotes} (Estimasi Talangan: Rp ${talanganVal.toLocaleString("id-ID")})`,
         items: [
           {
             id: "errand-1",
             name: errandNotes,
-            price: parseInt(estimatedPrice.replace(/\D/g, "")) || 0,
+            price: talanganVal,
             qty: 1
           }
         ]
       });
 
       router.push(`/order/${orderId}`);
-    } catch (err) {
-      alert("Gagal membuat pesanan titip beli.");
+    } catch (err: any) {
+      alert(err.message || "Gagal membuat pesanan titip beli.");
     } finally {
       setIsSubmitting(false);
     }
@@ -138,6 +146,19 @@ export default function TitipTetanggaPage() {
           </div>
         </div>
 
+        {/* Mini Interactive Map Preview */}
+        {(pickup || dropoff) && (
+          <div className="h-44 rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <RouteMap
+              pickup={pickup}
+              dropoff={dropoff}
+              directions={directions}
+              polylineColor="#f59e0b"
+              className="w-full h-full"
+            />
+          </div>
+        )}
+
         <form onSubmit={handleCheckout} className="space-y-4">
           {/* Section 1: Route */}
           <div className="sg-card p-4 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-sm space-y-4">
@@ -145,24 +166,18 @@ export default function TitipTetanggaPage() {
               Rute Titipan
             </h2>
             <div className="space-y-3 relative">
-              <div className="absolute left-3.5 top-8 bottom-8 w-0.5 bg-slate-200 dark:bg-zinc-800 z-0"></div>
-              
               <div className="relative z-10 flex gap-3 items-center">
                 <div className="w-7 h-7 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 mt-6">
                   <Store className="h-3.5 w-3.5" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">Titip Beli Di</label>
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">Titip Beli Di (Toko / Warung)</label>
                   <PlaceAutocomplete
-                    placeholder="Contoh: Indomaret Jebres, Warung Tegal..."
-                    onPlaceSelect={(place) => {
-                      if (place.geometry?.location) {
-                        setPickup({
-                          lat: place.geometry.location.lat(),
-                          lng: place.geometry.location.lng(),
-                          address: place.name || place.formatted_address || "Lokasi Pembelian"
-                        });
-                      }
+                    placeholder="Contoh: Toko Sembako, Indomaret..."
+                    onLocationSelect={(point) => {
+                      setPickup(point);
+                      setDirections(null);
+                      setServiceFee(0);
                     }}
                   />
                 </div>
@@ -173,17 +188,13 @@ export default function TitipTetanggaPage() {
                   <Home className="h-3.5 w-3.5" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">Antar Ke</label>
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">Antar Ke (Rumah / Kantor)</label>
                   <PlaceAutocomplete
                     placeholder="Masukkan lokasi pengantaran..."
-                    onPlaceSelect={(place) => {
-                      if (place.geometry?.location) {
-                        setDropoff({
-                          lat: place.geometry.location.lat(),
-                          lng: place.geometry.location.lng(),
-                          address: place.name || place.formatted_address || "Lokasi Pengantaran"
-                        });
-                      }
+                    onLocationSelect={(point) => {
+                      setDropoff(point);
+                      setDirections(null);
+                      setServiceFee(0);
                     }}
                   />
                 </div>
@@ -195,7 +206,7 @@ export default function TitipTetanggaPage() {
           <div className="sg-card p-4 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-sm space-y-4">
             <h2 className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider pl-1 flex justify-between items-center">
               Daftar Belanjaan
-              <Badge variant="amber" size="sm">Talangan max 100k</Badge>
+              <Badge variant="amber" size="sm">Talangan Driver</Badge>
             </h2>
 
             <div className="space-y-3">
@@ -204,7 +215,7 @@ export default function TitipTetanggaPage() {
                   <MessageSquare className="h-3.5 w-3.5 text-amber-500" /> Catatan Titipan (Detail)
                 </label>
                 <textarea
-                  placeholder="Contoh: Tolong belikan beras 5kg cap lele, sama telor setengah kilo. Kalau berasnya habis ganti cap ayam."
+                  placeholder="Contoh: Tolong belikan beras 5kg cap lele, sama telor 1 kg. Jika kosong silakan konfirmasi via telepon."
                   value={errandNotes}
                   onChange={(e) => setErrandNotes(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none transition-colors min-h-[80px]"
@@ -214,23 +225,24 @@ export default function TitipTetanggaPage() {
 
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
-                  <Banknote className="h-3.5 w-3.5 text-amber-500" /> Perkiraan Total Harga Barang (Rp)
+                  <Banknote className="h-3.5 w-3.5 text-amber-500" /> Perkiraan Total Harga Barang Talangan (Rp)
                 </label>
                 <input
                   type="number"
-                  placeholder="Estimasi dana talangan (max 100.000)"
+                  placeholder="Estimasi dana talangan (contoh: 50000)"
                   value={estimatedPrice}
-                  onChange={(e) => setEstimatedPrice(e.target.value)}
+                  onChange={(e) => {
+                    setEstimatedPrice(e.target.value);
+                  }}
                   className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-amber-500 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none transition-colors"
                   required
-                  max="100000"
                 />
               </div>
             </div>
           </div>
 
           {/* Checkout Button */}
-          <div className="pt-4">
+          <div className="pt-2">
             {serviceFee === 0 ? (
               <Button 
                 type="button"
@@ -243,9 +255,18 @@ export default function TitipTetanggaPage() {
               </Button>
             ) : (
               <>
-                <div className="flex items-center justify-between px-2 mb-3">
-                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Biaya Jasa Titip ({distanceKm.toFixed(1)} KM):</span>
-                  <span className="text-lg font-black text-amber-600 dark:text-amber-400">Rp {serviceFee.toLocaleString("id-ID")}</span>
+                <div className="flex items-center justify-between px-2 mb-3 bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      Jasa Titip Driver ({distanceKm.toFixed(1)} KM)
+                    </span>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400">
+                      + Talangan Barang: Rp {parseInt(estimatedPrice || "0").toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                  <span className="text-lg font-black text-amber-600 dark:text-amber-400">
+                    Rp {serviceFee.toLocaleString("id-ID")}
+                  </span>
                 </div>
                 <Button
                   type="submit"
@@ -256,15 +277,15 @@ export default function TitipTetanggaPage() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      Minta Tolong Driver
+                      Pesan Jasa Titip Sekarang
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
               </>
             )}
-            <p className="text-[9px] text-center text-slate-500 dark:text-zinc-400 mt-3 px-4">
-              Driver akan menalangi belanjaan Anda terlebih dahulu sesuai estimasi harga. Pembayaran total (barang + jasa titip) dilakukan saat driver tiba.
+            <p className="text-[10px] text-center text-slate-500 dark:text-zinc-400 mt-3 px-4">
+              Driver akan menalangi belanjaan Anda terlebih dahulu sesuai estimasi harga. Pembayaran total (barang + jasa titip) diserahkan tunai ke driver saat pesanan tiba.
             </p>
           </div>
         </form>

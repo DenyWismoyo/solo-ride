@@ -1,25 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/AuthProvider";
 import { orderService } from "@/services/order.service";
-import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from "@react-google-maps/api";
+import { functionsService } from "@/services/functions.service";
+import { RouteMap } from "@/components/map/RouteMap";
 import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
 import { Button } from "@/components/ui/button";
 import { 
   MapPin, 
   Navigation, 
   Loader2, 
-  Bike, 
-  Car, 
-  Package, 
   ArrowLeft, 
-  X,
-  ShieldCheck,
-  Coins
+  Bike,
+  Car
 } from "lucide-react";
-import { DEFAULT_CENTER, DEFAULT_ZOOM, MAP_LIBRARIES, MAP_DARK_STYLE } from "@/constants/maps";
 import { LocationPoint, ServiceType } from "@/types/order.types";
 import { AppService } from "@/constants/services";
 
@@ -28,11 +24,6 @@ interface RideBookingDrawerProps {
   onClose: () => void;
   initialService?: AppService | null;
 }
-
-const containerStyle = {
-  width: "100%",
-  height: "100%"
-};
 
 export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBookingDrawerProps) {
   const { user, userData } = useAuthContext();
@@ -44,8 +35,9 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
   const [price, setPrice] = useState<number>(0);
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [isOrdering, setIsOrdering] = useState(false);
+  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
 
-  const getServiceType = (): ServiceType => {
+  const getServiceType = (): "ojek" | "mobil" | "kirim" | "kuliner" | "titip" | "pasar" | "mart" => {
     if (!initialService) return "ojek";
     const id = initialService.id;
     if (id === "car") return "mobil";
@@ -57,22 +49,18 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
     return "ojek";
   };
 
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: MAP_LIBRARIES
-  });
-
   const calculateRoute = async () => {
-    if (!pickup || !dropoff) return;
+    if (!pickup || !dropoff || typeof window === "undefined" || !window.google?.maps) return;
+    setIsCalculatingPrice(true);
+
     // @gmaps-interop
-    const directionsService = new google.maps.DirectionsService();
+    const directionsService = new window.google.maps.DirectionsService();
     try {
       const results = await directionsService.route({
         origin: { lat: pickup.lat, lng: pickup.lng },
         destination: { lat: dropoff.lat, lng: dropoff.lng },
         // @gmaps-interop
-        travelMode: google.maps.TravelMode.DRIVING,
+        travelMode: window.google.maps.TravelMode.DRIVING,
       });
       setDirections(results);
       
@@ -80,24 +68,28 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
       const distVal = parseFloat(distText.replace(/[^0-9.]/g, "")) || 1;
       setDistanceKm(distVal);
 
-      // Tarif Dasar: Rp 2.500/km (Min Rp 10.000)
-      const baseFare = Math.max(10000, Math.round(distVal * 2500));
-      setPrice(baseFare);
+      const serviceType = getServiceType();
+      // Dynamic pricing call
+      try {
+        const pricingResult = await functionsService.calculateFinalPrice({
+          serviceType,
+          distanceKm: distVal
+        });
+        setPrice(pricingResult.finalPrice);
+      } catch (priceErr) {
+        console.warn("Fallback tarif lokal:", priceErr);
+        if (serviceType === "mobil") {
+          setPrice(Math.max(15000, Math.round(distVal * 4500)));
+        } else {
+          setPrice(Math.max(10000, Math.round(distVal * 2500)));
+        }
+      }
     } catch (err) {
-      console.error("Gagal menghitung rute", err);
+      console.error("Gagal menghitung rute:", err);
       alert("Gagal menghitung rute antara lokasi penjemputan dan tujuan.");
+    } finally {
+      setIsCalculatingPrice(false);
     }
-  };
-
-  const parseLocation = (place: any, addressBackup: string): LocationPoint | null => {
-    if (!place?.location) return null;
-    const lat = typeof place.location.lat === "function" ? place.location.lat() : place.location.lat;
-    const lng = typeof place.location.lng === "function" ? place.location.lng() : place.location.lng;
-    return {
-      lat,
-      lng,
-      address: place.formattedAddress || place.displayName || addressBackup
-    };
   };
 
   const handleOrder = async () => {
@@ -124,8 +116,8 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
       });
       onClose();
       router.push(`/order/${orderId}`);
-    } catch (err) {
-      alert("Gagal membuat pesanan.");
+    } catch (err: any) {
+      alert(err.message || "Gagal membuat pesanan.");
     } finally {
       setIsOrdering(false);
     }
@@ -153,28 +145,13 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
 
       {/* Map View */}
       <div className="flex-1 relative z-0">
-        {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={pickup ? { lat: pickup.lat, lng: pickup.lng } : DEFAULT_CENTER}
-            zoom={DEFAULT_ZOOM}
-            options={{ disableDefaultUI: true, styles: MAP_DARK_STYLE }}
-          >
-            {pickup && !directions && <Marker position={{ lat: pickup.lat, lng: pickup.lng }} />}
-            {directions && (
-              <DirectionsRenderer 
-                directions={directions} 
-                options={{ 
-                  polylineOptions: { strokeColor: "#10b981", strokeWeight: 5 } 
-                }} 
-              />
-            )}
-          </GoogleMap>
-        ) : (
-          <div className="flex h-full items-center justify-center text-slate-500 dark:text-zinc-500 text-sm">
-            Memuat Peta Surakarta...
-          </div>
-        )}
+        <RouteMap
+          pickup={pickup}
+          dropoff={dropoff}
+          directions={directions}
+          polylineColor={initialService?.id === "car" ? "#14b8a6" : "#10b981"}
+          className="w-full h-full"
+        />
       </div>
 
       {/* Floating Bottom Booking Form */}
@@ -191,7 +168,11 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
               <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Titik Jemput</span>
               <PlaceAutocomplete
                 placeholder="Cari lokasi penjemputan di Solo..."
-                onPlaceSelect={(p) => setPickup(parseLocation(p, "Lokasi Jemput") || pickup)}
+                onLocationSelect={(point) => {
+                  setPickup(point);
+                  setDirections(null);
+                  setPrice(0);
+                }}
               />
             </div>
           </div>
@@ -204,7 +185,11 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
               <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider block">Lokasi Tujuan</span>
               <PlaceAutocomplete
                 placeholder="Cari lokasi tujuan di Solo..."
-                onPlaceSelect={(p) => setDropoff(parseLocation(p, "Lokasi Tujuan") || dropoff)}
+                onLocationSelect={(point) => {
+                  setDropoff(point);
+                  setDirections(null);
+                  setPrice(0);
+                }}
               />
             </div>
           </div>
@@ -215,10 +200,11 @@ export function RideBookingDrawer({ isOpen, onClose, initialService }: RideBooki
           {price === 0 ? (
             <Button 
               onClick={calculateRoute}
-              disabled={!pickup || !dropoff}
+              disabled={!pickup || !dropoff || isCalculatingPrice}
               className="w-full h-12 bg-slate-900 dark:bg-zinc-800 hover:bg-slate-800 dark:hover:bg-zinc-700 text-white dark:text-zinc-200 font-bold rounded-2xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
-              Hitung Jarak & Tarif Rute
+              {isCalculatingPrice ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {isCalculatingPrice ? "Menghitung Harga..." : "Hitung Jarak & Tarif Rute"}
             </Button>
           ) : (
             <div className="space-y-3">

@@ -4,13 +4,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/components/AuthProvider";
 import { orderService } from "@/services/order.service";
+import { functionsService } from "@/services/functions.service";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { RouteMap } from "@/components/map/RouteMap";
 import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
-import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { functionsService } from "@/services/functions.service";
-import { DEFAULT_CENTER, DEFAULT_ZOOM, MAP_LIBRARIES, MAP_DARK_STYLE } from "@/constants/maps";
+import { LocationPoint } from "@/types/order.types";
 import { 
   Package, 
   MapPin, 
@@ -28,8 +28,9 @@ export default function SendPackagePage() {
   const router = useRouter();
   const { user, userData } = useAuthContext();
 
-  const [pickup, setPickup] = useState<{ lat: number; lng: number; address: string } | null>(null);
-  const [dropoff, setDropoff] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [pickup, setPickup] = useState<LocationPoint | null>(null);
+  const [dropoff, setDropoff] = useState<LocationPoint | null>(null);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   
   const [itemName, setItemName] = useState("");
   const [itemWeight, setItemWeight] = useState("Ringan (< 5kg)");
@@ -42,17 +43,19 @@ export default function SendPackagePage() {
   const [distanceKm, setDistanceKm] = useState<number>(0);
 
   const calculateRoute = async () => {
-    if (!pickup || !dropoff) return;
+    if (!pickup || !dropoff || typeof window === "undefined" || !window.google?.maps) return;
     setIsCalculatingPrice(true);
+    
     // @gmaps-interop
-    const directionsService = new google.maps.DirectionsService();
+    const directionsService = new window.google.maps.DirectionsService();
     try {
       const results = await directionsService.route({
         origin: { lat: pickup.lat, lng: pickup.lng },
         destination: { lat: dropoff.lat, lng: dropoff.lng },
         // @gmaps-interop
-        travelMode: google.maps.TravelMode.DRIVING,
+        travelMode: window.google.maps.TravelMode.DRIVING,
       });
+      setDirections(results);
       
       const distText = results.routes[0].legs[0].distance?.text || "0 km";
       const distVal = parseFloat(distText.replace(/[^0-9.]/g, "")) || 1;
@@ -71,12 +74,12 @@ export default function SendPackagePage() {
         });
         setPrice(pricingResult.finalPrice);
       } catch (priceErr) {
-        console.error("Gagal menghitung harga server", priceErr);
+        console.warn("Gagal kalkulasi harga kirim server, fallback ke formula lokal:", priceErr);
         // Fallback local calculation
         setPrice(Math.max(12000, Math.round(distVal * 3000)));
       }
     } catch (err) {
-      console.error("Gagal menghitung rute", err);
+      console.error("Gagal menghitung rute pengiriman:", err);
       alert("Gagal menghitung rute antara lokasi penjemputan dan tujuan.");
     } finally {
       setIsCalculatingPrice(false);
@@ -89,8 +92,12 @@ export default function SendPackagePage() {
       router.push("/login");
       return;
     }
-    if (!pickup || !dropoff || !itemName || !recipientName || !recipientPhone) {
-      alert("Harap lengkapi semua data pengiriman!");
+    if (userData?.role === "driver") {
+      router.push("/driver");
+      return;
+    }
+    if (!pickup || !dropoff || !itemName || !recipientName || !recipientPhone || price === 0) {
+      alert("Harap lengkapi semua data dan hitung tarif pengiriman!");
       return;
     }
 
@@ -103,11 +110,11 @@ export default function SendPackagePage() {
         dropoffLocation: dropoff,
         price,
         paymentMethod: "cash",
-        // Additional metadata could be stored in a flexible schema, but we'll use items array as a proxy or just rely on core fields
+        customerNote: `Barang: ${itemName} (${itemWeight}) | Penerima: ${recipientName} (${recipientPhone})`,
         items: [
           {
             id: "pkg-1",
-            name: itemName,
+            name: `${itemName} (${itemWeight})`,
             price: 0,
             qty: 1
           }
@@ -115,8 +122,8 @@ export default function SendPackagePage() {
       });
 
       router.push(`/order/${orderId}`);
-    } catch (err) {
-      alert("Gagal membuat pesanan pengiriman.");
+    } catch (err: any) {
+      alert(err.message || "Gagal membuat pesanan pengiriman.");
     } finally {
       setIsSubmitting(false);
     }
@@ -146,6 +153,19 @@ export default function SendPackagePage() {
           </div>
         </div>
 
+        {/* Mini Interactive Map Preview */}
+        {(pickup || dropoff) && (
+          <div className="h-44 rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <RouteMap
+              pickup={pickup}
+              dropoff={dropoff}
+              directions={directions}
+              polylineColor="#3b82f6"
+              className="w-full h-full"
+            />
+          </div>
+        )}
+
         <form onSubmit={handleCheckout} className="space-y-4">
           {/* Section 1: Route */}
           <div className="sg-card p-4 rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-sm space-y-4">
@@ -153,8 +173,6 @@ export default function SendPackagePage() {
               Rute Pengiriman
             </h2>
             <div className="space-y-3 relative">
-              <div className="absolute left-3.5 top-8 bottom-8 w-0.5 bg-slate-200 dark:bg-zinc-800 z-0"></div>
-              
               <div className="relative z-10 flex gap-3 items-center">
                 <div className="w-7 h-7 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 mt-6">
                   <MapPin className="h-3.5 w-3.5" />
@@ -163,14 +181,10 @@ export default function SendPackagePage() {
                   <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">Ambil Barang Dari</label>
                   <PlaceAutocomplete
                     placeholder="Masukkan lokasi penjemputan barang..."
-                    onPlaceSelect={(place) => {
-                      if (place.geometry?.location) {
-                        setPickup({
-                          lat: place.geometry.location.lat(),
-                          lng: place.geometry.location.lng(),
-                          address: place.name || place.formatted_address || "Lokasi Penjemputan"
-                        });
-                      }
+                    onLocationSelect={(point) => {
+                      setPickup(point);
+                      setDirections(null);
+                      setPrice(0);
                     }}
                   />
                 </div>
@@ -184,14 +198,10 @@ export default function SendPackagePage() {
                   <label className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">Antar Barang Ke</label>
                   <PlaceAutocomplete
                     placeholder="Masukkan tujuan pengiriman..."
-                    onPlaceSelect={(place) => {
-                      if (place.geometry?.location) {
-                        setDropoff({
-                          lat: place.geometry.location.lat(),
-                          lng: place.geometry.location.lng(),
-                          address: place.name || place.formatted_address || "Tujuan Pengantaran"
-                        });
-                      }
+                    onLocationSelect={(point) => {
+                      setDropoff(point);
+                      setDirections(null);
+                      setPrice(0);
                     }}
                   />
                 </div>
@@ -227,7 +237,10 @@ export default function SendPackagePage() {
                 </label>
                 <select
                   value={itemWeight}
-                  onChange={(e) => setItemWeight(e.target.value)}
+                  onChange={(e) => {
+                    setItemWeight(e.target.value);
+                    setPrice(0);
+                  }}
                   className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-blue-500 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none transition-colors appearance-none cursor-pointer"
                 >
                   <option value="Ringan (< 5kg)">Ringan (&lt; 5kg) - Dokumen, Baju</option>
@@ -275,7 +288,7 @@ export default function SendPackagePage() {
           </div>
 
           {/* Checkout Button */}
-          <div className="pt-4">
+          <div className="pt-2">
             {price === 0 ? (
               <Button 
                 type="button"
@@ -288,11 +301,16 @@ export default function SendPackagePage() {
               </Button>
             ) : (
               <>
-                <div className="flex items-center justify-between px-2 mb-3">
-                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">
-                    Estimasi Tarif ({distanceKm.toFixed(1)} KM):
+                <div className="flex items-center justify-between px-2 mb-3 bg-blue-500/10 p-3 rounded-2xl border border-blue-500/20">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      Tarif Kirim Kilat ({distanceKm.toFixed(1)} KM)
+                    </span>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400">100% Uang Tunai Diterima Kurir</p>
+                  </div>
+                  <span className="text-lg font-black text-blue-600 dark:text-blue-400">
+                    Rp {price.toLocaleString("id-ID")}
                   </span>
-                  <span className="text-lg font-black text-slate-900 dark:text-white">Rp {price.toLocaleString("id-ID")}</span>
                 </div>
                 <Button
                   type="submit"
