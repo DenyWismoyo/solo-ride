@@ -7,12 +7,24 @@ import { notificationService } from "./notification.service";
 export const kycService = {
   submitKYCRequest: async (data: Omit<KYCRequestDocument, "id" | "status" | "submittedAt">): Promise<string> => {
     try {
-      const docRef = await addDoc(collection(db, COLLECTIONS.KYC_REQUESTS), {
+      const batch = writeBatch(db);
+
+      // 1. Create KYC Request
+      const kycRef = doc(collection(db, COLLECTIONS.KYC_REQUESTS));
+      batch.set(kycRef, {
         ...data,
         status: "pending",
         submittedAt: serverTimestamp(),
       });
-      return docRef.id;
+
+      // 2. Update user profile kycStatus
+      const userRef = doc(db, COLLECTIONS.USERS, data.userId);
+      batch.update(userRef, {
+        kycStatus: "pending"
+      });
+
+      await batch.commit();
+      return kycRef.id;
     } catch (err) {
       throw new Error(`Gagal mengirim permohonan KYC: ${err}`);
     }
@@ -38,10 +50,11 @@ export const kycService = {
       });
 
       // 2. If approved, set isVerified = true on user
+      const userRef = doc(db, COLLECTIONS.USERS, driverUserId);
       if (status === "approved") {
-        const userRef = doc(db, COLLECTIONS.USERS, driverUserId);
         batch.update(userRef, {
           isVerified: true,
+          kycStatus: "verified"
         });
 
         // 3. Send Notification to driver
@@ -53,6 +66,10 @@ export const kycService = {
           body: "Selamat! Akun Mitra Driver Anda telah resmi terverifikasi oleh Koperasi.",
           isRead: false,
           createdAt: serverTimestamp(),
+        });
+      } else {
+        batch.update(userRef, {
+          kycStatus: status
         });
       }
 

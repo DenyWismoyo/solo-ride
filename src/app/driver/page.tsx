@@ -52,7 +52,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument, ServiceType } from "@/types/order.types";
 import { DEMAND_HOTSPOTS_SURAKARTA } from "@/constants/merchants";
@@ -89,7 +90,9 @@ export default function DriverDashboard() {
   const [nik, setNik] = useState("");
   const [simNumber, setSimNumber] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("AD ");
-  const [vehicleModel, setVehicleModel] = useState("Honda Vario 125cc");
+  const [vehicleModel, setVehicleModel] = useState("");
+  const [ktpFile, setKtpFile] = useState<File | null>(null);
+  const [simFile, setSimFile] = useState<File | null>(null);
   const [isSubmittingKYC, setIsSubmittingKYC] = useState(false);
 
   // Income Period Filter
@@ -334,9 +337,20 @@ export default function DriverDashboard() {
 
   const handleSubmitKYC = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !nik || !simNumber) return;
+    if (!user || !nik || !simNumber || !ktpFile || !simFile) return;
     setIsSubmittingKYC(true);
     try {
+      // 1. Upload KTP
+      const ktpRef = ref(storage, `kyc/${user.uid}/ktp_${Date.now()}`);
+      await uploadBytes(ktpRef, ktpFile);
+      const ktpImageUrl = await getDownloadURL(ktpRef);
+
+      // 2. Upload SIM
+      const simRef = ref(storage, `kyc/${user.uid}/sim_${Date.now()}`);
+      await uploadBytes(simRef, simFile);
+      const simImageUrl = await getDownloadURL(simRef);
+
+      // 3. Submit Data
       await kycService.submitKYCRequest({
         userId: user.uid,
         driverName: userData?.displayName || "Mitra Driver",
@@ -346,6 +360,8 @@ export default function DriverDashboard() {
         simNumber,
         vehiclePlate,
         vehicleModel,
+        ktpImageUrl,
+        simImageUrl,
       });
       setIsKYCOpen(false);
       alert("✅ Dokumen KYC berhasil dikirim! Super Admin / Pengurus Koperasi akan segera memverifikasi akun Anda.");
@@ -1245,6 +1261,28 @@ export default function DriverDashboard() {
                     value={vehicleModel}
                     onChange={(e) => setVehicleModel(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-slate-900 dark:text-white"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-zinc-300">Foto KTP:</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setKtpFile(e.target.files?.[0] || null)}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-[10px] text-slate-900 dark:text-white file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200"
+                    required
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-zinc-300">Foto SIM:</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setSimFile(e.target.files?.[0] || null)}
+                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-[10px] text-slate-900 dark:text-white file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200"
                     required
                   />
                 </div>

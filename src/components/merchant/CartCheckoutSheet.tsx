@@ -31,6 +31,7 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
   const [deliveryLocation, setDeliveryLocation] = useState<LocationPoint | null>(null);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<"reguler" | "titip">("reguler");
 
   // Calculate distance & fare
   const distance = useMemo(() => {
@@ -44,8 +45,9 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
   const deliveryFee = useMemo(() => {
     if (distance === 0) return 0;
     // Base formula from pricing config
-    return calculateFare("kuliner", distance).total;
-  }, [distance]);
+    const service = deliveryMethod === "titip" ? "titip" : "kuliner";
+    return calculateFare(service, distance).total;
+  }, [distance, deliveryMethod]);
 
   const finalTotal = total + deliveryFee;
 
@@ -61,7 +63,7 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
         customerPhone: userData?.phone || "081234567890",
         merchantId: merchant.id || "",
         merchantName: merchant.name,
-        serviceType: merchant.category === "pasar" ? "pasar" : "kuliner",
+        serviceType: deliveryMethod === "titip" ? "titip" : (merchant.category === "pasar" ? "pasar" : "kuliner"),
         pickupLocation: {
           lat: merchant.location.lat,
           lng: merchant.location.lng,
@@ -78,20 +80,11 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
           qty: c.qty
         })),
         customerNote: notes,
-      });
+      }, "pending_merchant");
 
-      // 2. We don't trigger match driver immediately. We wait for merchant to accept.
-      // But the order is created with status pending_merchant.
-      // Actually, wait, `createOrder` by default sets it to `pending`. We need to override it.
-      // For now, let's just create it. `createOrder` might need adjustment to accept initial status, 
-      // but assuming it falls back or we update it. Let's update it immediately if needed.
-      await merchantService.updateMerchantOrderStatus(
-        orderId, 
-        "pending_merchant", 
-        user.uid, 
-        "customer", 
-        userData?.displayName || "Pelanggan"
-      );
+      // Titip and kuliner/pasar orders start as pending_merchant so the merchant can prepare first
+      // We pass "pending_merchant" to the initialStatus of createOrder
+      // So no need to update status separately!
 
       onClose();
       router.push(`/order/${orderId}`);
@@ -167,6 +160,40 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
               </div>
               <ArrowRight className="h-4 w-4 text-slate-400 shrink-0" />
             </button>
+          </div>
+
+          {/* Delivery Method Selector */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider pl-1">
+              Metode Pengiriman
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setDeliveryMethod("reguler")}
+                className={`p-3 rounded-2xl border text-left flex flex-col gap-1 transition-colors ${
+                  deliveryMethod === "reguler" 
+                  ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 text-emerald-900 dark:text-emerald-300" 
+                  : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-400"
+                }`}
+              >
+                <span className="text-xs font-bold">Reguler (Langsung)</span>
+                <span className="text-[10px] opacity-80">Driver antar langsung</span>
+              </button>
+              
+              <button
+                onClick={() => setDeliveryMethod("titip")}
+                className={`p-3 rounded-2xl border text-left flex flex-col gap-1 transition-colors relative overflow-hidden ${
+                  deliveryMethod === "titip" 
+                  ? "bg-orange-50 dark:bg-orange-500/10 border-orange-500 text-orange-900 dark:text-orange-300" 
+                  : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-400"
+                }`}
+              >
+                <div className="absolute -right-4 top-0 bg-orange-500 text-white text-[9px] font-bold px-5 py-0.5 rotate-45 shadow-sm">HEMAT</div>
+                <span className="text-xs font-bold">Titip Tetangga</span>
+                <span className="text-[10px] opacity-80">Batching rute</span>
+              </button>
+            </div>
           </div>
 
           {/* Notes Input */}

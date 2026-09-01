@@ -30,13 +30,13 @@ function cleanUndefined<T>(obj: T): T {
 }
 
 export const orderService = {
-  createOrder: async (orderData: Omit<OrderDocument, "id" | "status" | "createdAt" | "updatedAt" | "driverId">): Promise<string> => {
+  createOrder: async (orderData: Omit<OrderDocument, "id" | "status" | "createdAt" | "updatedAt" | "driverId">, initialStatus: OrderStatus = "pending"): Promise<string> => {
     try {
       const sanitized = cleanUndefined(orderData);
       const newOrder = await addDoc(collection(db, COLLECTIONS.ORDERS), {
         ...sanitized,
         driverId: null,
-        status: "pending",
+        status: initialStatus,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });

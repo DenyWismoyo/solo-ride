@@ -29,6 +29,9 @@ export interface UserDocument {
   
   points?: number; // Poin stamp komunitas (Customer / Driver)
   isVerified?: boolean; // Verifikasi KTP / SIM / Legalitas Usaha
+  kycStatus?: "unverified" | "pending" | "verified" | "rejected";
+  ktpUrl?: string; // Driver / Merchant
+  simUrl?: string; // Driver
   businessName?: string; // Merchant / Industry
   storeName?: string; // Merchant
   storeSlug?: string; // Merchant Custom Store URL

@@ -12,8 +12,10 @@ import {
   CivicPriceFooter, 
   CivicSubmitButton 
 } from "@/components/civic/shared/CivicFormControls";
-import { Lock, User, Phone, MapPin } from "lucide-react";
+import { Lock, User, Phone, MapPin, Navigation } from "lucide-react";
 import { generateAnonCode } from "@/lib/privacy";
+import { MapLocationPickerModal } from "@/components/map/MapLocationPickerModal";
+import { LocationPoint } from "@/types/order.types";
 
 export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicSubServiceFormProps) {
   const { user, userData } = useAuthContext();
@@ -25,7 +27,8 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
   const [jenisKasus, setJenisKasus] = useState("Kekerasan Dalam Rumah Tangga (KDRT)");
   const [butuhPendampingan, setButuhPendampingan] = useState(false);
   const [safeContact, setSafeContact] = useState(userData?.phone || "081234567890");
-  const [address, setAddress] = useState(userData?.address || "Jl. Slamet Riyadi, Surakarta");
+  const [safeLocation, setSafeLocation] = useState<LocationPoint | null>(null);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [confidentialNotes, setConfidentialNotes] = useState("");
   const [anonCode, setAnonCode] = useState<string>("");
 
@@ -38,6 +41,10 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
     if (!user) {
       alert("Silakan login terlebih dahulu.");
       router.push("/login");
+      return;
+    }
+    if (!safeLocation) {
+      alert("Mohon tentukan lokasi Anda sekarang melalui peta untuk keperluan penjemputan darurat.");
       return;
     }
 
@@ -61,18 +68,14 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
           lat: -7.5695,
           lng: 110.8285
         },
-        dropoffLocation: {
-          address,
-          lat: -7.5621,
-          lng: 110.8547
-        },
+        dropoffLocation: safeLocation,
         citizenDetails: {
           serviceId: service.id,
           serviceName: service.name,
           isAnonymous,
           namaAtauKode: effectiveName,
           jenisKasus,
-          lokasiAman: address,
+          lokasiAman: safeLocation.address,
           butuhPendampingan,
           safeContact,
           confidentialNotes,
@@ -169,14 +172,35 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
         />
       </div>
 
-      <CivicTextField
-        label="Alamat Aman / Lokasi Saat Ini"
-        value={address}
-        onChange={setAddress}
-        placeholder="Alamat rumah atau lokasi yang aman..."
-        icon={<MapPin className="h-3.5 w-3.5 text-slate-400" />}
-        required
-      />
+      <div className="space-y-1.5 px-1">
+        <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+          Alamat Aman / Lokasi Saat Ini
+        </label>
+        <button 
+          type="button"
+          onClick={() => setIsMapOpen(true)}
+          className="w-full text-left flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm"
+        >
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${safeLocation ? "bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400" : "bg-slate-100 text-slate-400 dark:bg-zinc-800 dark:text-zinc-500"}`}>
+              <Navigation className="h-4 w-4" />
+            </div>
+            <div className="truncate pr-2">
+              {safeLocation ? (
+                <>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{safeLocation.address}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{safeLocation.lat.toFixed(5)}, {safeLocation.lng.toFixed(5)}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-bold text-slate-500 dark:text-zinc-400">Pilih Lokasi di Peta</p>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">Wajib untuk penjemputan</p>
+                </>
+              )}
+            </div>
+          </div>
+        </button>
+      </div>
 
       <CivicTextareaField
         label="Uraian Masalah / Permohonan (Kerahasiaan Dijamin)"
@@ -206,6 +230,12 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
         onCancel={onCancel}
         buttonBg="bg-purple-600 hover:bg-purple-700"
         shadowColor="shadow-purple-600/20"
+      />
+
+      <MapLocationPickerModal
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        onSelect={(loc) => setSafeLocation(loc)}
       />
     </form>
   );

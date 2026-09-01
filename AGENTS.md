@@ -350,15 +350,15 @@ Didefinisikan secara modular di `src/constants/ecosystemSectors.ts`.
 - [x] Poin/Stamp sistem dasar
 
 ### Phase 2 — Monetisasi & Keamanan 🔧 (Berikutnya)
-- [ ] **Karcis Harian**: Sistem flat fee Rp X/hari untuk driver aktif
-- [ ] **Dompet Driver**: Saldo digital internal (bukan rekening)
+- [x] **Karcis Harian**: Sistem flat fee Rp X/hari untuk driver aktif
+- [x] **Dompet Driver**: Saldo digital internal (bukan rekening)
 - [ ] **Masking Kontak**: Nomor pelanggan disembunyikan dari driver
 - [ ] **KYC Driver**: Upload foto KTP/SIM sebelum verifikasi
 - [ ] **Geofencing**: Batasi order per kecamatan/radius
 
 ### Phase 3 — Ekosistem Lokal 🌱 (Visioner)
-- [ ] **Merchant UMKM**: Modul order makanan/barang dari warung lokal
-- [ ] **Titip Tetangga**: Algoritma batching order searah rute
+- [x] **Merchant UMKM**: Modul order makanan/barang dari warung lokal
+- [x] **Titip Tetangga**: Algoritma batching order searah rute
 - [ ] **Pasar Warga**: Flash sale UMKM dengan push notif radius
 - [ ] **Forum Driver**: Chat komunitas + laporan kondisi jalan
 - [ ] **SHU Koperasi**: Kalkulasi pembagian keuntungan tahunan
