@@ -352,8 +352,8 @@ Didefinisikan secara modular di `src/constants/ecosystemSectors.ts`.
 ### Phase 2 — Monetisasi & Keamanan 🔧 (Berikutnya)
 - [x] **Karcis Harian**: Sistem flat fee Rp X/hari untuk driver aktif
 - [x] **Dompet Driver**: Saldo digital internal (bukan rekening)
-- [ ] **Masking Kontak**: Nomor pelanggan disembunyikan dari driver
-- [ ] **KYC Driver**: Upload foto KTP/SIM sebelum verifikasi
+- [x] **Masking Kontak (DP3A)**: Privacy masking di dashboard pemerintahan
+- [x] **KYC Driver**: Upload foto KTP/SIM sebelum verifikasi via Firebase Storage
 - [ ] **Geofencing**: Batasi order per kecamatan/radius
 
 ### Phase 3 — Ekosistem Lokal 🌱 (Visioner)
