@@ -8,6 +8,9 @@ import { Lock, CheckCircle2, Loader2, Eye, EyeOff , XCircle} from "lucide-react"
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
+import { useAuthContext } from "@/components/AuthProvider";
+import { maskName, maskPhone } from "@/lib/privacy";
+import { writeAuditLog } from "@/lib/auditLog";
 
 interface GovWorkspaceProps {
   orders: OrderDocument[];
@@ -15,6 +18,7 @@ interface GovWorkspaceProps {
 }
 
 export function Dp3aWorkspace({ orders, loading }: GovWorkspaceProps) {
+  const { user, userData } = useAuthContext();
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
 
   const handleReject = async (orderId: string) => {
@@ -55,23 +59,27 @@ export function Dp3aWorkspace({ orders, loading }: GovWorkspaceProps) {
     }
   };
 
-  const maskName = (name: string | undefined) => {
-    if (!name) return "—";
-    if (name.startsWith("Pemohon-")) return name; 
-    if (name.length <= 2) return name;
-    return `${name.charAt(0)}${"*".repeat(name.length - 2)}${name.charAt(name.length - 1)}`;
-  };
-
-  const maskPhone = (phone: string | undefined) => {
-    if (!phone) return "—";
-    if (phone.length < 8) return phone;
-    return `${phone.slice(0, 4)}****${phone.slice(-3)}`;
-  };
-
-  const toggleReveal = (orderId: string) => {
+  const toggleReveal = async (orderId: string) => {
+    const isRevealing = !revealedOrderIds.includes(orderId);
+    
     setRevealedOrderIds(prev => 
-      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+      isRevealing ? [...prev, orderId] : prev.filter(id => id !== orderId)
     );
+
+    if (isRevealing && user && userData) {
+      try {
+        await writeAuditLog({
+          orderId,
+          action: "identity_revealed",
+          actorId: user.uid,
+          actorName: userData.displayName || "Petugas DP3A",
+          actorRole: userData.additionalRole || "government",
+          notes: "Petugas membuka identitas anonim pemohon"
+        });
+      } catch (err) {
+        console.error("Failed to write audit log for reveal:", err);
+      }
+    }
   };
 
   return (

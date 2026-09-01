@@ -60,6 +60,8 @@ import { IncomingOrderModal } from "@/components/driver/IncomingOrderModal";
 import { HistoryDetailReceiptModal } from "@/components/history/HistoryDetailReceiptModal";
 import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 import { playSuccessChime } from "@/lib/sound";
+import { DriverWalletBento } from "@/components/driver/income/DriverWalletBento";
+import { DriverLedgerHistory } from "@/components/driver/income/DriverLedgerHistory";
 
 export default function DriverDashboard() {
   const { user, userData, loading: authLoading, effectiveUid, isImpersonating } = useAuthContext();
@@ -831,7 +833,7 @@ export default function DriverDashboard() {
       {/* TAB 2: 💰 PENDAPATAN (DOMPET & KARCIS FLAT FEE) */}
       {/* ========================================================================= */}
       {activeTab === "income" && (
-        <main className="pt-20 px-4 space-y-5 max-w-lg w-full mx-auto flex-1">
+        <main className="pt-20 px-4 space-y-5 max-w-lg w-full mx-auto flex-1 pb-24">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight sg-editorial-title">
@@ -839,159 +841,18 @@ export default function DriverDashboard() {
               </h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400">Transparansi 100% tunai tanpa potongan per-trip</p>
             </div>
-            <Button
-              size="sm"
-              onClick={() => setIsTopUpOpen(true)}
-              className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl gap-1.5 shadow-md cursor-pointer"
-            >
-              <PlusCircle className="h-4 w-4" /> Isi Saldo
-            </Button>
           </div>
-
-          {/* Period Filter Toggle */}
-          <div className="flex bg-slate-200/80 dark:bg-zinc-800/80 p-1 rounded-2xl border border-slate-300/60 dark:border-zinc-700/60 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setIncomePeriod("today")}
-              className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
-                incomePeriod === "today" 
-                  ? "bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-sm" 
-                  : "text-slate-500 dark:text-zinc-400"
-              }`}
-            >
-              Hari Ini
-            </button>
-            <button
-              type="button"
-              onClick={() => setIncomePeriod("week")}
-              className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
-                incomePeriod === "week" 
-                  ? "bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-sm" 
-                  : "text-slate-500 dark:text-zinc-400"
-              }`}
-            >
-              7 Hari
-            </button>
-            <button
-              type="button"
-              onClick={() => setIncomePeriod("all")}
-              className={`flex-1 py-1.5 rounded-xl transition-all cursor-pointer ${
-                incomePeriod === "all" 
-                  ? "bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-sm" 
-                  : "text-slate-500 dark:text-zinc-400"
-              }`}
-            >
-              Semua
-            </button>
-          </div>
-
-          {/* Income Highlights Cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gradient-to-tr from-emerald-500/10 via-white to-white dark:from-emerald-950/40 dark:via-zinc-900 dark:to-zinc-900 border-emerald-500/20 p-4 rounded-3xl space-y-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-                {incomePeriod === "today" ? "Omzet Hari Ini" : incomePeriod === "week" ? "Omzet 7 Hari" : "Total Omzet Tunai"}
-              </span>
-              <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-                Rp {periodGrossIncome.toLocaleString("id-ID")}
-              </div>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-400">Dari {filteredCompletedTrips.length} trip selesai</p>
-            </Card>
-
-            <Card className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 p-4 rounded-3xl space-y-1 shadow-sm">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-                Saldo Dompet Koperasi
-              </span>
-              <div className="text-xl font-black text-slate-900 dark:text-white">
-                Rp {walletBalance.toLocaleString("id-ID")}
-              </div>
-              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Bebas penarikan tunai</p>
-            </Card>
-          </div>
-
-          {/* Karcis Harian Flat Status Card */}
-          <Card className="bg-white/95 dark:bg-zinc-900/95 border-slate-200 dark:border-zinc-800 p-5 rounded-3xl space-y-3.5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
-                  <Ticket className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Karcis Harian Flat Rp 5.000</h3>
-                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">
-                    {karcisRemainingText ? `Aktif (${karcisRemainingText})` : "1 Karcis aktif = bebas narik 24 jam"}
-                  </p>
-                </div>
-              </div>
-              <Badge variant={isKarcisExpired ? "rose" : "emerald"} size="sm">
-                {isKarcisExpired ? "Kadaluarsa" : "Aktif 24 Jam"}
-              </Badge>
+          
+          {activeDriverUid ? (
+            <>
+              <DriverWalletBento driverId={activeDriverUid} />
+              <DriverLedgerHistory driverId={activeDriverUid} />
+            </>
+          ) : (
+            <div className="text-center p-8 text-slate-500 text-xs">
+              Memuat data driver...
             </div>
-
-            <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
-              Anda tidak dipotong komisi 20-30% per order. Cukup dengan karcis flat harian, 100% uang tunai dari pelanggan masuk langsung ke kantong Anda.
-            </p>
-
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button
-                variant="outline"
-                className="w-full border-amber-500/40 text-amber-600 dark:text-amber-400 font-bold text-xs h-11 rounded-2xl cursor-pointer"
-                onClick={() => handleBuyKarcis(true)}
-              >
-                Klaim Promo Trial (Gratis)
-              </Button>
-              <Button
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs h-11 rounded-2xl cursor-pointer shadow-md"
-                onClick={() => handleBuyKarcis(false)}
-              >
-                Beli Karcis (Rp 5.000)
-              </Button>
-            </div>
-          </Card>
-
-          {/* Ledger History */}
-          <div className="space-y-3 pt-2 pb-6">
-            <div className="flex items-center justify-between pl-1">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white sg-editorial-title flex items-center gap-2">
-                <History className="h-4 w-4 text-emerald-500" /> Buku Besar (Mutasi Saldo)
-              </h3>
-              <span className="text-[11px] text-slate-400">{ledger?.length || 0} Catatan</span>
-            </div>
-            
-            {(!ledger || ledger.length === 0) ? (
-              <div className="text-center p-6 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl shadow-sm">
-                <History className="h-6 w-6 text-slate-400 dark:text-zinc-600 mx-auto mb-2" />
-                <p className="text-xs text-slate-500 dark:text-zinc-400">Belum ada riwayat transaksi dompet.</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {ledger.map((tx) => {
-                  const isIncome = tx.amount > 0;
-                  const date = tx.createdAt?.toDate 
-                    ? tx.createdAt.toDate() 
-                    : tx.createdAt instanceof Date 
-                      ? tx.createdAt 
-                      : new Date();
-
-                  return (
-                    <div 
-                      key={tx.id} 
-                      className="sg-card p-3.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 flex justify-between items-center shadow-sm"
-                    >
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">{tx.description}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-zinc-400">
-                          {date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                      <div className={`text-xs font-black shrink-0 pl-3 ${isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                        {isIncome ? "+" : ""} Rp {Math.abs(tx.amount).toLocaleString("id-ID")}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          )}
         </main>
       )}
 

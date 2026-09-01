@@ -1,5 +1,7 @@
 import { UserRole } from "./user.types";
 
+export type PersonaCategory = "Warga & Driver" | "UMKM & Kargo" | "Industri (B2B)" | "Pemerintahan (Dinas)";
+
 export interface SandboxPersona {
   id: string; // e.g. "sandbox-driver-solo"
   role: UserRole;
@@ -9,16 +11,20 @@ export interface SandboxPersona {
   avatar: string;
   targetPath: string;
   badge: string;
-  badgeVariant: "emerald" | "amber" | "orange" | "blue" | "teal" | "rose";
+  badgeVariant: "emerald" | "amber" | "orange" | "blue" | "teal" | "rose" | "purple" | "neutral";
   description: string;
+  category: PersonaCategory;
   attributes: Record<string, any>;
 }
 
 export const SANDBOX_PERSONAS: SandboxPersona[] = [
-  // 1. CUSTOMER
+  // ==========================================
+  // KATEGORI: WARGA & DRIVER
+  // ==========================================
   {
     id: "sandbox-customer-solo",
     role: "customer",
+    category: "Warga & Driver",
     name: "Danu Setyawan (Warga Solo)",
     subtitle: "Pelanggan / Warga Aktif Jebres",
     avatar: "🛒",
@@ -32,11 +38,10 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
       address: "Jl. Kolonel Sutarto No. 45, Jebres, Surakarta"
     }
   },
-
-  // 2. DRIVER
   {
     id: "sandbox-driver-solo",
     role: "driver",
+    category: "Warga & Driver",
     name: "Joko Santoso (Mitra Driver)",
     subtitle: "Driver Komunitas Solo Balapan",
     avatar: "🛵",
@@ -54,11 +59,14 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
     }
   },
 
-  // 3. MERCHANT FOOD
+  // ==========================================
+  // KATEGORI: UMKM & KARGO
+  // ==========================================
   {
     id: "sandbox-merchant-manto",
     role: "merchant",
     additionalRole: "merch_kuliner",
+    category: "UMKM & Kargo",
     name: "Sate Kambing Pak Manto",
     subtitle: "Kuliner Legendaris Sriwedari",
     avatar: "🍲",
@@ -75,12 +83,11 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
       rating: 4.9
     }
   },
-
-  // 4. MERCHANT PASAR
   {
     id: "sandbox-merchant-pasar",
     role: "merchant",
     additionalRole: "merch_pasar",
+    category: "UMKM & Kargo",
     name: "Kios Mbok Darmi (Pasar Gede)",
     subtitle: "Pasar Tradisional & Sayur Subuh",
     avatar: "🥬",
@@ -96,11 +103,14 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
     }
   },
 
-  // 5. INDUSTRY - KARGO & LOGISTIK
+  // ==========================================
+  // KATEGORI: INDUSTRI (B2B)
+  // ==========================================
   {
     id: "sandbox-industry-solo",
     role: "industry",
     additionalRole: "ind_kargo",
+    category: "Industri (B2B)",
     name: "PT Bengawan Kargo Logistik",
     subtitle: "B2B & Logistik Kargo Pabrik Solo",
     avatar: "🚛",
@@ -115,12 +125,11 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
       activeContractsCount: 3
     }
   },
-
-  // 6. INDUSTRY - KLINIK & LAB MEDIS
   {
     id: "sandbox-ind-klinik",
     role: "industry",
     additionalRole: "ind_klinik",
+    category: "Industri (B2B)",
     name: "Klinik Medika Pratama Solo",
     subtitle: "Logistik Spesimen Medis & Farmasi",
     avatar: "🔬",
@@ -135,13 +144,12 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
       specialization: "Pengantaran Sampel Darah & Resep Medis"
     }
   },
-
-  // 7. INDUSTRY - TRAVEL & SHUTTLE
   {
     id: "sandbox-ind-travel",
     role: "industry",
     additionalRole: "ind_travel",
-    name: "Solo Wisata Trans Nusantara",
+    category: "Industri (B2B)",
+    name: "Solo Wisata Trans",
     subtitle: "Shuttle Stasiun/Bandara & Charter",
     avatar: "🚐",
     targetPath: "/industry",
@@ -155,94 +163,259 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
     }
   },
 
-  // 8. GOVERNMENT - DISKOP & KOPERASI
-  {
-    id: "sandbox-gov-solo",
-    role: "government",
-    additionalRole: "gov_diskop",
-    name: "Dinas Koperasi & UMKM Solo",
-    subtitle: "Pemerintah Kota Surakarta & Koperasi",
-    avatar: "🪙",
-    targetPath: "/gov",
-    badge: "Diskop & UMKM",
-    badgeVariant: "emerald",
-    description: "Cadangan SHU Koperasi Rp 120.000.000. Program Subsidi Karcis Harian Driver 2026.",
-    attributes: {
-      agencyName: "Dinas Koperasi & UMKM Kota Surakarta",
-      shuPool: 120000000,
-      activeBroadcastsCount: 2
-    }
-  },
-
-  // 9. GOVERNMENT - PARIWISATA & KEBUDAYAAN
-  {
-    id: "sandbox-gov-dispar",
-    role: "government",
-    additionalRole: "gov_dispar",
-    name: "Dinas Pariwisata Surakarta",
-    subtitle: "Promosi Event & Wisata Heritage",
-    avatar: "🎭",
-    targetPath: "/gov",
-    badge: "Dinas Pariwisata",
-    badgeVariant: "amber",
-    description: "Kalender Solo Great Sale, Kirab 1 Suro Keraton, dan Shelter Wisata Ojek di Pasar Gede.",
-    attributes: {
-      agencyName: "Dinas Kebudayaan & Pariwisata Kota Surakarta",
-      activeBroadcastsCount: 1
-    }
-  },
-
-  // 10. GOVERNMENT - DUKCAPIL
+  // ==========================================
+  // KATEGORI: PEMERINTAHAN (18 DINAS)
+  // ==========================================
   {
     id: "sandbox-gov-dukcapil",
     role: "government",
     additionalRole: "gov_dukcapil",
+    category: "Pemerintahan (Dinas)",
     name: "Disdukcapil Surakarta",
-    subtitle: "Layanan Antar Dokumen KTP/KK",
+    subtitle: "Layanan Antar Dokumen",
     avatar: "🪪",
     targetPath: "/gov",
     badge: "Disdukcapil",
     badgeVariant: "blue",
-    description: "Program Dukcapil Antar KTP-el / KK / Akta Kelahiran resmi ke rumah warga via Driver Mitra.",
-    attributes: {
-      agencyName: "Dinas Kependudukan & Catatan Sipil Surakarta",
-      deliveriesToday: 42
-    }
+    description: "Program Dukcapil Antar KTP-el / KK / Akta Kelahiran resmi ke rumah warga.",
+    attributes: { agencyName: "Dinas Kependudukan & Catatan Sipil Surakarta", deliveriesToday: 42 }
   },
-
-  // 11. GOVERNMENT - DINAS SOSIAL
+  {
+    id: "sandbox-gov-dinkes",
+    role: "government",
+    additionalRole: "gov_dinkes",
+    category: "Pemerintahan (Dinas)",
+    name: "Dinas Kesehatan",
+    subtitle: "Logistik & Kader Posyandu",
+    avatar: "🏥",
+    targetPath: "/gov",
+    badge: "Dinkes",
+    badgeVariant: "teal",
+    description: "Pendistribusian PMT (Pemberian Makanan Tambahan) Posyandu.",
+    attributes: { agencyName: "Dinas Kesehatan Surakarta" }
+  },
   {
     id: "sandbox-gov-dinsos",
     role: "government",
     additionalRole: "gov_dinsos",
+    category: "Pemerintahan (Dinas)",
     name: "Dinas Sosial Surakarta",
-    subtitle: "Perlindungan & Bansos Sembako",
+    subtitle: "Bansos & Pelayanan Difabel",
     avatar: "🤝",
     targetPath: "/gov",
     badge: "Dinas Sosial",
     badgeVariant: "rose",
-    description: "Penyaluran Voucher Bansos Sembako di Pasar Tradisional & Armada Ojek Siaga Difabel/Lansia.",
-    attributes: {
-      agencyName: "Dinas Sosial Kota Surakarta",
-      activeVouchersCount: 350
-    }
+    description: "Penyaluran Voucher Bansos Sembako di Pasar Tradisional.",
+    attributes: { agencyName: "Dinas Sosial Kota Surakarta", activeVouchersCount: 350 }
   },
-
-  // 12. GOVERNMENT - BAPENDA
+  {
+    id: "sandbox-gov-diskop",
+    role: "government",
+    additionalRole: "gov_diskop",
+    category: "Pemerintahan (Dinas)",
+    name: "Diskop & UMKM Solo",
+    subtitle: "Pemerintah Kota & Koperasi",
+    avatar: "🪙",
+    targetPath: "/gov",
+    badge: "Diskop & UMKM",
+    badgeVariant: "emerald",
+    description: "Cadangan SHU Koperasi Rp 120.000.000. Program Subsidi Karcis Harian.",
+    attributes: { agencyName: "Dinas Koperasi & UMKM", shuPool: 120000000 }
+  },
+  {
+    id: "sandbox-gov-dispar",
+    role: "government",
+    additionalRole: "gov_dispar",
+    category: "Pemerintahan (Dinas)",
+    name: "Dinas Pariwisata",
+    subtitle: "Promosi Event & Heritage",
+    avatar: "🎭",
+    targetPath: "/gov",
+    badge: "Dispar",
+    badgeVariant: "amber",
+    description: "Kalender Solo Great Sale, Kirab 1 Suro.",
+    attributes: { agencyName: "Dinas Pariwisata" }
+  },
+  {
+    id: "sandbox-gov-dishub",
+    role: "government",
+    additionalRole: "gov_dishub",
+    category: "Pemerintahan (Dinas)",
+    name: "Dinas Perhubungan",
+    subtitle: "Manajemen Lalu Lintas",
+    avatar: "🚦",
+    targetPath: "/gov",
+    badge: "Dishub",
+    badgeVariant: "orange",
+    description: "Shelter Ojek dan pengaturan lalin acara Car Free Day.",
+    attributes: { agencyName: "Dinas Perhubungan" }
+  },
   {
     id: "sandbox-gov-bapenda",
     role: "government",
     additionalRole: "gov_bapenda",
-    name: "Bapenda Kota Surakarta",
-    subtitle: "Optimalisasi PAD & Retribusi Pasar",
+    category: "Pemerintahan (Dinas)",
+    name: "Bapenda Surakarta",
+    subtitle: "Optimalisasi PAD",
     avatar: "📊",
     targetPath: "/gov",
     badge: "Bapenda PAD",
     badgeVariant: "teal",
-    description: "Monitoring Retribusi Digital Kios Pasar Tradisional & Transparansi Sirkulasi Ekonomi Mikro Solo.",
-    attributes: {
-      agencyName: "Badan Pendapatan Daerah Surakarta",
-      dailyPADRetribution: 48500000
-    }
+    description: "Monitoring Retribusi Digital Kios Pasar Tradisional.",
+    attributes: { agencyName: "Badan Pendapatan Daerah Surakarta" }
+  },
+  {
+    id: "sandbox-gov-disdik",
+    role: "government",
+    additionalRole: "gov_disdik",
+    category: "Pemerintahan (Dinas)",
+    name: "Dinas Pendidikan",
+    subtitle: "Bantuan Seragam & PIP",
+    avatar: "🏫",
+    targetPath: "/gov",
+    badge: "Disdik",
+    badgeVariant: "blue",
+    description: "Layanan logistik sekolah dan pendataan zonasi.",
+    attributes: { agencyName: "Dinas Pendidikan" }
+  },
+  {
+    id: "sandbox-gov-dlh",
+    role: "government",
+    additionalRole: "gov_dlh",
+    category: "Pemerintahan (Dinas)",
+    name: "Dinas Lingkungan Hidup",
+    subtitle: "Manajemen Sampah & Taman",
+    avatar: "🌳",
+    targetPath: "/gov",
+    badge: "DLH",
+    badgeVariant: "emerald",
+    description: "Layanan laporan penjemputan limbah B3/Bank Sampah.",
+    attributes: { agencyName: "Dinas Lingkungan Hidup" }
+  },
+  {
+    id: "sandbox-gov-damkar",
+    role: "government",
+    additionalRole: "gov_damkar",
+    category: "Pemerintahan (Dinas)",
+    name: "Damkar Surakarta",
+    subtitle: "Penyelamatan Darurat",
+    avatar: "🚒",
+    targetPath: "/gov",
+    badge: "Damkar",
+    badgeVariant: "rose",
+    description: "Tombol Darurat Kebakaran langsung panggil posko terdekat.",
+    attributes: { agencyName: "Pemadam Kebakaran" }
+  },
+  {
+    id: "sandbox-gov-dispusip",
+    role: "government",
+    additionalRole: "gov_dispusip",
+    category: "Pemerintahan (Dinas)",
+    name: "Dispusip",
+    subtitle: "Perpustakaan Keliling",
+    avatar: "📚",
+    targetPath: "/gov",
+    badge: "Dispusip",
+    badgeVariant: "blue",
+    description: "Antar-jemput peminjaman buku perpustakaan daerah.",
+    attributes: { agencyName: "Dinas Perpustakaan dan Kearsipan" }
+  },
+  {
+    id: "sandbox-gov-dispertan",
+    role: "government",
+    additionalRole: "gov_dispertan",
+    category: "Pemerintahan (Dinas)",
+    name: "Dispertan",
+    subtitle: "Pertanian & Pangan",
+    avatar: "🌾",
+    targetPath: "/gov",
+    badge: "Dispertan",
+    badgeVariant: "emerald",
+    description: "Layanan benih gratis dan monitoring pupuk petani kota.",
+    attributes: { agencyName: "Dinas Pertanian" }
+  },
+  {
+    id: "sandbox-gov-disnaker",
+    role: "government",
+    additionalRole: "gov_disnaker",
+    category: "Pemerintahan (Dinas)",
+    name: "Disnaker",
+    subtitle: "Kartu Kuning & Pelatihan",
+    avatar: "👷",
+    targetPath: "/gov",
+    badge: "Disnaker",
+    badgeVariant: "orange",
+    description: "Pembuatan kartu kuning (AK-I) diantar via kurir mitra.",
+    attributes: { agencyName: "Dinas Tenaga Kerja" }
+  },
+  {
+    id: "sandbox-gov-diskominfo",
+    role: "government",
+    additionalRole: "gov_diskominfo",
+    category: "Pemerintahan (Dinas)",
+    name: "Diskominfo",
+    subtitle: "Layanan Aduan SP4N LAPOR",
+    avatar: "📡",
+    targetPath: "/gov",
+    badge: "Diskominfo",
+    badgeVariant: "teal",
+    description: "Monitoring dashboard aduan infrastruktur (ULAS).",
+    attributes: { agencyName: "Diskominfo" }
+  },
+  {
+    id: "sandbox-gov-satpolpp",
+    role: "government",
+    additionalRole: "gov_satpolpp",
+    category: "Pemerintahan (Dinas)",
+    name: "Satpol PP",
+    subtitle: "Ketertiban Umum",
+    avatar: "🛡️",
+    targetPath: "/gov",
+    badge: "Satpol PP",
+    badgeVariant: "rose",
+    description: "Aduan PKL liar dan gangguan ketertiban masyarakat.",
+    attributes: { agencyName: "Satpol PP" }
+  },
+  {
+    id: "sandbox-gov-bpbd",
+    role: "government",
+    additionalRole: "gov_bpbd",
+    category: "Pemerintahan (Dinas)",
+    name: "BPBD",
+    subtitle: "Tanggap Bencana",
+    avatar: "🌊",
+    targetPath: "/gov",
+    badge: "BPBD",
+    badgeVariant: "amber",
+    description: "Laporan cepat banjir/pohon tumbang dari mitra di lapangan.",
+    attributes: { agencyName: "BPBD Surakarta" }
+  },
+  {
+    id: "sandbox-gov-dp3a",
+    role: "government",
+    additionalRole: "gov_dp3a",
+    category: "Pemerintahan (Dinas)",
+    name: "DP3AP2KB",
+    subtitle: "Perlindungan Anak & Perempuan",
+    avatar: "👩‍👧",
+    targetPath: "/gov",
+    badge: "DP3A",
+    badgeVariant: "purple",
+    description: "Aduan KDRT/Kekerasan dengan masking anonim (Privacy DP3A Mode).",
+    attributes: { agencyName: "DP3AP2KB" }
+  },
+  {
+    id: "sandbox-gov-dpmptsp",
+    role: "government",
+    additionalRole: "gov_dpmptsp",
+    category: "Pemerintahan (Dinas)",
+    name: "DPMPTSP",
+    subtitle: "Izin Usaha UMKM",
+    avatar: "📑",
+    targetPath: "/gov",
+    badge: "DPMPTSP",
+    badgeVariant: "blue",
+    description: "Pendaftaran NIB untuk mitra pedagang Ride-Solo.",
+    attributes: { agencyName: "DPMPTSP Surakarta" }
   }
 ];

@@ -83,6 +83,12 @@ src/
     └── pricing.ts                # Tarif dasar, radius, dll.
 ```
 
+### Aturan Route Groups & Canonical Paths (Next.js)
+- **HINDARI PARALLEL ROUTES CONFLICT**: DILARANG KERAS membuat folder dengan segment rute yang sama di dalam dan di luar Route Group. 
+  Contoh SALAH: `src/app/(merchant)/merchant` dan `src/app/merchant`.
+  Kedua path tersebut akan crash karena Next.js menganggapnya sama (resolves to `/merchant`).
+- Selalu periksa direktori root `src/app/` sebelum men-generate page baru untuk memastikan URL segment belum digunakan.
+
 ---
 
 ## 4. Aturan Penulisan Kode
@@ -154,6 +160,22 @@ export function useOrder(orderId?: string) {
 - **Visual Map / GPS Only (No Text Autocomplete)**: Untuk penentuan lokasi baru (di luar alamat tersimpan), DILARANG menggunakan input teks *autocomplete* karena rawan meleset. Selalu gunakan *read-only input* yang membuka **Map Modal** (`MapLocationPickerModal`) atau tombol **GPS Saya**. Input teks hanya berfungsi untuk menampilkan alamat hasil *reverse-geocoding*.
 - **Destination-First Stepper (Ride & Car)**: Saat pengguna memilih lokasi tujuan, **DILARANG** mengisi otomatis lokasi penjemputan (pickup) menggunakan data GPS di belakang layar tanpa interaksi eksplisit pengguna. Mengisi GPS otomatis akan memicu kalkulasi rute prematur dan merampas kontrol pengguna untuk menentukan titik jemput mereka sendiri.
 
+### Privacy & Identity Masking (DP3A Pattern)
+- Untuk layanan yang menangani data sensitif (mis. pelaporan DP3A, aduan warga anonim), wajib mengimplementasikan **Privacy Masking**.
+- Gunakan `maskName()` dan `maskPhone()` dari `src/lib/privacy.ts`.
+- Di antarmuka admin/petugas, sediakan tombol eksplisit "Buka Identitas" yang memanggil `writeAuditLog({ action: "identity_revealed" })` sebelum data asli ditampilkan.
+
+### Emergency Bypass & SLA Monitor
+- Layanan yang bersifat darurat (Damkar, BPBD, Ambulans) harus mem-bypass tahap `pending_verification` dan langsung masuk ke `pending` (mencari petugas/mitra).
+- Gunakan `isEmergencyService(serviceId)` dari `src/constants/emergencyServices.ts`.
+- Setiap pesanan wajib dimonitor menggunakan batas waktu dari `src/constants/slaConfig.ts` (SLA threshold) untuk mengukur metrik *Average Response Time*.
+
+### Rejection Flow Standard
+- DILARANG melakukan *hard-delete* pada dokumen yang ditolak.
+- WAJIB mengubah status menjadi `rejected` dan mencatat alasan penolakan (`rejectionReason`).
+- Di sisi admin/petugas, WAJIB menggunakan komponen `<RejectionModal>` standar yang terintegrasi langsung dengan `writeAuditLog()`.
+- Di sisi *customer history*, kartu order WAJIB menampilkan blok merah berisi alasan penolakan dengan jelas.
+
 ---
 
 ## 5. Firestore Schema
@@ -197,6 +219,24 @@ interface DriverDocument {
   lastUpdated: Timestamp;
 }
 ```
+
+### Audit Log — Sub-Collection Pattern
+
+Setiap aksi yang mengubah status order pemerintahan WAJIB dicatat ke sub-collection,
+BUKAN sebagai field array di dalam order document.
+
+```
+// ✅ BENAR — Sub-collection (scalable, queryable, append-only)
+orders/{orderId}/auditLog/{auto-id}
+
+// ❌ SALAH — Array field dalam document (size limit, tidak queryable)
+orders/{orderId}.auditLog: AuditEntry[]
+```
+
+Interface `AuditEntry` wajib menggunakan `src/types/audit.types.ts`.
+Helper untuk menulis log: `writeAuditLog()` dari `src/lib/auditLog.ts`.
+
+Security rules: allow create ONLY, deny update/delete (immutable audit trail).
 
 ---
 
@@ -280,21 +320,15 @@ Menu navigasi driver **berbeda total** dari navigasi customer. Terdiri dari 4 pi
 3. **`performance`**: Rating mitra, tingkat penyelesaian, tabungan poin stamp, estimasi dividen SHU koperasi tahunan, riwayat trip detail.
 4. **`partner`**: KTA digital koperasi, verifikasi legalitas KYC (KTP/SIM), tombol darurat Satgas 24 jam, posko basecamp Solo.
 
-### Super Admin Ecosystem Persona Sandbox & Seeding
-Untuk memfasilitasi pengujian multi-role yang realistis tanpa login-logout:
-- Super Admin dilengkapi dengan **12 Persona Sandbox Surakarta**:
-  1. `sandbox-customer-solo` (Danu Setyawan - Warga Jebres)
-  2. `sandbox-driver-solo` (Joko Santoso - Driver Balapan, Karcis Aktif, Saldo Rp 150rb, ⭐ 4.9)
-  3. `sandbox-merchant-manto` (`merch_kuliner` - Sate Pak Manto Sriwedari)
-  4. `sandbox-merchant-pasar` (`merch_pasar` - Kios Sayur Mbok Darmi Pasar Gede)
-  5. `sandbox-industry-solo` (`ind_kargo` - PT Bengawan Kargo Logistik)
-  6. `sandbox-ind-klinik` (`ind_klinik` - Klinik Medika Pratama Solo - Spesimen Lab & E-Resep)
-  7. `sandbox-ind-travel` (`ind_travel` - Solo Wisata Trans - Shuttle Balapan & Bandara)
-  8. `sandbox-gov-solo` (`gov_diskop` - Diskop & UKM Kota Surakarta - Cadangan SHU)
-  9. `sandbox-gov-dispar` (`gov_dispar` - Dinas Pariwisata Surakarta - Kalender Heritage & Event)
-  10. `sandbox-gov-dukcapil` (`gov_dukcapil` - Disdukcapil - Antar KTP/KK ke Rumah)
-  11. `sandbox-gov-dinsos` (`gov_dinsos` - Dinas Sosial - Bansos Sembako Pasar & Difabel)
-  12. `sandbox-gov-bapenda` (`gov_bapenda` - Bapenda - Retribusi Pasar Digital & PAD)
+### Super Admin Ecosystem Persona Sandbox & Seeding (Categorized)
+Untuk memfasilitasi pengujian lintas 5 ekosistem (khususnya 18 Dinas Pemkot):
+- Persona Sandbox WAJIB dikelompokkan (*Grouped*) berdasarkan Kategori di UI `AdminImpersonationBar`:
+  - **Kategori Warga & Driver**: Customer, Driver Reguler.
+  - **Kategori UMKM**: Kuliner, Pasar Tradisional.
+  - **Kategori Pemerintahan (18 Dinas)**: Diskop, Dispar, Satpol PP, DPMPTSP, dll.
+  - **Kategori Industri**: Kargo, Klinik, Travel.
+- UI Impersonation WAJIB menggunakan Dropdown Categorized atau Tabs untuk mencegah *cluttered screen*.
+- Semua 18 Dinas wajib tersedia di `SANDBOX_PERSONAS` untuk mempermudah QA spesifik per instansi.
 - Modul `seedEcosystemSandbox()` di `src/lib/seedSandbox.ts` menginisialisasi seluruh data di atas ke Firestore dalam 1-Click.
 
 ### Hierarchical Additional Roles Architecture
@@ -365,3 +399,4 @@ Didefinisikan secara modular di `src/constants/ecosystemSectors.ts`.
 - Jangan gunakan `libraries: ['places']` sebagai literal array di dalam komponen
 - Jangan buat state management global selain `AuthProvider` tanpa diskusi arsitektur
 - Jangan deploy ke production tanpa update `firestore.rules`
+- Jangan membuat folder duplikat yang menghasilkan path yang sama (Route Segment Collision) karena ketidaktahuan penggunaan Route Group `(...)`.

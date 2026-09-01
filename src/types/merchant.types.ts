@@ -35,3 +35,12 @@ export interface Merchant {
   promoTag?: string;
   popularItems: string[];
 }
+
+export interface MerchantDocument extends Omit<Merchant, "distanceKm"> {
+  ownerId?: string; // UID of the sandbox merchant owner
+  location?: { lat: number; lng: number };
+  address?: string;
+  phoneNumber?: string;
+  createdAt?: Timestamp | any;
+  updatedAt?: Timestamp | any;
+}

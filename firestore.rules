@@ -20,6 +20,21 @@ service cloud.firestore {
     // 2. Orders Collection (Real-time Ride, Food, Delivery Dispatch)
     match /orders/{orderId} {
       allow read, write: if isAuthenticated();
+
+      match /auditLog/{logId} {
+        // Hanya petugas dinas, driver, dan admin yang bisa baca
+        allow read: if isAuthenticated() &&
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
+            ["admin", "driver", "government"]);
+        
+        // Hanya petugas dinas, driver, dan admin yang bisa menulis
+        allow create: if isAuthenticated() &&
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
+            ["admin", "driver", "government"]);
+        
+        // Tidak ada yang boleh edit atau hapus audit log
+        allow update, delete: if false;
+      }
     }
 
     // 3. Wallets Collection (Driver & Merchant Balances)

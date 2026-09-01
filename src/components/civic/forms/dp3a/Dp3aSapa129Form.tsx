@@ -13,6 +13,7 @@ import {
   CivicSubmitButton 
 } from "@/components/civic/shared/CivicFormControls";
 import { Lock, User, Phone, MapPin } from "lucide-react";
+import { generateAnonCode } from "@/lib/privacy";
 
 export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicSubServiceFormProps) {
   const { user, userData } = useAuthContext();
@@ -26,10 +27,10 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
   const [safeContact, setSafeContact] = useState(userData?.phone || "081234567890");
   const [address, setAddress] = useState(userData?.address || "Jl. Slamet Riyadi, Surakarta");
   const [confidentialNotes, setConfidentialNotes] = useState("");
-  const [randomCode, setRandomCode] = useState<number>(0);
+  const [anonCode, setAnonCode] = useState<string>("");
 
   useEffect(() => {
-    setRandomCode(Math.floor(1000 + Math.random() * 9000));
+    setAnonCode(generateAnonCode());
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,8 +42,8 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
     }
 
     const effectiveName = isAnonymous
-      ? `Pemohon-${randomCode}`
-      : (reporterName || `Pemohon-${randomCode}`);
+      ? anonCode
+      : (reporterName || anonCode);
 
     const orderId = await submitOrder(
       {
@@ -113,9 +114,9 @@ export function Dp3aSapa129Form({ agency, service, onSuccess, onCancel }: CivicS
               <div className="w-9 h-5 bg-purple-200 peer-focus:outline-none rounded-full peer dark:bg-purple-900 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-purple-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
             </label>
           </div>
-          {isAnonymous && randomCode > 0 && (
+          {isAnonymous && anonCode && (
             <p className="text-[10px] font-medium text-purple-500 mt-2 p-1.5 bg-white/50 dark:bg-black/20 rounded-lg inline-block">
-              Kode Laporan Anda: <b>Pemohon-{randomCode}</b>
+              Kode Laporan Anda: <b>{anonCode}</b>
             </p>
           )}
         </div>

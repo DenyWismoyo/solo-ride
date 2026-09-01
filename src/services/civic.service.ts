@@ -2,6 +2,8 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 
+import { isEmergencyService } from "@/constants/emergencyServices";
+
 export interface CreateCivicOrderDTO {
   customerId: string;
   customerName: string;
@@ -28,13 +30,13 @@ export interface CreateCivicOrderDTO {
 export const civicService = {
   createCivicOrder: async (data: CreateCivicOrderDTO): Promise<string> => {
     try {
-      const isEmergencyService = 
-        data.serviceType.includes("damkar") || data.serviceType.includes("bpbd");
+      const isEmergency = isEmergencyService(data.serviceType);
 
       const ref = await addDoc(collection(db, COLLECTIONS.ORDERS), {
         ...data,
         targetRole: data.targetRole || "government",
-        status: isEmergencyService ? "pending" : "pending_verification",
+        status: isEmergency ? "pending" : "pending_verification",
+        isEmergency,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });

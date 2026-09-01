@@ -8,6 +8,9 @@ import { Briefcase, GraduationCap, CheckCircle2, Loader2, KeyRound , XCircle} fr
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
+import { RejectionModal } from "@/components/government/shared/RejectionModal";
+import { useAuthContext } from "@/components/AuthProvider";
+import { writeAuditLog } from "@/lib/auditLog";
 
 interface GovWorkspaceProps {
   orders: OrderDocument[];
@@ -15,25 +18,42 @@ interface GovWorkspaceProps {
 }
 
 export function DisnakerWorkspace({ orders, loading }: GovWorkspaceProps) {
+  const { user, userData } = useAuthContext();
   const [activeTab, setActiveTab] = useState<"ak1" | "blk">("ak1");
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+  const [rejectionTarget, setRejectionTarget] = useState<OrderDocument | null>(null);
 
-  const handleReject = async (orderId: string) => {
-    const reason = prompt("Masukkan alasan penolakan:");
-    if (!reason) return;
+  const handleReject = async (reason: string) => {
+    if (!rejectionTarget?.id) return;
+    const orderId = rejectionTarget.id;
     
     setDispatchingId(orderId);
     try {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
-        status: "cancelled",
+        status: "rejected",
         rejectionReason: reason,
+        rejectedByDinasAt: serverTimestamp(),
+        rejectedByDinasName: userData?.displayName || "Petugas Disnaker",
         updatedAt: serverTimestamp()
       });
+      
+      if (user) {
+        await writeAuditLog({
+          orderId,
+          action: "rejected",
+          actorId: user.uid,
+          actorName: userData?.displayName || "Petugas Disnaker",
+          actorRole: userData?.additionalRole || "government",
+          notes: reason
+        });
+      }
+      
       alert("Permohonan berhasil ditolak.");
     } catch (err: any) {
       alert(`Gagal menolak: ${err.message || err}`);
     } finally {
       setDispatchingId(null);
+      setRejectionTarget(null);
     }
   };
 
@@ -46,8 +66,20 @@ export function DisnakerWorkspace({ orders, loading }: GovWorkspaceProps) {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
         status: "pending",
         verifiedByDinasAt: serverTimestamp(),
+        verifiedByDinasName: userData?.displayName || "Petugas Disnaker",
         updatedAt: serverTimestamp()
       });
+      
+      if (user) {
+        await writeAuditLog({
+          orderId,
+          action: "verified",
+          actorId: user.uid,
+          actorName: userData?.displayName || "Petugas Disnaker",
+          actorRole: userData?.additionalRole || "government"
+        });
+      }
+
       alert("✅ Kartu Kuning AK-1 Berhasil Dicetak & Siap Diantar Kurir Mitra!");
     } catch (err: any) {
       alert(`Gagal: ${err.message || err}`);
@@ -62,8 +94,20 @@ export function DisnakerWorkspace({ orders, loading }: GovWorkspaceProps) {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
         status: "completed",
         verifiedByDinasAt: serverTimestamp(),
+        verifiedByDinasName: userData?.displayName || "Petugas Disnaker",
         updatedAt: serverTimestamp()
       });
+      
+      if (user) {
+        await writeAuditLog({
+          orderId,
+          action: "verified",
+          actorId: user.uid,
+          actorName: userData?.displayName || "Petugas Disnaker",
+          actorRole: userData?.additionalRole || "government"
+        });
+      }
+
       alert("✅ Pendaftaran Peserta Pelatihan BLK Berhasil Disetujui!");
     } catch (err: any) {
       alert(`Gagal: ${err.message || err}`);
@@ -209,6 +253,16 @@ export function DisnakerWorkspace({ orders, loading }: GovWorkspaceProps) {
                   <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.04]">
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={() => setRejectionTarget(order)}
+                      disabled={dispatchingId === order.id}
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-900/20 rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
+                    >
+                      <XCircle className="h-3.5 w-3.5 mr-1" />
+                      Tolak
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={() => order.id && (activeTab === "ak1" ? handleApproveAk1(order.id) : handleApproveBlk(order.id))}
                       disabled={dispatchingId === order.id}
                       className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer shadow-xs"
@@ -227,6 +281,17 @@ export function DisnakerWorkspace({ orders, loading }: GovWorkspaceProps) {
           })}
         </div>
       )}
+
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onConfirm={handleReject}
+        orderInfo={{
+          serviceName: rejectionTarget?.serviceTitle,
+          customerName: rejectionTarget?.customerName,
+          orderId: rejectionTarget?.id
+        }}
+      />
     </div>
   );
 }

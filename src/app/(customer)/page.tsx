@@ -58,6 +58,8 @@ import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
 import { HistoryDetailReceiptModal } from "@/components/history/HistoryDetailReceiptModal";
+import { HistoryFilterBar } from "@/components/history/HistoryFilterBar";
+import { ServiceCategory, getOrderCategory, GOV_STATUS_LABELS } from "@/constants/serviceCategories";
 
 export default function CustomerHome() {
   const router = useRouter();
@@ -68,6 +70,7 @@ export default function CustomerHome() {
   const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
   const [selectedOrderForReceipt, setSelectedOrderForReceipt] = useState<OrderDocument | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState<"all" | "active" | "completed" | "cancelled">("all");
+  const [activeHistoryCategory, setActiveHistoryCategory] = useState<ServiceCategory | "semua">("semua");
 
   // Real-time broadcasts for customers
   const { broadcasts } = useBroadcasts("customer");
@@ -253,6 +256,14 @@ export default function CustomerHome() {
               </span>
             </div>
 
+            <div className="mb-3">
+              <HistoryFilterBar 
+                activeCategory={activeHistoryCategory} 
+                onCategoryChange={setActiveHistoryCategory} 
+                orders={customerOrders} 
+              />
+            </div>
+
             {/* Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
@@ -306,10 +317,11 @@ export default function CustomerHome() {
             {/* Filtered Order Feed */}
             {(() => {
               const filtered = customerOrders.filter((order) => {
-                if (orderStatusFilter === "completed") return order.status === "completed";
-                if (orderStatusFilter === "cancelled") return order.status === "cancelled";
-                if (orderStatusFilter === "active") return order.status !== "completed" && order.status !== "cancelled";
-                return true;
+                const catMatch = activeHistoryCategory === "semua" || getOrderCategory(order) === activeHistoryCategory;
+                const statusMatch = orderStatusFilter === "all"
+                  || (orderStatusFilter === "active" && !["completed","cancelled","rejected"].includes(order.status))
+                  || order.status === orderStatusFilter;
+                return catMatch && statusMatch;
               });
 
               if (filtered.length === 0) {
@@ -328,7 +340,11 @@ export default function CustomerHome() {
 
               return (
                 <div className="space-y-3">
-                  {filtered.map((order) => (
+                  {filtered.map((order) => {
+                    const isGovOrder = getOrderCategory(order) === "layanan_publik";
+                    const govStatus = GOV_STATUS_LABELS[order.status];
+                    
+                    return (
                     <motion.div
                       key={order.id}
                       whileTap={{ scale: 0.97 }}
@@ -342,16 +358,22 @@ export default function CustomerHome() {
                             <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                               {(order as any).serviceTitle || order.serviceType}
                             </span>
-                            <Badge 
-                              variant={
-                                order.status === "completed" ? "emerald" :
-                                order.status === "cancelled" ? "rose" :
-                                order.status === "in_progress" ? "blue" : "amber"
-                              }
-                              size="sm"
-                            >
-                              {order.status === "completed" ? "Selesai" : order.status === "cancelled" ? "Batal" : order.status}
-                            </Badge>
+                            {isGovOrder && govStatus ? (
+                              <Badge variant={govStatus.color as any} size="sm">
+                                {govStatus.label}
+                              </Badge>
+                            ) : (
+                              <Badge 
+                                variant={
+                                  order.status === "completed" ? "emerald" :
+                                  order.status === "cancelled" || order.status === "rejected" ? "rose" :
+                                  order.status === "in_progress" ? "blue" : "amber"
+                                }
+                                size="sm"
+                              >
+                                {order.status === "completed" ? "Selesai" : order.status === "cancelled" || order.status === "rejected" ? "Batal" : order.status}
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                             ID: #{order.id?.slice(0, 8).toUpperCase()}
@@ -363,16 +385,40 @@ export default function CustomerHome() {
                         </span>
                       </div>
 
-                      <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl space-y-1.5 text-xs text-slate-600 dark:text-zinc-300">
-                        <div className="flex items-start gap-2">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">Jemput:</span>
-                          <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{order.pickupLocation?.address}</span>
+                      {isGovOrder ? (
+                        <div className="p-3 bg-indigo-500/5 dark:bg-indigo-950/20 rounded-2xl space-y-1.5">
+                          <div className="flex items-start gap-2">
+                            <span className="text-[10px] font-bold text-indigo-500 uppercase shrink-0 mt-0.5">Dinas:</span>
+                            <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">
+                              {(order as any).agencyName || "Dinas Pemkot Surakarta"}
+                            </span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase shrink-0 mt-0.5">Layanan:</span>
+                            <span className="text-xs text-slate-700 dark:text-zinc-300">
+                              {(order as any).serviceTitle || order.serviceType}
+                            </span>
+                          </div>
+                          {order.status === "rejected" && (order as any).rejectionReason && (
+                            <div className="p-2 bg-rose-500/10 border border-rose-500/20 rounded-xl mt-1">
+                              <p className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold leading-snug">
+                                Ditolak: {(order as any).rejectionReason}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-start gap-2">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">Tujuan:</span>
-                          <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{order.dropoffLocation?.address}</span>
+                      ) : (
+                        <div className="p-3 bg-slate-50/90 dark:bg-white/[0.03] rounded-2xl space-y-1.5 text-xs text-slate-600 dark:text-zinc-300">
+                          <div className="flex items-start gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">Jemput:</span>
+                            <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{order.pickupLocation?.address}</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">Tujuan:</span>
+                            <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">{order.dropoffLocation?.address}</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                         <span className="font-medium">
@@ -383,7 +429,8 @@ export default function CustomerHome() {
                         </span>
                       </div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })()}

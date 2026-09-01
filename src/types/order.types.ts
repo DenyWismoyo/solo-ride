@@ -1,6 +1,8 @@
 import { Timestamp } from "firebase/firestore";
 
 export type OrderStatus = 
+  | "pending_merchant"
+  | "preparing"
   | "pending_verification" 
   | "pending" 
   | "cooking" 
@@ -8,7 +10,8 @@ export type OrderStatus =
   | "accepted" 
   | "in_progress" 
   | "completed" 
-  | "cancelled";
+  | "cancelled"
+  | "rejected";
 export type PaymentMethod = "cash" | "qris" | "wallet";
 
 export type ServiceType = 
@@ -271,6 +274,8 @@ export interface OrderDocument {
   pickupLocation: LocationPoint;
   dropoffLocation: LocationPoint;
   price: number;
+  subtotal?: number;
+  deliveryFee?: number;
   status: OrderStatus;
   paymentMethod?: PaymentMethod;
   
@@ -281,8 +286,18 @@ export interface OrderDocument {
     [key: string]: any;
   };
 
+  isEmergency?: boolean;
+
   verifiedByDinasAt?: Timestamp | any;
+  verifiedByDinasName?: string;
+
+  rejectedByDinasAt?: Timestamp | any;
+  rejectedByDinasName?: string;
+  rejectionReason?: string;
+
   otpCode?: string;
+  otpConfirmedAt?: Timestamp | any;
+
   createdAt: Timestamp | any;
   updatedAt: Timestamp | any;
   completedAt?: Timestamp | any;

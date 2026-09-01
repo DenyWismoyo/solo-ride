@@ -2,8 +2,10 @@ import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, 
 import { db } from "../lib/firebase";
 import { COLLECTIONS } from "../constants/collections";
 import { LOCAL_MERCHANTS_SURAKARTA } from "../constants/merchants";
-import { MenuItemDocument } from "../types/merchant.types";
+import { MenuItemDocument, MerchantDocument } from "../types/merchant.types";
 import { UserDocument } from "../types/user.types";
+import { OrderStatus } from "../types/order.types";
+import { writeAuditLog } from "../lib/auditLog";
 
 export const merchantService = {
   addMenuItem: async (item: Omit<MenuItemDocument, "id" | "createdAt" | "updatedAt">): Promise<string> => {
@@ -86,6 +88,92 @@ export const merchantService = {
       return null;
     } catch (err) {
       throw new Error(`Gagal mengambil data merchant: ${err}`);
+    }
+  },
+
+  getMerchantProfileByOwner: async (ownerId: string): Promise<MerchantDocument | null> => {
+    try {
+      const q = query(
+        collection(db, "merchants"),
+        where("ownerId", "==", ownerId)
+      );
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const docSnap = snapshot.docs[0];
+        return { id: docSnap.id, ...docSnap.data() } as MerchantDocument;
+      }
+      return null;
+    } catch (err) {
+      console.error("Error fetching merchant profile:", err);
+      return null;
+    }
+  },
+
+  getMerchantProducts: async (merchantId: string): Promise<MenuItemDocument[]> => {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.MENU_ITEMS),
+        where("merchantId", "==", merchantId)
+      );
+      const snapshot = await getDocs(q);
+      const items: MenuItemDocument[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as MenuItemDocument);
+      });
+      return items;
+    } catch (err) {
+      console.error("Error fetching merchant products:", err);
+      return [];
+    }
+  },
+
+  toggleStoreStatus: async (merchantId: string, isOpen: boolean): Promise<void> => {
+    try {
+      const docRef = doc(db, "merchants", merchantId);
+      await updateDoc(docRef, { isOpen, updatedAt: serverTimestamp() });
+    } catch (err: any) {
+      throw new Error(`Gagal mengubah status toko: ${err.message}`);
+    }
+  },
+
+  updateMerchantOrderStatus: async (
+    orderId: string, 
+    status: OrderStatus, 
+    userId: string, 
+    userRole: string = "merchant",
+    userName: string = "Merchant",
+    rejectionReason?: string
+  ): Promise<void> => {
+    try {
+      const docRef = doc(db, COLLECTIONS.ORDERS, orderId);
+      
+      const updateData: any = {
+        status,
+        updatedAt: serverTimestamp(),
+      };
+
+      if (status === "rejected" && rejectionReason) {
+        updateData.rejectionReason = rejectionReason;
+        updateData.rejectedByDinasAt = serverTimestamp();
+        updateData.rejectedByDinasName = userName;
+      } else if (status === "preparing") {
+        updateData.verifiedByDinasAt = serverTimestamp();
+        updateData.verifiedByDinasName = userName;
+      }
+
+      await updateDoc(docRef, updateData);
+
+      // Write to sub-collection audit trail
+      await writeAuditLog({
+        orderId,
+        action: status === "rejected" ? "status_rejected" : `status_${status}` as any,
+        actorId: userId,
+        actorRole: userRole,
+        actorName: userName,
+        notes: status === "rejected" ? `Pesanan ditolak merchant: ${rejectionReason}` : `Status diubah ke ${status}`
+      });
+    } catch (err: any) {
+      throw new Error(`Gagal memperbarui status pesanan: ${err.message}`);
     }
   }
 };

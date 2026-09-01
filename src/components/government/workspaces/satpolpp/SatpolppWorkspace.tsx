@@ -8,6 +8,9 @@ import { ShieldCheck, CheckCircle2, Loader2, MapPin, Phone , XCircle} from "luci
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
+import { RejectionModal } from "@/components/government/shared/RejectionModal";
+import { useAuthContext } from "@/components/AuthProvider";
+import { writeAuditLog } from "@/lib/auditLog";
 
 interface GovWorkspaceProps {
   orders: OrderDocument[];
@@ -15,25 +18,42 @@ interface GovWorkspaceProps {
 }
 
 export function SatpolppWorkspace({ orders, loading }: GovWorkspaceProps) {
+  const { user, userData } = useAuthContext();
   const [activeTab, setActiveTab] = useState<"trantib" | "acara">("trantib");
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+  const [rejectionTarget, setRejectionTarget] = useState<OrderDocument | null>(null);
 
-  const handleReject = async (orderId: string) => {
-    const reason = prompt("Masukkan alasan penolakan:");
-    if (!reason) return;
+  const handleReject = async (reason: string) => {
+    if (!rejectionTarget?.id) return;
+    const orderId = rejectionTarget.id;
     
     setDispatchingId(orderId);
     try {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
-        status: "cancelled",
+        status: "rejected",
         rejectionReason: reason,
+        rejectedByDinasAt: serverTimestamp(),
+        rejectedByDinasName: userData?.displayName || "Petugas Satpol PP",
         updatedAt: serverTimestamp()
       });
+      
+      if (user) {
+        await writeAuditLog({
+          orderId,
+          action: "rejected",
+          actorId: user.uid,
+          actorName: userData?.displayName || "Petugas Satpol PP",
+          actorRole: userData?.additionalRole || "government",
+          notes: reason
+        });
+      }
+      
       alert("Permohonan berhasil ditolak.");
     } catch (err: any) {
       alert(`Gagal menolak: ${err.message || err}`);
     } finally {
       setDispatchingId(null);
+      setRejectionTarget(null);
     }
   };
   
@@ -50,8 +70,20 @@ export function SatpolppWorkspace({ orders, loading }: GovWorkspaceProps) {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
         status: "completed",
         verifiedByDinasAt: serverTimestamp(),
+        verifiedByDinasName: userData?.displayName || "Petugas Satpol PP",
         updatedAt: serverTimestamp()
       });
+      
+      if (user) {
+        await writeAuditLog({
+          orderId,
+          action: "completed",
+          actorId: user.uid,
+          actorName: userData?.displayName || "Petugas Satpol PP",
+          actorRole: userData?.additionalRole || "government"
+        });
+      }
+
       alert("✅ Laporan Trantibum Telah Ditindaklanjuti Regu Patroli Satpol PP!");
     } catch (err: any) {
       alert(`Gagal: ${err.message || err}`);
@@ -166,7 +198,7 @@ export function SatpolppWorkspace({ orders, loading }: GovWorkspaceProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => order.id && handleReject(order.id)}
+                      onClick={() => setRejectionTarget(order)}
                       disabled={dispatchingId === order.id}
                       className="text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-900/20 rounded-xl text-xs font-bold h-8 px-3 cursor-pointer"
                     >
@@ -193,6 +225,17 @@ export function SatpolppWorkspace({ orders, loading }: GovWorkspaceProps) {
           })}
         </div>
       )}
+
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onConfirm={handleReject}
+        orderInfo={{
+          serviceName: rejectionTarget?.serviceTitle,
+          customerName: rejectionTarget?.customerName,
+          orderId: rejectionTarget?.id
+        }}
+      />
     </div>
   );
 }
