@@ -175,5 +175,39 @@ export const merchantService = {
     } catch (err: any) {
       throw new Error(`Gagal memperbarui status pesanan: ${err.message}`);
     }
+  },
+
+  saveProduct: async (product: Partial<MenuItemDocument> & { merchantId: string; name: string }): Promise<void> => {
+    try {
+      if (product.id) {
+        const ref = doc(db, COLLECTIONS.MENU_ITEMS, product.id);
+        await updateDoc(ref, {
+          ...product,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        await addDoc(collection(db, COLLECTIONS.MENU_ITEMS), {
+          ...product,
+          isAvailable: product.isAvailable ?? true,
+          soldToday: 0,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (err) {
+      throw new Error(`Gagal menyimpan produk menu: ${err}`);
+    }
+  },
+
+  deleteProduct: async (productId: string): Promise<void> => {
+    try {
+      const ref = doc(db, COLLECTIONS.MENU_ITEMS, productId);
+      await deleteDoc(ref);
+    } catch (err) {
+      throw new Error(`Gagal menghapus produk: ${err}`);
+    }
   }
 };
+
+export type { ProductItem, MerchantProfile, MenuItemDocument, MerchantDocument } from "../types/merchant.types";
+

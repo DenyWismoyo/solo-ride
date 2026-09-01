@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useGoogleMaps } from "@/components/map/GoogleMapsProvider";
 import { LocationPoint } from "@/types/order.types";
-import { X, MapPin, Check, Loader2 } from "lucide-react";
+import { X, MapPin, Check, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isWithinGeofence } from "@/lib/geo";
 
 interface MapLocationPickerModalProps {
   isOpen: boolean;
@@ -74,6 +75,11 @@ export function MapLocationPickerModal({ isOpen, onClose, onSelect, initialLocat
   };
 
   const handleConfirm = () => {
+    if (!isWithinGeofence(markerPos.lat, markerPos.lng)) {
+      alert("Maaf, layanan Ride-Solo saat ini hanya tersedia untuk titik lokasi di area Solo Raya (Maksimal 25 KM dari Pusat Kota).");
+      return;
+    }
+
     onSelect({
       lat: markerPos.lat,
       lng: markerPos.lng,
@@ -126,7 +132,7 @@ export function MapLocationPickerModal({ isOpen, onClose, onSelect, initialLocat
 
           {/* Map Container */}
           <div className="flex-1 relative bg-slate-100 dark:bg-slate-800">
-            {!isLoaded ? (
+            {!isLoaded || typeof window === "undefined" || typeof window.google?.maps?.Map !== "function" ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
                 <span className="text-xs font-medium text-slate-500">Memuat Peta...</span>

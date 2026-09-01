@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthContext } from "@/components/AuthProvider";
 import { motion, AnimatePresence } from "motion/react";
@@ -15,27 +15,20 @@ import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, 
   Search, 
-  Filter, 
   Sparkles, 
   ArrowRight, 
-  CheckCircle2, 
   Landmark, 
   Building2, 
   Store, 
   Bike,
   X,
   Loader2,
-  FileCheck2,
-  Phone,
-  MapPin,
-  HelpCircle,
-  Layers,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck
 } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
-
 import { cn } from "@/lib/utils";
 
 const cardContainerVariants = {
@@ -43,14 +36,14 @@ const cardContainerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.05
+      staggerChildren: 0.03,
+      delayChildren: 0.02
     }
   }
 };
 
 const cardItemVariants = {
-  hidden: { opacity: 0, y: 12, scale: 0.96 },
+  hidden: { opacity: 0, y: 10, scale: 0.97 },
   show: { 
     opacity: 1, 
     y: 0, 
@@ -58,20 +51,115 @@ const cardItemVariants = {
     transition: {
       type: "spring" as const,
       stiffness: 400,
-      damping: 24
+      damping: 25
     }
   }
 };
 
-export default function AllEcosystemServicesPage() {
+type CategoryTab = "all" | "government" | "mobility" | "merchant" | "industry";
+
+function MoreServicesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, userData, isImpersonating } = useAuthContext();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // Search, Category, and Sub-Category Filter States
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<"all" | "mobility" | "merchant" | "government" | "industry">("all");
-  const [activeSubCategory, setActiveSubCategory] = useState<string>("all");
+  // Initialize state with URL Search Params and fallback to sessionStorage
+  const [activeCategory, setActiveCategory] = useState<CategoryTab>(() => {
+    if (typeof window !== "undefined") {
+      const urlTab = searchParams.get("tab") as CategoryTab;
+      if (urlTab) return urlTab;
+      const savedTab = sessionStorage.getItem("ridesolo_more_tab") as CategoryTab;
+      if (savedTab) return savedTab;
+    }
+    return "all";
+  });
+
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const urlQ = searchParams.get("q");
+      if (urlQ) return urlQ;
+      const savedQ = sessionStorage.getItem("ridesolo_more_query");
+      if (savedQ) return savedQ;
+    }
+    return "";
+  });
+
+  const [activeSubCategory, setActiveSubCategory] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const urlSub = searchParams.get("sub");
+      if (urlSub) return urlSub;
+      const savedSub = sessionStorage.getItem("ridesolo_more_sub");
+      if (savedSub) return savedSub;
+    }
+    return "all";
+  });
+
+  // Restore scroll position when returning to the catalog page
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedScroll = sessionStorage.getItem("ridesolo_more_scroll");
+      if (savedScroll) {
+        const y = parseInt(savedScroll, 10);
+        if (!isNaN(y) && y > 0) {
+          const timer = setTimeout(() => {
+            window.scrollTo({ top: y, behavior: "instant" });
+          }, 80);
+          return () => clearTimeout(timer);
+        }
+      }
+    }
+  }, []);
+
+  // Synchronize state when URL search params change (e.g. browser back/forward buttons)
+  useEffect(() => {
+    const currentTab = searchParams.get("tab") as CategoryTab;
+    if (currentTab && currentTab !== activeCategory) {
+      setActiveCategory(currentTab);
+      sessionStorage.setItem("ridesolo_more_tab", currentTab);
+    }
+    const currentQ = searchParams.get("q");
+    if (currentQ !== null && currentQ !== searchQuery) {
+      setSearchQuery(currentQ);
+      sessionStorage.setItem("ridesolo_more_query", currentQ);
+    }
+    const currentSub = searchParams.get("sub");
+    if (currentSub !== null && currentSub !== activeSubCategory) {
+      setActiveSubCategory(currentSub);
+      sessionStorage.setItem("ridesolo_more_sub", currentSub);
+    }
+  }, [searchParams]);
+
+  // Update URL history state and sessionStorage seamlessly
+  const updateUrlAndStorage = (tab: CategoryTab, query: string, sub: string) => {
+    sessionStorage.setItem("ridesolo_more_tab", tab);
+    sessionStorage.setItem("ridesolo_more_query", query);
+    sessionStorage.setItem("ridesolo_more_sub", sub);
+
+    const params = new URLSearchParams();
+    if (tab !== "all") params.set("tab", tab);
+    if (query.trim()) params.set("q", query.trim());
+    if (sub !== "all") params.set("sub", sub);
+
+    const newUrl = params.toString() ? `/services/more?${params.toString()}` : "/services/more";
+    window.history.replaceState(null, "", newUrl);
+  };
+
+  const handleCategoryChange = (cat: CategoryTab) => {
+    setActiveCategory(cat);
+    setActiveSubCategory("all");
+    updateUrlAndStorage(cat, searchQuery, "all");
+  };
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    updateUrlAndStorage(activeCategory, q, activeSubCategory);
+  };
+
+  const handleSubCategoryChange = (sub: string) => {
+    setActiveSubCategory(sub);
+    updateUrlAndStorage(activeCategory, searchQuery, sub);
+  };
 
   // Generic B2B / Industry Request Modal State
   const [selectedCivicService, setSelectedCivicService] = useState<AppService | null>(null);
@@ -82,7 +170,7 @@ export default function AllEcosystemServicesPage() {
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
   const [requestSuccessOrder, setRequestSuccessOrder] = useState<string | null>(null);
 
-  // 1. Filter Non-Government Services (Mobility, Merchant, Industry)
+  // 1. Filter Non-Government Services
   const nonGovServices = useMemo(() => {
     return ALL_ECOSYSTEM_SERVICES.filter(s => s.category !== "government");
   }, []);
@@ -90,25 +178,24 @@ export default function AllEcosystemServicesPage() {
   // 2. Filter Government OPD Sectors (18 Gerbang Utama)
   const filteredGovSectors = useMemo(() => {
     return GOVERNMENT_SECTORS.filter((sector) => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = 
-        !searchQuery ||
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
         sector.name.toLowerCase().includes(q) ||
         sector.agencyOrCompanyName.toLowerCase().includes(q) ||
         sector.tagline.toLowerCase().includes(q) ||
         sector.description.toLowerCase().includes(q) ||
-        sector.services.some(s => s.toLowerCase().includes(q));
-
-      return matchesSearch;
+        sector.services.some(s => s.toLowerCase().includes(q))
+      );
     });
   }, [searchQuery]);
 
   // 3. Filter General Services (For non-government categories)
   const filteredNonGovServices = useMemo(() => {
     return nonGovServices.filter((srv) => {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
       const matchesSearch = 
-        !searchQuery ||
+        !q ||
         srv.name.toLowerCase().includes(q) ||
         srv.description.toLowerCase().includes(q) ||
         srv.agencyName?.toLowerCase().includes(q) ||
@@ -144,14 +231,12 @@ export default function AllEcosystemServicesPage() {
     }));
   }, [nonGovServices, activeCategory]);
 
-  // Reset activeSubCategory when activeCategory changes
-  const handleCategoryChange = (cat: "all" | "mobility" | "merchant" | "government" | "industry") => {
-    setActiveCategory(cat);
-    setActiveSubCategory("all");
-  };
-
   const handleCardClick = (service: AppService) => {
-    // Direct App Router Routes
+    sessionStorage.setItem("ridesolo_more_tab", activeCategory);
+    sessionStorage.setItem("ridesolo_more_scroll", String(window.scrollY));
+    sessionStorage.setItem("ridesolo_more_query", searchQuery);
+
+    // Direct App Router Core Services
     if (["ride", "car", "send", "food", "pasar", "mart", "titip"].includes(service.id)) {
       router.push(`/services/${service.id}`);
       return;
@@ -169,6 +254,13 @@ export default function AllEcosystemServicesPage() {
     setCitizenNikOrRef("");
     setCitizenNotes("");
     setRequestSuccessOrder(null);
+  };
+
+  const handleOpenGovPortal = (sectorId: string) => {
+    sessionStorage.setItem("ridesolo_more_tab", "government");
+    sessionStorage.setItem("ridesolo_more_scroll", String(window.scrollY));
+    sessionStorage.setItem("ridesolo_more_query", searchQuery);
+    router.push(`/services/gov/${sectorId}`);
   };
 
   const handleSubmitCivicRequest = async (e: React.FormEvent) => {
@@ -247,16 +339,16 @@ export default function AllEcosystemServicesPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-2xl bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-sm transition-colors cursor-pointer"
+              className="p-2.5 rounded-2xl bg-white/80 dark:bg-[#0c1220]/80 border border-slate-200/80 dark:border-white/[0.08] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition-transform active:scale-95 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
                   Katalog Layanan Solo
                 </h1>
-                <Badge variant="blue" size="sm" className="hidden sm:inline-flex text-[10px]">
+                <Badge variant="blue" size="sm" className="hidden sm:inline-flex text-[10px] font-bold">
                   5 Pilar Terintegrasi
                 </Badge>
               </div>
@@ -267,96 +359,72 @@ export default function AllEcosystemServicesPage() {
           </div>
         </div>
 
-        {/* Search & Category Filter Section */}
-        <div className="space-y-3">
+        {/* Search & Category Filter Section (Sticky Blur) */}
+        <div className="space-y-3 sticky top-16 sm:top-18 z-30 pt-1 pb-2 backdrop-blur-md bg-slate-50/80 dark:bg-[#070b14]/80">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Cari dinas, layanan KTP, bansos, resep obat, pasar, ojek..."
-              className="w-full pl-11 pr-11 py-3.5 bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-2xl border border-white/50 dark:border-white/10 rounded-full text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500/80 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)] transition-all"
+              className="w-full pl-11 pr-11 py-3 bg-white/90 dark:bg-[#0c1220]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 rounded-2xl text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 shadow-sm transition-all"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                onClick={() => handleSearchChange("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
-          {/* Main Category Tabs */}
-          <div className="flex items-center gap-2 p-2 bg-white/40 dark:bg-[#0c1220]/40 backdrop-blur-2xl rounded-full overflow-x-auto no-scrollbar shadow-inner border border-white/50 dark:border-white/10">
-            <button
-              onClick={() => handleCategoryChange("all")}
-              className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                activeCategory === "all"
-                  ? "bg-white dark:bg-[#0c1220] text-blue-600 dark:text-blue-400 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/50 dark:border-white/10"
-                  : "text-slate-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-            >
-              <Sparkles className={`h-4 w-4 ${activeCategory === "all" ? "text-blue-500" : ""}`} />
-              <span>Semua</span>
-            </button>
-            <button
-              onClick={() => handleCategoryChange("government")}
-              className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                activeCategory === "government"
-                  ? "bg-white dark:bg-[#0c1220] text-blue-600 dark:text-blue-400 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/50 dark:border-white/10"
-                  : "text-slate-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-            >
-              <Landmark className={`h-4 w-4 ${activeCategory === "government" ? "text-blue-500" : ""}`} />
-              <span>Layanan Publik (18 Dinas)</span>
-            </button>
-            <button
-              onClick={() => handleCategoryChange("mobility")}
-              className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                activeCategory === "mobility"
-                  ? "bg-white dark:bg-[#0c1220] text-emerald-600 dark:text-emerald-400 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/50 dark:border-white/10"
-                  : "text-slate-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-            >
-              <Bike className={`h-4 w-4 ${activeCategory === "mobility" ? "text-emerald-500" : ""}`} />
-              <span>Transportasi</span>
-            </button>
-            <button
-              onClick={() => handleCategoryChange("merchant")}
-              className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                activeCategory === "merchant"
-                  ? "bg-white dark:bg-[#0c1220] text-amber-600 dark:text-amber-400 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/50 dark:border-white/10"
-                  : "text-slate-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-            >
-              <Store className={`h-4 w-4 ${activeCategory === "merchant" ? "text-amber-500" : ""}`} />
-              <span>UMKM & Pasar</span>
-            </button>
-            <button
-              onClick={() => handleCategoryChange("industry")}
-              className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                activeCategory === "industry"
-                  ? "bg-white dark:bg-[#0c1220] text-purple-600 dark:text-purple-400 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-white/50 dark:border-white/10"
-                  : "text-slate-600 dark:text-zinc-400 hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-            >
-              <Building2 className={`h-4 w-4 ${activeCategory === "industry" ? "text-purple-500" : ""}`} />
-              <span>Industri B2B</span>
-            </button>
+          {/* Main Category Tabs with Smooth Slider */}
+          <div className="flex items-center gap-1.5 p-1.5 bg-white/80 dark:bg-[#0c1220]/80 backdrop-blur-2xl rounded-2xl overflow-x-auto scrollbar-hide no-scrollbar touch-pan-x shadow-xs border border-slate-200/60 dark:border-white/[0.06]">
+            {[
+              { id: "all", label: "Semua", icon: Sparkles, color: "text-blue-500" },
+              { id: "government", label: "Layanan Publik (18 Dinas)", icon: Landmark, color: "text-blue-500" },
+              { id: "mobility", label: "Transportasi", icon: Bike, color: "text-emerald-500" },
+              { id: "merchant", label: "UMKM & Pasar", icon: Store, color: "text-amber-500" },
+              { id: "industry", label: "Industri B2B", icon: Building2, color: "text-purple-500" },
+            ].map((tab) => {
+              const isActive = activeCategory === tab.id;
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleCategoryChange(tab.id as CategoryTab)}
+                  className={`relative px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 z-10 ${
+                    isActive
+                      ? "text-slate-900 dark:text-white"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategoryPill"
+                      className="absolute inset-0 bg-white dark:bg-[#151e33] rounded-xl shadow-md border border-slate-200/80 dark:border-white/10 -z-10"
+                      transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                    />
+                  )}
+                  <Icon className={`h-3.5 w-3.5 ${isActive ? tab.color : "opacity-70"}`} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Sub-Category Pill Filters (Only for Non-Gov with subcategories) */}
           {availableSubCategories.length > 0 && activeCategory !== "government" && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar animate-in fade-in">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide no-scrollbar touch-pan-x animate-in fade-in">
               <button
-                onClick={() => setActiveSubCategory("all")}
-                className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition-all shrink-0 cursor-pointer ${
+                onClick={() => handleSubCategoryChange("all")}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 cursor-pointer ${
                   activeSubCategory === "all"
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                    : "bg-white/60 dark:bg-zinc-800/60 border border-white/40 text-slate-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-white/80 dark:bg-zinc-800/80 border border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-zinc-300 hover:bg-white"
                 }`}
               >
                 Semua Sub-Kategori
@@ -366,15 +434,15 @@ export default function AllEcosystemServicesPage() {
                 return (
                   <button
                     key={sub.id}
-                    onClick={() => setActiveSubCategory(sub.id)}
-                    className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                    onClick={() => handleSubCategoryChange(sub.id)}
+                    className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                       isActive
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                        : "bg-white/60 dark:bg-zinc-800/60 border border-white/40 text-slate-600 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-700 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]"
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white/80 dark:bg-zinc-800/80 border border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-zinc-300 hover:bg-white"
                     }`}
                   >
                     <span>{sub.label}</span>
-                    <span className="text-[9px] opacity-80 px-1.5 py-0.5 rounded-full bg-black/10 dark:bg-white/20">
+                    <span className="text-[9px] opacity-80 px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/20">
                       {sub.count}
                     </span>
                   </button>
@@ -385,16 +453,46 @@ export default function AllEcosystemServicesPage() {
         </div>
 
         {/* ========================================================================= */}
+        {/* BANNER: POJOK REMBUG & PANTAUAN JALAN LIVE                                */}
+        {/* ========================================================================= */}
+        <Link
+          href="/community"
+          className="p-4 rounded-[1.75rem] bg-gradient-to-r from-orange-500/15 via-orange-500/5 to-transparent border border-orange-500/25 shadow-xs flex items-center justify-between gap-3 group hover:border-orange-500/40 transition-all cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 flex items-center justify-center text-xl shrink-0 group-hover:scale-105 transition-transform">
+              📢
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                  Pojok Rembug & Pantauan Jalan Live
+                </h3>
+                <Badge variant="orange" size="sm" className="font-bold text-[9px]">REALTIME</Badge>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                Pantau penutupan jalan hajatan warga, genangan banjir & rute CFD Slamet Riyadi
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 text-xs font-bold text-orange-600 dark:text-orange-400 group-hover:translate-x-1 transition-transform shrink-0">
+            <span className="hidden sm:inline">Buka Pantauan</span>
+            <ChevronRight className="h-4 w-4" />
+          </div>
+        </Link>
+
+        {/* ========================================================================= */}
         {/* VIEW 1: GOVERNMENT TAB (18 GERBANG UTAMA DINAS PEMKOT)                    */}
         {/* ========================================================================= */}
         {activeCategory === "government" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h2 className="text-sm font-black text-slate-900 dark:text-white">
                   18 Gerbang Pelayanan Publik Pemkot Surakarta
                 </h2>
-                <Badge variant="blue" size="sm">{filteredGovSectors.length} Dinas</Badge>
+                <Badge variant="blue" size="sm" className="font-bold">{filteredGovSectors.length} Dinas</Badge>
               </div>
               <span className="text-[11px] text-slate-500 hidden sm:inline">Pilih dinas untuk melihat seluruh layanannya</span>
             </div>
@@ -403,7 +501,7 @@ export default function AllEcosystemServicesPage() {
               <div className="p-12 text-center bg-white/90 dark:bg-[#0c1220]/90 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] space-y-3">
                 <Search className="h-10 w-10 text-slate-300 dark:text-zinc-700 mx-auto" />
                 <h3 className="text-sm font-bold">Dinas tidak ditemukan</h3>
-                <Button size="sm" onClick={() => setSearchQuery("")} className="text-xs rounded-xl">
+                <Button size="sm" onClick={() => handleSearchChange("")} className="text-xs rounded-xl">
                   Reset Pencarian
                 </Button>
               </div>
@@ -418,23 +516,21 @@ export default function AllEcosystemServicesPage() {
                   <motion.div
                     key={sector.id}
                     variants={cardItemVariants}
-                    onClick={() => router.push(`/services/gov/${sector.id}`)}
+                    onClick={() => handleOpenGovPortal(sector.id)}
                     whileTap={{ scale: 0.98 }}
                     whileHover={{ y: -3 }}
-                    className="p-4 rounded-[1.75rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.1)] space-y-3 transition-all hover:bg-white/90 dark:hover:bg-[#11192e]/90 cursor-pointer group flex flex-col justify-between"
+                    className="p-4 sm:p-5 rounded-[1.75rem] bg-white/85 dark:bg-[#0c1220]/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.08)] space-y-3 transition-all hover:border-blue-500/40 cursor-pointer group flex flex-col justify-between"
                   >
                     <div className="space-y-2.5">
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-2xl flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-blue-500/30 group-hover:bg-blue-500/30 transition-all">
+                          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-2xl flex items-center justify-center shrink-0 group-hover:scale-108 group-hover:shadow-lg group-hover:shadow-blue-500/25 group-hover:bg-blue-500/25 transition-all">
                             {sector.avatar}
                           </div>
                           <div>
-                            <div className="flex items-center gap-1.5">
-                              <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                {sector.name}
-                              </h3>
-                            </div>
+                            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              {sector.name}
+                            </h3>
                             <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium truncate max-w-[200px]">
                               {sector.agencyOrCompanyName}
                             </p>
@@ -492,10 +588,10 @@ export default function AllEcosystemServicesPage() {
             {/* Core Mobility & Marketplace */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h2 className="text-sm font-black text-slate-900 dark:text-white">
                   Layanan Warga & Mobilitas Harian
                 </h2>
-                <span className="text-[11px] text-slate-500">Ekosistem Koperasi Ride-Solo</span>
+                <span className="text-[11px] text-slate-500 font-medium">Ekosistem Koperasi Ride-Solo</span>
               </div>
 
               <motion.div 
@@ -513,16 +609,16 @@ export default function AllEcosystemServicesPage() {
                       onClick={() => handleCardClick(service)}
                       whileTap={{ scale: 0.98 }}
                       whileHover={{ y: -3 }}
-                      className="p-4 rounded-[1.6rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.1)] space-y-3 transition-all hover:bg-white/90 dark:hover:bg-[#11192e]/90 cursor-pointer group flex flex-col justify-between"
+                      className="p-4 sm:p-5 rounded-[1.75rem] bg-white/85 dark:bg-[#0c1220]/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.08)] space-y-3 transition-all hover:border-emerald-500/40 cursor-pointer group flex flex-col justify-between"
                     >
                       <div className="space-y-2.5">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg shadow-sm ${service.bgColor} ${service.borderColor} ${service.id === "ride" ? "group-hover:shadow-emerald-500/30 group-hover:bg-emerald-500/30" : service.id === "car" ? "group-hover:shadow-teal-500/30 group-hover:bg-teal-500/30" : service.id === "send" ? "group-hover:shadow-blue-500/30 group-hover:bg-blue-500/30" : "group-hover:shadow-slate-500/30 group-hover:bg-slate-500/30"}`}>
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-all duration-300 group-hover:scale-108 group-hover:shadow-lg shadow-sm ${service.bgColor} ${service.borderColor} ${service.id === "ride" ? "group-hover:shadow-emerald-500/30 group-hover:bg-emerald-500/30" : service.id === "car" ? "group-hover:shadow-teal-500/30 group-hover:bg-teal-500/30" : service.id === "send" ? "group-hover:shadow-blue-500/30 group-hover:bg-blue-500/30" : "group-hover:shadow-slate-500/30 group-hover:bg-slate-500/30"}`}>
                               <Icon size={24} variant="duotone" className={`h-6 w-6 ${service.color}`} />
                             </div>
                             <div>
-                              <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                 {service.name}
                               </h3>
                               <div className="flex items-center gap-1.5 mt-0.5">
@@ -573,7 +669,7 @@ export default function AllEcosystemServicesPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Landmark className="h-4 w-4 text-blue-500" />
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white">
                     Gerbang 18 Dinas Pemkot Surakarta
                   </h2>
                 </div>
@@ -590,19 +686,19 @@ export default function AllEcosystemServicesPage() {
                 {GOVERNMENT_SECTORS.map((sector) => (
                   <motion.div
                     key={sector.id}
-                    onClick={() => router.push(`/services/gov/${sector.id}`)}
+                    onClick={() => handleOpenGovPortal(sector.id)}
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.96 }}
-                    className="p-4 min-h-[110px] rounded-[1.6rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] flex flex-col items-center justify-center text-center gap-2.5 cursor-pointer group hover:bg-white/90 dark:hover:bg-[#11192e]/90 transition-all"
+                    className="p-4 min-h-[115px] rounded-[1.6rem] bg-white/85 dark:bg-[#0c1220]/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_8px_20px_-4px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.08)] flex flex-col items-center justify-center text-center gap-2 cursor-pointer group hover:border-blue-500/40 transition-all"
                   >
-                    <div className="w-12 h-12 rounded-[1.2rem] bg-blue-500/10 text-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-blue-500/30 group-hover:bg-blue-500/30">
+                    <div className="w-12 h-12 rounded-[1.2rem] bg-blue-500/10 text-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-blue-500/25">
                       {sector.avatar}
                     </div>
                     <div>
-                      <h4 className="text-[11px] font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate max-w-[100px] mx-auto">
+                      <h4 className="text-[11px] font-black text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate max-w-[100px] mx-auto">
                         {sector.name}
                       </h4>
-                      <span className="text-[9px] text-slate-500 block mt-0.5">
+                      <span className="text-[9px] text-slate-500 dark:text-zinc-400 block mt-0.5 font-semibold">
                         {sector.services.length} Layanan
                       </span>
                     </div>
@@ -619,17 +715,17 @@ export default function AllEcosystemServicesPage() {
         {activeCategory !== "all" && activeCategory !== "government" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h2 className="text-sm font-black text-slate-900 dark:text-white">
                 Daftar Layanan {activeCategory === "mobility" ? "Transportasi" : activeCategory === "merchant" ? "UMKM & Pasar" : "Industri B2B"}
               </h2>
-              <Badge variant="outline" size="sm">{filteredNonGovServices.length} Layanan</Badge>
+              <Badge variant="outline" size="sm" className="font-bold">{filteredNonGovServices.length} Layanan</Badge>
             </div>
 
             {filteredNonGovServices.length === 0 ? (
               <div className="p-12 text-center bg-white/90 dark:bg-[#0c1220]/90 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] space-y-3">
                 <Search className="h-10 w-10 text-slate-300 dark:text-zinc-700 mx-auto" />
                 <h3 className="text-sm font-bold">Layanan tidak ditemukan</h3>
-                <Button size="sm" onClick={() => { setSearchQuery(""); setActiveSubCategory("all"); }} className="text-xs rounded-xl">
+                <Button size="sm" onClick={() => { handleSearchChange(""); handleSubCategoryChange("all"); }} className="text-xs rounded-xl">
                   Reset Filter
                 </Button>
               </div>
@@ -649,16 +745,16 @@ export default function AllEcosystemServicesPage() {
                       onClick={() => handleCardClick(service)}
                       whileTap={{ scale: 0.98 }}
                       whileHover={{ y: -3 }}
-                      className="p-4 rounded-[1.6rem] bg-white/70 dark:bg-[#0c1220]/70 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.1)] space-y-3 transition-all hover:bg-white/90 dark:hover:bg-[#11192e]/90 cursor-pointer group flex flex-col justify-between"
+                      className="p-4 sm:p-5 rounded-[1.75rem] bg-white/85 dark:bg-[#0c1220]/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/[0.08] shadow-[0_8px_30px_-4px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_12px_28px_-6px_rgba(0,0,0,0.65),inset_0_1px_1px_rgba(255,255,255,0.08)] space-y-3 transition-all hover:border-emerald-500/40 cursor-pointer group flex flex-col justify-between"
                     >
                       <div className="space-y-2.5">
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg shadow-sm ${service.bgColor} ${service.borderColor} ${service.id === "ride" ? "group-hover:shadow-emerald-500/30 group-hover:bg-emerald-500/30" : service.id === "car" ? "group-hover:shadow-teal-500/30 group-hover:bg-teal-500/30" : service.id === "send" ? "group-hover:shadow-blue-500/30 group-hover:bg-blue-500/30" : "group-hover:shadow-slate-500/30 group-hover:bg-slate-500/30"}`}>
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 transition-all duration-300 group-hover:scale-108 group-hover:shadow-lg shadow-sm ${service.bgColor} ${service.borderColor} group-hover:shadow-emerald-500/25`}>
                               <Icon size={24} variant="duotone" className={`h-6 w-6 ${service.color}`} />
                             </div>
                             <div>
-                              <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                 {service.name}
                               </h3>
                               <div className="flex items-center gap-1.5 mt-0.5">
@@ -707,151 +803,141 @@ export default function AllEcosystemServicesPage() {
         )}
       </main>
 
-      {/* ========================================================================= */}
-      {/* Generic B2B / Industry Request Modal */}
-      {selectedCivicService && (
-        <AnimatePresence>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
+      {/* Generic Civic / B2B Modal */}
+      <AnimatePresence>
+        {selectedCivicService && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-lg bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] rounded-[2rem] shadow-2xl overflow-hidden my-6 text-slate-900 dark:text-white"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-[#0c1220] rounded-[2rem] max-w-md w-full p-6 shadow-2xl border border-slate-200/80 dark:border-white/10 space-y-4 max-h-[90vh] overflow-y-auto sg-custom-scrollbar"
             >
-              <div className="relative p-5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between">
+              <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center">
-                    <Building2 className="h-5 w-5 text-blue-100" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${selectedCivicService.bgColor} ${selectedCivicService.borderColor}`}>
+                    {selectedCivicService.icon && (
+                      <selectedCivicService.icon size={20} variant="duotone" className={selectedCivicService.color} />
+                    )}
                   </div>
                   <div>
-                    <Badge className="bg-blue-400/20 text-blue-100 border border-blue-300/30 text-[10px] uppercase tracking-wider mb-0.5">
-                      Layanan Industri & Faskes
-                    </Badge>
-                    <h2 className="text-base font-black tracking-tight">{selectedCivicService.name}</h2>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      {selectedCivicService.name}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+                      {selectedCivicService.agencyName || "Mitra Industri Surakarta"}
+                    </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedCivicService(null)}
-                  className="p-2 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
+                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
               {requestSuccessOrder ? (
-                <div className="p-6 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-500">
-                    <CheckCircle2 className="h-8 w-8" />
+                <div className="py-6 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                    <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">
-                      Permohonan Berhasil Dikirim!
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400">
-                      ID Pesanan: <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{requestSuccessOrder}</span>
-                    </p>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed bg-slate-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-slate-200 dark:border-zinc-700">
-                    Pihak mitra penyedia layanan ({selectedCivicService.agencyName}) akan memverifikasi permohonan Anda dan driver kurir mitra segera meluncur.
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Permohonan Berhasil Dikirim!
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    ID Pesanan: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{requestSuccessOrder}</span>
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Petugas / Mitra Industri akan segera memverifikasi dan menghubungkan ke mitra driver.
                   </p>
                   <Button
                     onClick={() => {
                       setSelectedCivicService(null);
-                      setRequestSuccessOrder(null);
+                      router.push(`/order/${requestSuccessOrder}`);
                     }}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 text-xs font-bold"
+                    className="w-full h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold"
                   >
-                    Selesai
+                    Pantau Status Pesanan
                   </Button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitCivicRequest} className="p-5 space-y-4">
+                <form onSubmit={handleSubmitCivicRequest} className="space-y-3.5">
+                  <div className="p-3 bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200/60 dark:border-white/[0.04] text-xs text-slate-600 dark:text-zinc-300">
+                    {selectedCivicService.description}
+                  </div>
+
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
-                      Nomor Identitas / NIK / ID Pelanggan
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                      NIK / Nomor Dokumen Referensi
                     </label>
                     <input
                       type="text"
+                      required
                       value={citizenNikOrRef}
                       onChange={(e) => setCitizenNikOrRef(e.target.value)}
-                      placeholder="Masukkan NIK atau nomor referensi..."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-mono"
-                      required
+                      placeholder="Contoh: 3372012345670001"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
-                      <Phone className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Nomor WhatsApp Aktif</span>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                      Nomor Telepon / WhatsApp
                     </label>
                     <input
                       type="tel"
+                      required
                       value={citizenPhone}
                       onChange={(e) => setCitizenPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                      required
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Alamat Lokasi / Titik Penjemputan</span>
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                      Alamat Pengiriman / Penjemputan
                     </label>
                     <textarea
                       rows={2}
+                      required
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
-                      required
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-zinc-300">
-                      Catatan Tambahan untuk Petugas
+                    <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+                      Catatan Tambahan (Opsional)
                     </label>
-                    <textarea
-                      rows={2}
+                    <input
+                      type="text"
                       value={citizenNotes}
                       onChange={(e) => setCitizenNotes(e.target.value)}
-                      placeholder="Informasi spesifik mengenai permohonan..."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                      placeholder="Contoh: Titipkan di satpam jika tidak ada orang"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 flex items-center justify-between text-xs">
-                    <span className="text-slate-600 dark:text-zinc-300 font-semibold">Tarif Layanan:</span>
-                    <span className="font-black text-sm text-blue-600 dark:text-blue-400">
-                      {selectedCivicService.feeLabel || "Sesuai Standar Layanan"}
-                    </span>
-                  </div>
-
-                  <div className="pt-2 flex items-center gap-3">
+                  <div className="pt-2 flex gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setSelectedCivicService(null)}
-                      className="w-1/3 py-2.5 rounded-xl text-xs font-bold border-slate-200 dark:border-zinc-700"
+                      className="w-1/3 h-10 rounded-xl text-xs"
                     >
                       Batal
                     </Button>
                     <Button
                       type="submit"
                       disabled={isSubmittingRequest}
-                      className="w-2/3 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+                      className="w-2/3 h-10 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold"
                     >
                       {isSubmittingRequest ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Mengirim...</span>
-                        </>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
                       ) : (
-                        <>
-                          <span>Kirim Permohonan</span>
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </>
+                        "Kirim Permohonan"
                       )}
                     </Button>
                   </div>
@@ -859,8 +945,20 @@ export default function AllEcosystemServicesPage() {
               )}
             </motion.div>
           </div>
-        </AnimatePresence>
-      )}
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+export default function AllEcosystemServicesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    }>
+      <MoreServicesContent />
+    </Suspense>
   );
 }

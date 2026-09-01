@@ -1,6 +1,7 @@
 export const DEFAULT_CENTER = { lat: -7.5755, lng: 110.8243 }; // Default Surakarta (Solo), Jawa Tengah
 export const DEFAULT_ZOOM = 14;
-export const MAP_LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
+export const MAP_LIBRARIES: ("places" | "geometry" | "visualization")[] = ["places", "geometry", "visualization"];
+export const GEOFENCE_MAX_RADIUS_KM = 25; // 25 KM max pickup radius from Solo
 
 // --- ULTRA-CLEAN APPLE / GOOGLE MAPS LIGHT STYLE ---
 export const MAP_LIGHT_STYLE = [

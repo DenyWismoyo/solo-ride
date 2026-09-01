@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ridesolo-hermes": {
+      "command": "node",
+      "args": ["d:/Project/OJEK LOKAL/mcp-server/build/index.js"]
+    }
+  }
+}

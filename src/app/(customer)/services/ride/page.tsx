@@ -10,6 +10,7 @@ import { RouteMap } from "@/components/map/RouteMap";
 import { PlaceAutocomplete } from "@/components/map/PlaceAutocomplete";
 import { SoloHeritageQuickPicker } from "@/components/map/SoloHeritageQuickPicker";
 import { SavedAddressQuickPick } from "@/components/map/SavedAddressQuickPick";
+import { LocationSearchModal } from "@/components/map/LocationSearchModal";
 import { Button } from "@/components/ui/button";
 import {
   MapPin,
@@ -52,6 +53,9 @@ export default function RideBookingPage() {
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
 
   const { addRecentDestination } = useRecentDestinations();
+
+  // Search Modal State (Opens categorized landmark/search sheet)
+  const [searchModalType, setSearchModalType] = useState<"pickup" | "dropoff" | null>(null);
 
   // Manual Map Pin Picker State
   const [manualPickType, setManualPickType] = useState<
@@ -464,7 +468,7 @@ export default function RideBookingPage() {
                         <PlaceAutocomplete
                           value={pickup?.address}
                           placeholder="Lokasi penjemputan dari peta atau GPS..."
-                          onPickOnMapClick={() => setManualPickType("pickup")}
+                          onPickOnMapClick={() => setSearchModalType("pickup")}
                           onLocationSelect={(point) => {
                             setPickup(point);
                             setDirections(null);
@@ -497,7 +501,7 @@ export default function RideBookingPage() {
                       <PlaceAutocomplete
                         value={dropoff?.address}
                         placeholder="Mau ke mana?"
-                        onPickOnMapClick={() => setManualPickType("dropoff")}
+                        onPickOnMapClick={() => setSearchModalType("dropoff")}
                         onLocationSelect={handleSetDropoff}
                       />
                     </div>
@@ -591,6 +595,28 @@ export default function RideBookingPage() {
           </div>
         </>
       )}
+
+      {/* Location Search Modal (Like Gojek/Grab) */}
+      <LocationSearchModal
+        isOpen={searchModalType !== null}
+        onClose={() => setSearchModalType(null)}
+        type={searchModalType || "dropoff"}
+        currentValue={searchModalType === "pickup" ? pickup?.address : dropoff?.address}
+        onSelectLocation={(point) => {
+          if (searchModalType === "pickup") {
+            setPickup(point);
+            setDirections(null);
+            setPrice(0);
+          } else if (searchModalType === "dropoff") {
+            handleSetDropoff(point);
+          }
+        }}
+        onPickOnMap={() => {
+          if (searchModalType) {
+            setManualPickType(searchModalType);
+          }
+        }}
+      />
     </div>
   );
 }

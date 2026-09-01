@@ -44,3 +44,8 @@ export interface MerchantDocument extends Omit<Merchant, "distanceKm"> {
   createdAt?: Timestamp | any;
   updatedAt?: Timestamp | any;
 }
+
+// Convenient type aliases
+export type ProductItem = MenuItemDocument;
+export type MerchantProfile = MerchantDocument;
+

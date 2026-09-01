@@ -59,10 +59,15 @@ import { OrderDocument, ServiceType } from "@/types/order.types";
 import { DEMAND_HOTSPOTS_SURAKARTA } from "@/constants/merchants";
 import { IncomingOrderModal } from "@/components/driver/IncomingOrderModal";
 import { HistoryDetailReceiptModal } from "@/components/history/HistoryDetailReceiptModal";
+import { DriverRadarMap } from "@/components/map/DriverRadarMap";
 import { UnifiedHistoryModal } from "@/components/history/UnifiedHistoryModal";
 import { playSuccessChime } from "@/lib/sound";
 import { DriverWalletBento } from "@/components/driver/income/DriverWalletBento";
 import { DriverLedgerHistory } from "@/components/driver/income/DriverLedgerHistory";
+import { KecamatanFilterPill } from "@/components/driver/radar/KecamatanFilterPill";
+import { HotspotDemandLeaderboard } from "@/components/driver/radar/HotspotDemandLeaderboard";
+import { HotspotDetailDrawer } from "@/components/driver/radar/HotspotDetailDrawer";
+import { DemandHotspot } from "@/constants/geofencing";
 
 export default function DriverDashboard() {
   const { user, userData, loading: authLoading, effectiveUid, isImpersonating } = useAuthContext();
@@ -71,6 +76,8 @@ export default function DriverDashboard() {
   const activeDriverUid = effectiveUid || user?.uid;
 
   const [activeTab, setActiveTab] = useState<"radar" | "income" | "performance" | "partner">("radar");
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string>("all");
+  const [focusedHotspot, setFocusedHotspot] = useState<DemandHotspot | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedTripForReceipt, setSelectedTripForReceipt] = useState<OrderDocument | null>(null);
@@ -704,6 +711,36 @@ export default function DriverDashboard() {
             </div>
           )}
 
+          {/* Kecamatan Filter Capsule & Radar Map (Geofencing & Hotspots) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+                Pilih Wilayah Kecamatan
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                Kota Surakarta
+              </span>
+            </div>
+
+            <KecamatanFilterPill
+              selectedDistrictId={selectedDistrictId}
+              onSelectDistrict={(districtId) => {
+                setSelectedDistrictId(districtId);
+                setFocusedHotspot(null);
+              }}
+            />
+
+            <div className="h-[360px] w-full rounded-[2rem] overflow-hidden shadow-sm border border-slate-200/80 dark:border-white/[0.08]">
+              <DriverRadarMap
+                isOnline={isOnline}
+                driverLocation={location}
+                selectedDistrictId={selectedDistrictId}
+                focusedHotspot={focusedHotspot}
+                onSelectHotspot={(hotspot) => setFocusedHotspot(hotspot)}
+              />
+            </div>
+          </div>
+
           {/* Real-time Incoming Orders Feed */}
           {isOnline && (
             <div className="space-y-3 pt-2">
@@ -814,34 +851,23 @@ export default function DriverDashboard() {
             </div>
           )}
 
-          {/* Surakarta Demand Hotspots Recommendation */}
-          <div className="space-y-3 pt-3">
-            <div className="flex items-center gap-2">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white sg-editorial-title">
-                Rekomendasi Area Ramai di Solo
-              </h3>
-            </div>
-
-            <div className="space-y-2">
-              {DEMAND_HOTSPOTS_SURAKARTA.map((spot, idx) => (
-                <div 
-                  key={idx}
-                  className="sg-card p-3 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/80 flex items-center justify-between shadow-sm"
-                >
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white">{spot.name}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-zinc-400">Kecamatan: {spot.area}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                      Ramai: {spot.demand}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Surakarta Live Demand Hotspots Leaderboard */}
+          <div className="pt-2">
+            <HotspotDemandLeaderboard
+              driverLocation={location}
+              selectedDistrictId={selectedDistrictId}
+              onFocusHotspot={(hotspot) => setFocusedHotspot(hotspot)}
+            />
           </div>
+
+          {/* Clicked Hotspot Detail Drawer */}
+          {focusedHotspot && (
+            <HotspotDetailDrawer
+              hotspot={focusedHotspot}
+              driverLocation={location}
+              onClose={() => setFocusedHotspot(null)}
+            />
+          )}
         </main>
       )}
 

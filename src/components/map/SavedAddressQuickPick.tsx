@@ -27,7 +27,7 @@ export function SavedAddressQuickPick({ onSelect, className = "" }: SavedAddress
 
   if (savedAddresses.length === 0) {
     return (
-      <div className={`flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide ${className}`}>
+      <div className={`flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide no-scrollbar touch-pan-x ${className}`}>
         <Link 
           href="/profile"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-zinc-400 hover:bg-slate-200 dark:hover:bg-white/[0.1] text-[10px] font-medium whitespace-nowrap transition-colors"
@@ -40,7 +40,7 @@ export function SavedAddressQuickPick({ onSelect, className = "" }: SavedAddress
   }
 
   return (
-    <div className={`flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide ${className}`}>
+    <div className={`flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide no-scrollbar touch-pan-x ${className}`}>
       {savedAddresses.map((addr: SavedAddress) => (
         <button
           key={addr.id}

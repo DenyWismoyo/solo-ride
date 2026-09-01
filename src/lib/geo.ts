@@ -1,6 +1,7 @@
 /**
  * Geo & Distance utility functions for Ride-Solo Hyperlocal Surakarta
  */
+import { DEFAULT_CENTER, GEOFENCE_MAX_RADIUS_KM } from "../constants/maps";
 
 /**
  * Calculates distance between two GPS coordinates using the Haversine formula.
@@ -42,4 +43,17 @@ export function formatDistance(km?: number | null): string {
     return `${Math.round(km * 1000)} m`;
   }
   return `${km.toFixed(1)} km`;
+}
+
+/**
+ * Checks if a given coordinate is within the allowed Geofence radius of Solo.
+ */
+export function isWithinGeofence(lat: number, lng: number): boolean {
+  const distance = calculateDistanceKm(
+    DEFAULT_CENTER.lat,
+    DEFAULT_CENTER.lng,
+    lat,
+    lng
+  );
+  return distance <= GEOFENCE_MAX_RADIUS_KM;
 }

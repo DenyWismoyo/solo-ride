@@ -118,7 +118,7 @@ export function SoloHeritageQuickPicker({
             className="overflow-hidden space-y-2 pt-1"
           >
             {/* Category Pills */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide no-scrollbar touch-pan-x">
               {CATEGORY_TABS.map((tab) => {
                 const isSelected = activeCategory === tab.id;
                 return (
@@ -141,7 +141,7 @@ export function SoloHeritageQuickPicker({
             </div>
 
             {/* Compact Horizontal Carousel of Landmarks */}
-            <div className="flex items-stretch gap-2 overflow-x-auto pb-1.5 scrollbar-none">
+            <div className="flex items-stretch gap-2 overflow-x-auto pb-1.5 scrollbar-hide no-scrollbar touch-pan-x">
               {filteredPlaces.map((place) => {
                 const Icon = getCategoryIcon(place.category);
                 const isSelected = selectedPlaceForAction?.id === place.id;

@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { GOVERNMENT_SECTORS } from "@/constants/ecosystemSectors";
 import { ALL_ECOSYSTEM_SERVICES, AppService } from "@/constants/services";
+import { useOpdServices } from "@/hooks/useOpdServices";
+import { OpdServiceConfig } from "@/services/opdService.service";
 import { useAuthContext } from "@/components/AuthProvider";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AdminImpersonationBar } from "@/components/admin/AdminImpersonationBar";
@@ -65,16 +67,8 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
     return GOVERNMENT_SECTORS.find(s => s.id === normalizedId || s.id === rawId);
   }, [normalizedId, rawId]);
 
-  // Find Specific Services belonging to this OPD
-  const agencyServices = useMemo(() => {
-    if (!sector) return [];
-    return ALL_ECOSYSTEM_SERVICES.filter(srv => {
-      const matchRole = srv.additionalRole === sector.id;
-      const cleanSectorName = sector.id.replace("gov_", "");
-      const matchId = srv.id.startsWith(`${cleanSectorName}_`) || srv.id === cleanSectorName;
-      return matchRole || matchId;
-    });
-  }, [sector]);
+  // Realtime Live OPD Services Hook
+  const { services: liveServices, loading: loadingServices } = useOpdServices(normalizedId);
 
   const { isImpersonating } = useAuthContext();
 
@@ -84,7 +78,11 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
     hotline: "0271-642020"
   };
 
-  const handleOpenServiceModal = (service: AppService) => {
+  const handleOpenServiceModal = (service: OpdServiceConfig | AppService) => {
+    if ("isActive" in service && !service.isActive) {
+      alert("Layanan ini sedang ditutup sementara oleh dinas terkait.");
+      return;
+    }
     router.push(`/services/gov/${sector?.id || normalizedId}/${service.id}`);
   };
 
@@ -117,11 +115,19 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
         "max-w-4xl mx-auto px-4 space-y-4 transition-all duration-200",
         isImpersonating ? "pt-28 sm:pt-28" : "pt-20 sm:pt-20"
       )}>
-        {/* Breadcrumb Navigation */}
+        {/* Breadcrumb Navigation & Back Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400 overflow-x-auto no-scrollbar py-0.5">
-            <Link href="/services/more" className="hover:text-blue-600 transition-colors shrink-0 font-medium">
-              Katalog Layanan
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="p-1.5 rounded-xl bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="font-bold text-[10px]">Kembali</span>
+            </button>
+            <Link href="/services/more?tab=government" className="hover:text-blue-600 transition-colors shrink-0 font-medium ml-1">
+              Katalog (18 Dinas)
             </Link>
             <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
             <span className="text-slate-900 dark:text-white font-bold truncate">
@@ -129,8 +135,8 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
             </span>
           </div>
 
-          <Badge variant="emerald" size="sm" className="text-[10px]">
-            {agencyServices.length} Layanan Aktif
+          <Badge variant="emerald" size="sm" className="text-[10px] font-bold shrink-0">
+            {liveServices.filter(s => s.isActive).length} Layanan Aktif
           </Badge>
         </div>
 
@@ -196,7 +202,7 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {agencyServices.map((service, idx) => {
+            {liveServices.map((service, idx) => {
               const Icon = service.icon;
               return (
                 <motion.div
@@ -205,21 +211,45 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => handleOpenServiceModal(service)}
-                  className="group relative p-4 rounded-[1.5rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer space-y-3"
+                  className={`group relative p-4 rounded-[1.5rem] bg-white dark:bg-[#0c1220] border transition-all space-y-3 ${
+                    service.isActive
+                      ? "border-slate-200/80 dark:border-white/[0.08] hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:shadow-md cursor-pointer"
+                      : "border-rose-200/60 dark:border-rose-950/40 bg-slate-50/60 dark:bg-slate-900/30 opacity-75 cursor-not-allowed"
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                        {typeof Icon === "function" || (typeof Icon === "object" && Icon !== null) ? (
-                          <Icon size={20} className="h-5 w-5" />
+                      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform shadow-sm ${
+                        service.isActive
+                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200/60 dark:border-blue-800/40 group-hover:scale-105"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
+                      }`}>
+                        {typeof Icon === "function" ? (
+                          React.createElement(Icon as any, { size: 20, className: "h-5 w-5" })
                         ) : (
-                          <span className="text-lg">{Icon || "🏛️"}</span>
+                          <span className="text-lg">{typeof Icon === "string" ? Icon : "🏛️"}</span>
                         )}
                       </div>
                       <div>
-                        <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {service.name}
-                        </h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className={`text-xs font-bold transition-colors ${
+                            service.isActive
+                              ? "text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                              : "text-slate-500 dark:text-zinc-400"
+                          }`}>
+                            {service.name}
+                          </h3>
+                          {!service.isActive && (
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                              Tutup Sementara
+                            </span>
+                          )}
+                          {service.isCustom && (
+                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-700 dark:text-purple-300">
+                              Baru
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-2">
                           {service.description}
                         </p>
@@ -227,18 +257,20 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.04] text-xs">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                    {service.feeLabel || "Resmi Pemkot Solo"}
-                  </span>
-                  <div className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
-                    <span>Buka Formulir</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.04] text-xs">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                      {service.feeLabel || "Resmi Pemkot Solo"}
+                    </span>
+                    <div className={`flex items-center gap-1 text-[11px] font-bold ${
+                      service.isActive ? "text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform" : "text-slate-400"
+                    }`}>
+                      <span>{service.isActive ? "Buka Formulir" : "Sedang Tutup"}</span>
+                      {service.isActive && <ChevronRight className="h-3.5 w-3.5" />}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 

@@ -694,9 +694,9 @@ export const POPULAR_SOLO_LANDMARKS = [
 ];
 
 export const DEMAND_HOTSPOTS_SURAKARTA = [
-  { name: "Stasiun Solo Balapan", area: "Banjarsari", demand: "Tinggi", multiplier: "1.0x" },
-  { name: "Universitas Sebelas Maret (UNS)", area: "Jebres", demand: "Sangat Tinggi", multiplier: "1.0x" },
-  { name: "Pasar Gede & Pasar Legi", area: "Pasar Kliwon", demand: "Tinggi", multiplier: "1.0x" },
-  { name: "Kawasan Stadion Manahan", area: "Banjarsari", demand: "Sedang", multiplier: "1.0x" },
-  { name: "Solo Square & Solo Grand Mall", area: "Laweyan", demand: "Tinggi", multiplier: "1.0x" }
+  { name: "Stasiun Solo Balapan", area: "Banjarsari", demand: "Tinggi", multiplier: "1.0x", lat: -7.5583, lng: 110.8214, weight: 8 },
+  { name: "Universitas Sebelas Maret (UNS)", area: "Jebres", demand: "Sangat Tinggi", multiplier: "1.0x", lat: -7.5589, lng: 110.8561, weight: 15 },
+  { name: "Pasar Gede & Pasar Legi", area: "Pasar Kliwon", demand: "Tinggi", multiplier: "1.0x", lat: -7.5689, lng: 110.8322, weight: 10 },
+  { name: "Kawasan Stadion Manahan", area: "Banjarsari", demand: "Sedang", multiplier: "1.0x", lat: -7.5542, lng: 110.8067, weight: 5 },
+  { name: "Solo Square & Solo Grand Mall", area: "Laweyan", demand: "Tinggi", multiplier: "1.0x", lat: -7.5574, lng: 110.7857, weight: 8 }
 ];

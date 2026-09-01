@@ -151,7 +151,7 @@ export function RouteMap({
     );
   }
 
-  if (!isLoaded) {
+  if (!isLoaded || typeof window === "undefined" || typeof window.google?.maps?.Map !== "function") {
     return (
       <div className={`relative flex flex-col items-center justify-center ${isDarkEffective ? "bg-slate-950 text-slate-400" : "bg-slate-100 text-slate-600"} text-xs w-full h-full min-h-[300px] ${className}`}>
         <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mb-2" />

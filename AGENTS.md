@@ -331,12 +331,32 @@ Untuk memfasilitasi pengujian lintas 5 ekosistem (khususnya 18 Dinas Pemkot):
 - Semua 18 Dinas wajib tersedia di `SANDBOX_PERSONAS` untuk mempermudah QA spesifik per instansi.
 - Modul `seedEcosystemSandbox()` di `src/lib/seedSandbox.ts` menginisialisasi seluruh data di atas ke Firestore dalam 1-Click.
 
-### Hierarchical Additional Roles Architecture
-Setiap pengguna dapat memiliki `role` primer dan `additionalRole` spesifik:
-- **`government`**: `gov_diskop`, `gov_dispar`, `gov_dukcapil`, `gov_dinsos`, `gov_bapenda`, `gov_dinkes`, `gov_dishub`
-- **`industry`**: `ind_klinik`, `ind_travel`, `ind_kargo`, `ind_hotel`, `ind_pabrik`, `ind_agro`
-- **`merchant`**: `merch_kuliner`, `merch_pasar`, `merch_mart`, `merch_apotek`, `merch_batik`
-Didefinisikan secara modular di `src/constants/ecosystemSectors.ts`.
+### Dedicated Government OPD Workspace Architecture (Desktop & Mobile Compatible)
+Seluruh pengelolaan 18 Dinas Pemerintah Kota Surakarta **WAJIB** menggunakan layout dedicated di `src/app/(government)/gov/layout.tsx`:
+- **Desktop Command Center**:
+  - Left Sidebar 260px (`GovSidebar.tsx`) dengan switcher dinas, status siaga satgas, dan 4 tab pilar: `workspace`, `orders`, `broadcast`, `audit`.
+  - Top Command Bar (`GovHeader.tsx`) dengan capsule pemilih OPD dan profil.
+- **Mobile Touch-First Ergonomics**:
+  - Floating Pill Bottom Navigation (`GovBottomNav.tsx`) untuk peralihan instan antara 4 pilar menu operasional.
+  - Quick OPD Drawer Sheet (`GovOPDDrawer.tsx`) untuk pemilihan instansi secara cepat dengan pencarian.
+- **Direct Dynamic Routing**:
+  - Setiap admin dinas dapat langsung diarahkan ke `/gov/[opdId]` (contoh: `/gov/gov_dinkes`, `/gov/gov_dukcapil`, `/gov/gov_diskop`).
+
+### Dynamic OPD Service Template & Catalog Management (Two-Way Realtime Sync)
+Setiap admin OPD memiliki hak kelola mandiri atas katalog layanannya via tab **`catalog`** di dashboard `/gov`:
+- **Real-Time Toggle**: Menonaktifkan/mengaktifkan sub-layanan seketika via Firestore collection `opd_services`. Layanan yang non-aktif otomatis disembunyikan/berlabel *"Tutup Sementara"* di portal warga (`/services/gov/[id]`).
+- **Custom Parameters**: Admin dapat menyesuaikan estimasi SLA (menit), biaya subsidi/tarif, deskripsi panduan, persyaratan dokumen, dan menentukan moda luaran (`CivicOutputMode`).
+- **Inovasi Layanan Baru (+ Custom Service)**: Admin dinas dapat meluncurkan program layanan baru secara mandiri tanpa deploy ulang.
+- **Client Hook**: Konsumsi hook `useOpdServices(agencyId)` yang memadukan default catalog dengan live Firestore overrides.
+
+### Dedicated Merchant & Pasar Tradisional Workspace Architecture (`/merchant`)
+Seluruh pengelolaan mitra UMKM kuliner dan pedagang pasar tradisional Surakarta menggunakan layout dedicated di `src/app/merchant/layout.tsx`:
+- **4 Pilar Menu Operasional**:
+  1. `kitchen` — Live Kitchen POS Kanban (Masuk, Dimasak, Siap, Kurir OTW, Selesai) dengan Web Audio synthesizer chime.
+  2. `catalog` — Manajemen menu makanan/sembako dengan switch toggle stok habis/tersedia dan editor modal.
+  3. `voucher` — Scanner & verifikator barcode voucher sembako/pangan dari Dinsos & Koperasi untuk pasar tradisional.
+  4. `finance` — Laporan omzet bersih 100% (Zero Commission model) & saldo dompet koperasi.
+- **Dual Compatibility**: Desktop Sidebar 260px (`MerchantSidebar.tsx`) + Mobile Floating Pill Nav (`MerchantBottomNav.tsx`).
 
 ---
 
@@ -354,14 +374,15 @@ Didefinisikan secara modular di `src/constants/ecosystemSectors.ts`.
 - [x] **Dompet Driver**: Saldo digital internal (bukan rekening)
 - [x] **Masking Kontak (DP3A)**: Privacy masking di dashboard pemerintahan
 - [x] **KYC Driver**: Upload foto KTP/SIM sebelum verifikasi via Firebase Storage
-- [ ] **Geofencing**: Batasi order per kecamatan/radius
+- [x] **Geofencing & Demand Heatmap**: 5 Kecamatan Surakarta (Banjarsari, Jebres, Laweyan, Pasar Kliwon, Serengan) + live radar hotspots
 
 ### Phase 3 — Ekosistem Lokal 🌱 (Visioner)
-- [x] **Merchant UMKM**: Modul order makanan/barang dari warung lokal
+- [x] **Merchant UMKM**: Modul order makanan/barang dari warung lokal & Kitchen POS
 - [x] **Titip Tetangga**: Algoritma batching order searah rute
 - [ ] **Pasar Warga**: Flash sale UMKM dengan push notif radius
-- [ ] **Forum Driver**: Chat komunitas + laporan kondisi jalan
+- [x] **Pojok Rembug & Live Road Intel**: Laporan jalan live warga & driver (CFD, Banjir, Hajatan) + verifikasi Dishub
 - [ ] **SHU Koperasi**: Kalkulasi pembagian keuntungan tahunan
+- [x] **Demand Heatmap**: Peta panas prediksi keramaian per jam di Solo
 
 ### Phase 4 — Anti-Fraud & Scale 🛡️
 - [ ] **Deteksi GPS Palsu (Tuyul)**: Validasi dengan accelerometer

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { playSuccessChime } from "@/lib/sound";
 import { motion, AnimatePresence } from "motion/react";
+import { CivicOutputViewer } from "@/components/civic/output/CivicOutputViewer";
 
 export default function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -297,8 +298,15 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
-        {/* OTP Display for Document Handover (Government Services) */}
-        {order.otpCode && order.status !== "completed" && order.status !== "cancelled" && (
+        {/* Multi-Modal Output Viewer for Government Orders */}
+        {(order.targetRole === "government" || (order.additionalRole && order.additionalRole.startsWith("gov_"))) && (
+          <div className="mb-4">
+            <CivicOutputViewer order={order} />
+          </div>
+        )}
+
+        {/* OTP Display for Document Handover (Fallback) */}
+        {!order.targetRole?.includes("government") && order.otpCode && order.status !== "completed" && order.status !== "cancelled" && (
           <div className="mb-4 bg-blue-50/90 dark:bg-blue-900/40 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-800 backdrop-blur-md flex items-center justify-between shadow-xs">
             <div>
               <p className="text-xs font-bold text-blue-700 dark:text-blue-300 mb-0.5">OTP Serah Terima</p>

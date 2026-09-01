@@ -58,7 +58,7 @@ export function CivicPageLayout({
         {/* Minimalist Top Breadcrumbs */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400 overflow-x-auto no-scrollbar py-0.5">
-            <Link href="/services/more" className="hover:text-blue-600 transition-colors shrink-0 font-medium">
+            <Link href="/services/more?tab=government" className="hover:text-blue-600 transition-colors shrink-0 font-medium">
               Katalog
             </Link>
             <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
@@ -71,7 +71,7 @@ export function CivicPageLayout({
             </span>
           </div>
 
-          <Badge variant="blue" size="sm" className="text-[10px] shrink-0">
+          <Badge variant="blue" size="sm" className="text-[10px] shrink-0 font-bold">
             {feeLabel}
           </Badge>
         </div>
@@ -82,12 +82,13 @@ export function CivicPageLayout({
           animate={{ opacity: 1, y: 0 }}
           className="p-4 sm:p-5 rounded-[1.75rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.4)] flex items-start gap-3.5"
         >
-          <Link
-            href={`/services/gov/${agencyId}`}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.12] transition-colors shrink-0 cursor-pointer mt-0.5"
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="p-2 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.12] transition-all active:scale-95 shrink-0 cursor-pointer mt-0.5"
           >
             <ArrowLeft className="h-4 w-4" />
-          </Link>
+          </button>
 
           <div className="w-11 h-11 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 text-xl flex items-center justify-center shrink-0">
             {agencyAvatar}
