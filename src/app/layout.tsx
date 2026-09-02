@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { GoogleMapsProvider } from "@/components/map/GoogleMapsProvider";
+import { ToastProvider } from "@/components/ui/toast";
+import { OfflineBanner } from "@/components/layout/OfflineBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +39,10 @@ export default function RootLayout({
         <ThemeProvider>
           <GoogleMapsProvider>
             <AuthProvider>
-              {children}
+              <ToastProvider>
+                <OfflineBanner />
+                {children}
+              </ToastProvider>
             </AuthProvider>
           </GoogleMapsProvider>
         </ThemeProvider>
@@ -45,3 +50,4 @@ export default function RootLayout({
     </html>
   );
 }
+

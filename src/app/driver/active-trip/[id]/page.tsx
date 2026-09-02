@@ -151,14 +151,14 @@ export default function DriverActiveTripPage({ params }: { params: Promise<{ id:
     <div className="relative h-[100dvh] w-full bg-slate-950 overflow-hidden flex flex-col justify-between">
       {/* Floating Header */}
       <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
-        <Button 
-          variant="secondary" 
-          size="icon" 
-          className="rounded-full shadow-lg pointer-events-auto bg-white/90 dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 backdrop-blur-md cursor-pointer text-slate-800 dark:text-zinc-200"
+        <button 
+          type="button"
+          className="sg-floating-btn h-10 w-10 shadow-lg pointer-events-auto"
           onClick={() => router.push("/driver")}
+          title="Kembali ke Dashboard"
         >
           <ArrowLeft className="h-5 w-5" />
-        </Button>
+        </button>
         <div className="bg-emerald-500/20 border border-emerald-500/40 px-3 py-1.5 rounded-full backdrop-blur-md text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 shadow-md">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
           {order.status === "accepted" 

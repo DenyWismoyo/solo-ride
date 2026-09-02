@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { SoloAppLogoIcon } from "@/components/icons";
 
+import { toast } from "@/components/ui/toast";
+
 interface DigitalCertificateCardProps {
   data: DigitalCertificateMetadata;
   serviceTitle: string;
@@ -33,8 +35,11 @@ export function DigitalCertificateCard({
   className = ""
 }: DigitalCertificateCardProps) {
   const handleDownload = () => {
-    alert(`Mengunduh dokumen resmi: ${data.certificateNumber}.pdf\nDokumen terenkripsi dan tervalidasi tanda tangan elektronik Pemkot Surakarta.`);
+    toast.success(`Mengunduh dokumen resmi: ${data.certificateNumber}.pdf`, {
+      description: "Dokumen terenkripsi & tervalidasi tanda tangan elektronik Pemkot Surakarta."
+    });
   };
+
 
   return (
     <div className={`relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white via-slate-50 to-teal-50/40 dark:from-[#0c1220] dark:via-[#0c1220] dark:to-teal-950/20 border-2 border-teal-500/30 dark:border-teal-500/30 p-5 sm:p-6 shadow-lg space-y-4 ${className}`}>

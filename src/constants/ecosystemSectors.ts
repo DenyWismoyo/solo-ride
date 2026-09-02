@@ -322,6 +322,23 @@ export const GOVERNMENT_SECTORS: SectorDefinition[] = [
     ],
     sampleFeatures: ["Kurir SK Izin", "Antrean MPP Online", "Katalog Investasi"],
     description: "Mempermudah perizinan usaha satu pintu terpadu dan pengantaran dokumen legalitas usaha langsung ke alamat pelaku usaha."
+  },
+  {
+    id: "gov_disdag",
+    parentRole: "government",
+    name: "Dinas Perdagangan",
+    agencyOrCompanyName: "Dinas Perdagangan Kota Surakarta",
+    tagline: "Pengelolaan 44 Pasar Tradisional, SPHP & Gerakan Pangan Murah",
+    avatar: "🏪",
+    accentColor: "emerald",
+    services: [
+      "Gerakan Pangan Murah (GPM) & Sembako Subsidi SPHP Bulog",
+      "Pengelolaan 44 Pasar Tradisional & E-Retribusi Kios",
+      "Tera Ulang Timbangan Pedagang Pasar Bebas Curang",
+      "Sistem Pemantauan Harga Komoditas Pangan Harian"
+    ],
+    sampleFeatures: ["Voucher GPM Barcode", "Peta 44 Pasar Tradisional", "Penerbitan Tera"],
+    description: "Menjaga stabilitas harga pangan, mengelola 44 pasar tradisional Kota Solo, dan menyalurkan sembako subsidi tepat sasaran."
   }
 ];
 

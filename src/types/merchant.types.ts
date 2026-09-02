@@ -36,14 +36,28 @@ export interface Merchant {
   popularItems: string[];
 }
 
+export interface ActiveFlashSaleConfig {
+  shift: "subuh" | "sore";
+  shiftTitle: string;
+  discountPercent: number;
+  totalQuota: number;
+  remainingQuota: number;
+  targetItemName: string;
+  startTime?: any;
+  endTime?: string;
+  isActive: boolean;
+}
+
 export interface MerchantDocument extends Omit<Merchant, "distanceKm"> {
   ownerId?: string; // UID of the sandbox merchant owner
   location?: { lat: number; lng: number };
   address?: string;
   phoneNumber?: string;
+  activeFlashSale?: ActiveFlashSaleConfig;
   createdAt?: Timestamp | any;
   updatedAt?: Timestamp | any;
 }
+
 
 // Convenient type aliases
 export type ProductItem = MenuItemDocument;

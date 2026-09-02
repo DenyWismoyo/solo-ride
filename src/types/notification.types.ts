@@ -26,6 +26,7 @@ export interface NotificationDocument {
 }
 
 export type BroadcastTarget = "all" | "driver" | "customer" | "merchant" | "industry" | "government" | string;
+export type BroadcastCategory = "info" | "warning" | "emergency" | "program";
 
 export interface BroadcastDocument {
   id?: string;
@@ -34,6 +35,9 @@ export interface BroadcastDocument {
   title: string;
   body: string;
   target: BroadcastTarget;
+  category?: BroadcastCategory;
+  actionUrl?: string;
+  actionLabel?: string;
   geofence?: {
     center: { lat: number; lng: number };
     radiusKm: number;

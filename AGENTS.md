@@ -38,49 +38,157 @@
 src/
 ├── app/                          # Next.js App Router pages
 │   ├── (customer)/               # Route group: Customer flows
-│   │   ├── page.tsx              # Beranda + Peta
-│   │   └── order/[id]/page.tsx   # Tracking pesanan
-│   ├── driver/                   # Route group: Driver flows
-│   │   ├── page.tsx              # Dashboard Driver
-│   │   └── active-trip/[id]/page.tsx
-│   ├── admin/                    # Admin Control Panel
-│   │   └── page.tsx
+│   │   ├── page.tsx              # Beranda Super App + 4 Tab (Home, Orders, Rewards, Profile)
+│   │   ├── community/page.tsx    # Pojok Rembug Solo (Road Intelligence)
+│   │   ├── order/[id]/page.tsx   # Tracking pesanan aktif
+│   │   ├── store/[id]/page.tsx   # Halaman toko merchant tertentu
+│   │   ├── merchant/[id]/page.tsx # Store merchant customer view
+│   │   └── services/             # Sub-routes layanan customer
+│   │       ├── ride/page.tsx     # Ojek Motor
+│   │       ├── car/page.tsx      # Mobil Warga
+│   │       ├── send/page.tsx     # Kurir Kirim
+│   │       ├── food/page.tsx     # Kuliner UMKM
+│   │       ├── titip/page.tsx    # Titip Tetangga
+│   │       ├── pasar/page.tsx    # Pasar Tradisional 44 Pasar Solo
+│   │       ├── pasar-murah/page.tsx # SPHP Gerakan Pangan Murah Pemkot×BULOG
+│   │       ├── mart/page.tsx     # Mart Digital
+│   │       ├── warta/page.tsx    # Pusat Warta & Siaran Resmi 19 Dinas
+│   │       ├── gov/[id]/page.tsx # Portal Layanan Pemerintah per Dinas
+│   │       └── more/page.tsx     # Katalog Lengkap + Search Ekosistem
+│   ├── driver/                   # Driver workspace (standalone, no route group)
+│   │   ├── page.tsx              # Dashboard Driver (4 Pilar: radar, income, performance, partner)
+│   │   └── active-trip/[id]/page.tsx  # Navigasi trip aktif
+│   ├── merchant/                 # Merchant workspace (standalone, no route group)
+│   │   ├── layout.tsx            # MerchantLayout (Sidebar + BottomNav)
+│   │   └── page.tsx              # Dashboard UMKM (4 Pilar: kitchen, catalog, voucher, finance)
+│   ├── (government)/gov/         # Route group: Government OPD workspace
+│   │   ├── layout.tsx            # GovLayout (Sidebar + Header + BottomNav)
+│   │   ├── page.tsx              # OPD dashboard default
+│   │   └── [opdId]/page.tsx      # Workspace per dinas (/gov/gov_dinkes, /gov/gov_disdag, dll.)
+│   ├── (industry)/industry/      # Route group: Industry B2B workspace
+│   │   └── page.tsx              # Industry dashboard (contracts, orders, fleet)
+│   ├── (admin)/admin/            # Route group: Super Admin panel
+│   │   ├── page.tsx              # Admin control panel
+│   │   └── bizconfig/page.tsx    # BizConfig dynamic pricing admin
 │   ├── login/page.tsx
 │   ├── register/page.tsx
-│   ├── layout.tsx                # Root layout + AuthProvider
+│   ├── layout.tsx                # Root layout + AuthProvider + GoogleMapsProvider + ThemeProvider
 │   └── globals.css               # Design tokens & base styles
 │
 ├── components/                   # Shared UI components
-│   ├── ui/                       # shadcn/ui primitives (Button, Input, Card, etc.)
-│   ├── map/                      # Map-related components (PlaceAutocomplete, RouteMap, etc.)
-│   ├── order/                    # Order-related UI (OrderCard, StatusBadge, etc.)
-│   └── layout/                   # Navbar, Sidebar, BottomNav, etc.
+│   ├── ui/                       # shadcn/ui primitives (Button, Input, Card, Badge, Modal, etc.)
+│   ├── layout/                   # AppHeader, BottomNav, ProfileDrawer
+│   ├── map/                      # GoogleMapsProvider, PlaceAutocomplete, RouteMap, MapLocationPickerModal
+│   ├── icons/                    # Bespoke hyperlocal icon library (SoloMotorIcon, SoloAppLogoIcon, dll.)
+│   ├── admin/                    # AdminImpersonationBar, AdminOverviewBento, AdminPersonaGrid, dll.
+│   ├── booking/                  # RideBookingDrawer, dll.
+│   ├── civic/                    # CivicFormDispatcher, civic forms per dinas (18 subfolder), CivicBroadcastBanner
+│   ├── community/                # RoadIncidentFeed, RoadIncidentCard, CreateIncidentModal
+│   ├── driver/                   # DriverRadarTab, DriverIncomeTab, DriverPerformanceTab, DriverPartnerTab
+│   │   ├── income/               # DriverIncomeTab, DriverWalletBento, DriverLedgerHistory, SHUCalculator
+│   │   ├── performance/          # DriverPerformanceTab
+│   │   ├── partner/              # DriverPartnerTab
+│   │   ├── radar/                # DriverRadarTab, HotspotDemandLeaderboard, DriverHeatmapControls
+│   │   └── modals/               # TopupWalletModal, KycUploadModal
+│   ├── government/               # GovWorkspaceDispatcher + workspaces per dinas (19 subfolder)
+│   │   └── layout/               # GovSidebar, GovHeader, GovBottomNav, GovOPDDrawer, GovWorkspaceContext
+│   ├── history/                  # HistoryDetailReceiptModal, UnifiedHistoryModal
+│   ├── home/                     # HomeExploreTab, HomeActivityTab, HomeRewardsTab, HomeProfileTab
+│   ├── industry/                 # IndustryWorkspace, IndustryContractsTab, CreateContractModal, dll.
+│   ├── merchant/                 # CartCheckoutSheet, KitchenOrderStream, ProductCatalogManager
+│   │   ├── catalog/              # ProductCatalogManager
+│   │   ├── finance/              # MerchantFinancialSummary
+│   │   ├── kitchen/              # KitchenOrderStream
+│   │   ├── layout/               # MerchantSidebar, MerchantContext
+│   │   ├── pasar/                # PasarMultiLapakCheckoutModal
+│   │   └── voucher/              # VoucherScannerModal
+│   ├── order/                    # DeliveryAddressPickerModal, dll.
+│   ├── profile/                  # SavedAddressesModal
+│   ├── services/                 # More page komponen (MoreCategoryTabs, MoreGovSectorsGrid, dll.)
+│   └── theme/                    # ThemeProvider
 │
 ├── hooks/                        # Custom React hooks (satu file per domain)
 │   ├── useAuth.ts                # Auth state listener
 │   ├── useOrder.ts               # Order realtime listener
-│   ├── useLocation.ts            # Driver location + GPS hook
-│   └── usePendingOrders.ts       # (Target: pindah ke sini dari useOrder.ts)
+│   ├── useLocation.ts            # Device GPS hook
+│   ├── useLiveGPS.ts             # Driver live GPS broadcast ke Firestore (throttled)
+│   ├── usePendingOrders.ts       # Pending orders listener untuk driver dispatch
+│   ├── useDriverWallet.ts        # Karcis + dompet koperasi driver
+│   ├── useBroadcasts.ts          # Civic broadcast listener per role
+│   ├── useCivicOrder.ts          # Government order history customer
+│   ├── useContracts.ts           # Industry B2B contracts
+│   ├── useFoodMerchants.ts       # Merchant kuliner listing
+│   ├── useKYCRequests.ts         # Admin KYC queue
+│   ├── useMarketProducts.ts      # Pasar tradisional product listing
+│   ├── useMerchant.ts            # Merchant profile & data
+│   ├── useMerchantMenu.ts        # Menu items merchant
+│   ├── useMerchantOrders.ts      # Order stream merchant
+│   ├── useNotifications.ts       # In-app notifications
+│   ├── useOpdServices.ts         # OPD dynamic service catalog + Firestore overrides
+│   ├── useRecentDestinations.ts  # Customer recent trip destinations
+│   ├── useReviews.ts             # Rating & review
+│   ├── useRoadIncidents.ts       # Community road incidents
+│   └── useRoleHistory.ts         # Unified order history per role
 │
 ├── services/                     # Firebase / external API calls
-│   ├── auth.service.ts           # Auth CRUD
-│   ├── order.service.ts          # Order lifecycle
-│   ├── location.service.ts       # Driver geolocation
-│   ├── payment.service.ts        # [TODO] Karcis harian + ledger
-│   └── notification.service.ts   # [TODO] Push notification UMKM
+│   ├── auth.service.ts           # Auth CRUD (login, logout, register, update profile)
+│   ├── order.service.ts          # Order lifecycle (create, accept, complete, cancel, reject)
+│   ├── location.service.ts       # Driver geolocation (update, read online drivers)
+│   ├── wallet.service.ts         # Dompet koperasi + karcis harian driver
+│   ├── driverWallet.service.ts   # Driver wallet & karcis read operations
+│   ├── driverLedger.service.ts   # Driver daily ledger history
+│   ├── merchant.service.ts       # UMKM store + order status management
+│   ├── broadcast.service.ts      # Civic broadcast engine (publish, read)
+│   ├── civic.service.ts          # Government order submission + OPD verification
+│   ├── opdService.service.ts     # OPD dynamic services catalog management
+│   ├── contract.service.ts       # Industry B2B contract CRUD
+│   ├── notification.service.ts   # In-app push notification management
+│   ├── kyc.service.ts            # Driver KYC submission & admin verification
+│   ├── review.service.ts         # Rating & review submission
+│   ├── traffic.service.ts        # Community road incident (Pojok Rembug Solo)
+│   ├── address.service.ts        # Saved addresses management
+│   ├── functions.service.ts      # Firebase callable functions wrapper (pricing, promo)
+│   └── payment.service.ts        # [TODO] Payment gateway client wrapper (integrasi Mayar)
 │
-├── types/                        # [TODO] Shared TypeScript types
-│   ├── order.types.ts
-│   ├── user.types.ts
-│   └── location.types.ts
+├── types/                        # Shared TypeScript types
+│   ├── order.types.ts            # OrderDocument, OrderStatus, ServiceType, GovCitizenDetails per 18 dinas
+│   ├── user.types.ts             # UserDocument, UserRole, SavedAddress
+│   ├── civic.types.ts            # Civic service types
+│   ├── merchant.types.ts         # Merchant, MenuItem, dll.
+│   ├── wallet.types.ts           # DriverWalletDocument, KarcisStatus, WalletTransaction
+│   ├── kyc.types.ts              # KYCRequest types
+│   ├── payment.types.ts          # PaymentMethod types
+│   ├── review.types.ts           # Review & rating types
+│   ├── notification.types.ts     # BroadcastDocument, BroadcastCategory
+│   ├── traffic.types.ts          # RoadIncident types
+│   ├── contract.types.ts         # Industry B2B contract types
+│   ├── audit.types.ts            # AuditEntry, SLAConfig, AuditAction
+│   ├── sandbox.types.ts          # SandboxPersona, PersonaCategory (19 dinas)
+│   └── location.types.ts         # [TODO] Ekstrak LocationPoint dari order.types ke sini
 │
 ├── lib/                          # SDK initializers & utilities
 │   ├── firebase.ts               # Firebase app, auth, db, storage
-│   └── utils.ts                  # cn(), formatRupiah(), etc.
+│   ├── utils.ts                  # cn(), formatRupiah(), dll.
+│   ├── auditLog.ts               # writeAuditLog() — sub-collection helper
+│   ├── privacy.ts                # maskName(), maskPhone(), generateAnonCode()
+│   ├── sound.ts                  # Web Audio API: playOrderAlertSound(), playSuccessChime()
+│   ├── geo.ts                    # Geolocation utility functions
+│   ├── geoResolver.ts            # Reverse geocoding helper
+│   ├── pricing.ts                # Tarif dasar, perhitungan ongkir, surge pricing
+│   └── seedSandbox.ts            # seedEcosystemSandbox() — 1-click Firestore seed
 │
-└── constants/                    # [TODO] App-wide constants
-    ├── maps.ts                   # Map styles, default center, etc.
-    └── pricing.ts                # Tarif dasar, radius, dll.
+└── constants/                    # App-wide constants
+    ├── maps.ts                   # Koordinat default Solo (lat: -7.5755, lng: 110.8243), map styles
+    ├── collections.ts            # Firestore collection name constants (COLLECTIONS object)
+    ├── services.ts               # SUPER_APP_SERVICES, ALL_ECOSYSTEM_SERVICES catalog
+    ├── ecosystemSectors.ts       # 19 dinas + industry + UMKM SectorDefinition
+    ├── civicCatalog.ts           # Government service catalog detail per dinas
+    ├── geofencing.ts             # DemandHotspot per kecamatan Solo
+    ├── merchants.ts              # Seed catalog merchant UMKM Solo
+    ├── slaConfig.ts              # SLA per dinas (jam) + getSLAConfig() + getSLAStatus()
+    ├── emergencyServices.ts      # EMERGENCY_SERVICE_PREFIXES + isEmergencyService()
+    ├── serviceCategories.ts      # Service category & sub-category definitions
+    └── surakartaPlaces.ts        # Landmark, pasar, dan POI Solo
 ```
 
 ### Aturan Route Groups & Canonical Paths (Next.js)
@@ -88,6 +196,16 @@ src/
   Contoh SALAH: `src/app/(merchant)/merchant` dan `src/app/merchant`.
   Kedua path tersebut akan crash karena Next.js menganggapnya sama (resolves to `/merchant`).
 - Selalu periksa direktori root `src/app/` sebelum men-generate page baru untuk memastikan URL segment belum digunakan.
+- **Route Group Resiliency (`loading.tsx` & `error.tsx`)**: Setiap Route Group domain (`(customer)`, `driver`, `(government)/gov`, `merchant`) WAJIB memiliki `loading.tsx` (skeleton pulse) dan `error.tsx` (tactile recovery card dengan tombol reset) untuk mencegah crash putih (*blank screen*).
+
+### Clean Barrel Exports Standard (`index.ts`)
+- Setiap folder core (`src/types/`, `src/services/`, `src/hooks/`, dan `src/components/[domain]/`) WAJIB mengekspos `index.ts`.
+- Developer dan agen dianjurkan mengimpor langsung dari root barrel:
+  ```typescript
+  import { useDriverWallet, useLiveGPS } from "@/hooks";
+  import { orderService, walletService } from "@/services";
+  import { DriverRadarTab, DriverIncomeTab } from "@/components/driver";
+  ```
 
 ---
 
@@ -195,29 +313,71 @@ export function useOrder(orderId?: string) {
 
 ### Collection: `users`
 ```typescript
+type UserRole = "customer" | "driver" | "admin" | "merchant" | "government" | "industry";
+
 interface UserDocument {
   uid: string;
   email: string | null;
   displayName: string | null;
-  role: "customer" | "driver" | "admin" | "merchant";
+  role: UserRole;
   createdAt: Timestamp;
-  // Driver specific
+  updatedAt?: Timestamp;
+  // Role extension (sub-role)
+  additionalRole?: string;   // e.g. "gov_dispar", "gov_disdag", "ind_klinik"
+  sectorName?: string;       // e.g. "Dinas Perdagangan Kota Surakarta"
+  // Customer / Driver
   points?: number;           // Stamp/Poin untuk ditukar di UMKM mitra
-  karcisExpiry?: Timestamp;  // [TODO] Masa berlaku karcis harian
-  isVerified?: boolean;      // [TODO] Verifikasi KTP/SIM
+  isVerified?: boolean;      // Verifikasi KTP/SIM/Legalitas
+  kycStatus?: "unverified" | "pending" | "verified" | "rejected";
+  savedAddresses?: SavedAddress[]; // Rumah, Kantor, Kampus, dll.
+  // Driver specific
+  vehiclePlate?: string;
+  vehicleModel?: string;
+  // Merchant / Industry
+  storeName?: string;
+  storeSlug?: string;
+  businessName?: string;
+  // Government
+  institutionName?: string;
+  phone?: string;
 }
 ```
 
 ### Collection: `orders`
 ```typescript
+type OrderStatus =
+  | "pending_verification" // Menunggu verifikasi OPD
+  | "pending"              // Mencari driver
+  | "accepted"             // Driver sudah diterima
+  | "in_progress"          // Sedang dalam perjalanan
+  | "completed"            // Selesai
+  | "cancelled"            // Dibatalkan customer
+  | "rejected"             // Ditolak OPD (catatan rejectionReason WAJIB ada)
+  | "pending_merchant"     // Menunggu konfirmasi merchant
+  | "cooking"              // Merchant sedang memproses
+  | "ready_for_pickup"     // Siap dijemput driver;
+
 interface OrderDocument {
   customerId: string;
-  driverId: string | null;
+  customerName?: string;
+  driverId?: string | null;
+  driverName?: string;
+  merchantId?: string;          // Jika order UMKM
+  contractId?: string;          // Jika Industry B2B
+  serviceType: ServiceType;     // WAJIB ada di setiap order
+  targetRole?: string;          // e.g. "government", "industry"
+  additionalRole?: string;      // e.g. "gov_disdag", "ind_kargo"
+  agencyName?: string;
+  items?: OrderItem[];           // Jika order kuliner/mart/pasar
   pickupLocation: { lat: number; lng: number; address: string };
   dropoffLocation: { lat: number; lng: number; address: string };
   price: number;
-  status: "pending" | "accepted" | "in_progress" | "completed" | "cancelled";
-  paymentMethod: "cash" | "qris" | "wallet"; // [TODO]
+  status: OrderStatus;
+  paymentMethod?: "cash" | "qris" | "wallet";
+  citizenDetails?: Record<string, any>; // Data spesifik per dinas
+  isEmergency?: boolean;        // Damkar / BPBD — bypass pending_verification
+  rejectionReason?: string;     // WAJIB diisi jika status === "rejected"
+  otpCode?: string;             // Serah terima OTP dokumen Dukcapil
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -232,6 +392,36 @@ interface DriverDocument {
   lastUpdated: Timestamp;
 }
 ```
+
+### Collection: `broadcasts` (Civic Broadcast Engine)
+```typescript
+interface BroadcastDocument {
+  institutionName: string;         // e.g. "Dinas Perdagangan Kota Surakarta"
+  title: string;
+  body: string;
+  category: "info" | "warning" | "emergency" | "program";
+  targetAudience: "all" | "customer" | "driver" | "merchant";
+  geofence?: { areaName: string; radius?: number };
+  actionUrl?: string;              // Link ke halaman terkait (/services/pasar-murah, dll.)
+  actionLabel?: string;
+  createdAt: Timestamp;
+}
+```
+
+### Collections Lain yang Aktif
+- `wallets/{userId}` — Dompet koperasi driver (balance, updatedAt)
+- `ledger/{entryId}` — Mutasi keuangan driver (immutable append-only)
+- `karcis/{karcisId}` — Karcis harian flat driver (driverId, expiresAt, isTrial)
+- `merchants/{merchantId}` — Profil toko UMKM (storeName, slug, location, isOpen)
+- `menu_items/{itemId}` — Produk/menu per merchant
+- `contracts/{contractId}` — Kontrak B2B industri
+- `reviews/{reviewId}` — Rating & ulasan order
+- `kyc_requests/{requestId}` — Pengajuan KYC driver
+- `notifications/{notifId}` — Notifikasi in-app per user
+- `stamps/{stampId}` — Loyalty stamp komunitas
+- `forum/{forumId}` — Diskusi komunitas
+- `bizConfig/{configId}` — Dynamic pricing & formula admin panel
+- `opd_services/{serviceId}` — OPD dynamic service catalog dengan Firestore override
 
 ### Audit Log — Sub-Collection Pattern
 
@@ -250,6 +440,16 @@ Interface `AuditEntry` wajib menggunakan `src/types/audit.types.ts`.
 Helper untuk menulis log: `writeAuditLog()` dari `src/lib/auditLog.ts`.
 
 Security rules: allow create ONLY, deny update/delete (immutable audit trail).
+
+### Firestore Security Rules — Prinsip Wajib
+
+- **DILARANG** menggunakan fallback `match /{document=**}` yang membuka semua collections ke semua authenticated user
+- **WAJIB** menerapkan ownership check: `request.auth.uid == userId` untuk wallet dan data sensitif personal
+- **Template minimal per collection**:
+  - `wallets`: `allow read, write: if isOwner(userId) || isAdmin()`
+  - `kyc_requests`: `allow read: if isOwner() || isAdmin(); allow create: if isOwner()`
+  - `orders/auditLog`: `allow create: if isAuthenticated(); allow update, delete: if false;`
+- **Firestore rules WAJIB di-deploy** sebelum produksi: `npx firebase-tools deploy --only firestore`
 
 ---
 
@@ -334,18 +534,18 @@ Menu navigasi driver **berbeda total** dari navigasi customer. Terdiri dari 4 pi
 4. **`partner`**: KTA digital koperasi, verifikasi legalitas KYC (KTP/SIM), tombol darurat Satgas 24 jam, posko basecamp Solo.
 
 ### Super Admin Ecosystem Persona Sandbox & Seeding (Categorized)
-Untuk memfasilitasi pengujian lintas 5 ekosistem (khususnya 18 Dinas Pemkot):
+Untuk memfasilitasi pengujian lintas 5 ekosistem (khususnya 19 Dinas Pemkot):
 - Persona Sandbox WAJIB dikelompokkan (*Grouped*) berdasarkan Kategori di UI `AdminImpersonationBar`:
   - **Kategori Warga & Driver**: Customer, Driver Reguler.
   - **Kategori UMKM**: Kuliner, Pasar Tradisional.
-  - **Kategori Pemerintahan (18 Dinas)**: Diskop, Dispar, Satpol PP, DPMPTSP, dll.
+  - **Kategori Pemerintahan (19 Dinas)**: Diskop, Dispar, Satpol PP, DPMPTSP, **Disdag**, dll.
   - **Kategori Industri**: Kargo, Klinik, Travel.
 - UI Impersonation WAJIB menggunakan Dropdown Categorized atau Tabs untuk mencegah *cluttered screen*.
-- Semua 18 Dinas wajib tersedia di `SANDBOX_PERSONAS` untuk mempermudah QA spesifik per instansi.
+- Semua 19 Dinas wajib tersedia di `SANDBOX_PERSONAS` untuk mempermudah QA spesifik per instansi.
 - Modul `seedEcosystemSandbox()` di `src/lib/seedSandbox.ts` menginisialisasi seluruh data di atas ke Firestore dalam 1-Click.
 
 ### Dedicated Government OPD Workspace Architecture (Desktop & Mobile Compatible)
-Seluruh pengelolaan 18 Dinas Pemerintah Kota Surakarta **WAJIB** menggunakan layout dedicated di `src/app/(government)/gov/layout.tsx`:
+Seluruh pengelolaan **19 Dinas Pemerintah Kota Surakarta** (termasuk Dinas Perdagangan/`gov_disdag`) **WAJIB** menggunakan layout dedicated di `src/app/(government)/gov/layout.tsx`:
 - **Desktop Command Center**:
   - Left Sidebar 260px (`GovSidebar.tsx`) dengan switcher dinas, status siaga satgas, dan 4 tab pilar: `workspace`, `orders`, `broadcast`, `audit`.
   - Top Command Bar (`GovHeader.tsx`) dengan capsule pemilih OPD dan profil.
@@ -353,7 +553,9 @@ Seluruh pengelolaan 18 Dinas Pemerintah Kota Surakarta **WAJIB** menggunakan lay
   - Floating Pill Bottom Navigation (`GovBottomNav.tsx`) untuk peralihan instan antara 4 pilar menu operasional.
   - Quick OPD Drawer Sheet (`GovOPDDrawer.tsx`) untuk pemilihan instansi secara cepat dengan pencarian.
 - **Direct Dynamic Routing**:
-  - Setiap admin dinas dapat langsung diarahkan ke `/gov/[opdId]` (contoh: `/gov/gov_dinkes`, `/gov/gov_dukcapil`, `/gov/gov_diskop`).
+  - Setiap admin dinas dapat langsung diarahkan ke `/gov/[opdId]` (contoh: `/gov/gov_dinkes`, `/gov/gov_dukcapil`, `/gov/gov_diskop`, `/gov/gov_disdag`).
+
+**19 Dinas OPD yang sudah aktif**: Dukcapil, Dinkes, Dinsos, Diskop, Dispar, Dishub, Bapenda, Disdik, DLH, Damkar, Dispusip, Dispertan, Disnaker, Diskominfo, Satpol PP, BPBD, DP3A, DPMPTSP, **Disdag** (Dinas Perdagangan — pengelola Pasar Murah SPHP dan retribusi 44 pasar tradisional).
 
 ### Dynamic OPD Service Template & Catalog Management (Two-Way Realtime Sync)
 Setiap admin OPD memiliki hak kelola mandiri atas katalog layanannya via tab **`catalog`** di dashboard `/gov`:
@@ -373,34 +575,70 @@ Seluruh pengelolaan mitra UMKM kuliner dan pedagang pasar tradisional Surakarta 
 
 ---
 
-## 8. Roadmap Fitur (Prioritas)
+## 8. Community Features & Beyond-Roadmap Services
 
-### Phase 1 — MVP Core ✅ (Selesai)
-- [x] Auth (Email + Google, role-based)
-- [x] Customer: Order ojek dengan peta
-- [x] Driver: Dashboard online/offline + terima pesanan
-- [x] Realtime tracking status order
-- [x] Poin/Stamp sistem dasar
+### Pojok Rembug Solo (Community Road Intelligence)
+- **Route**: `/community` (dalam route group `(customer)`)
+- **Komponen**: `RoadIncidentFeed`, `RoadIncidentCard`, `CreateIncidentModal` di `src/components/community/`
+- **Hook**: `useRoadIncidents.ts` | **Service**: `traffic.service.ts` | **Types**: `src/types/traffic.types.ts`
+- **Tujuan**: Crowdsourced laporan kejadian jalan real-time dari warga & driver (kecelakaan, banjir, macet, galian jalan)
+- **Aturan**: Laporan di-moderate — pengguna harus login untuk submit, tapi viewing terbuka umum
 
-### Phase 2 — Monetisasi & Keamanan 🔧 (Berikutnya)
-- [x] **Karcis Harian**: Sistem flat fee Rp X/hari untuk driver aktif
-- [x] **Dompet Driver**: Saldo digital internal (bukan rekening)
-- [x] **Masking Kontak (DP3A)**: Privacy masking di dashboard pemerintahan
-- [x] **KYC Driver**: Upload foto KTP/SIM sebelum verifikasi via Firebase Storage
-- [x] **Geofencing & Demand Heatmap**: 5 Kecamatan Surakarta (Banjarsari, Jebres, Laweyan, Pasar Kliwon, Serengan) + live radar hotspots
+### Pasar Murah SPHP & Gerakan Pangan Murah (`/services/pasar-murah`)
+- **Pengelola OPD**: Dinas Perdagangan (`gov_disdag`) + BULOG KC Surakarta + Dispangtan
+- **Komoditas resmi**: Beras SPHP 5kg (HET Rp 62.500), Minyakita (Rp 15.700/L), Gula Maniskita, Telur Subsidi
+- **5 Posko GPM**: 1 posko per kecamatan (Laweyan, Serengan, Banjarsari, Jebres, Pasar Kliwon) dengan live quota
+- **Aturan Akses**: Wajib NIK KTP Solo, kuota maks 2 pack/KK/bulan (anti-tengkulak)
+- **Mekanisme**: Voucher digital barcode QR / PIN Tebus — ambil di posko atau diantar mitra ojek (Civic Delivery)
 
-### Phase 3 — Ekosistem Lokal 🌱 (Visioner)
-- [x] **Merchant UMKM**: Modul order makanan/barang dari warung lokal & Kitchen POS
-- [x] **Titip Tetangga**: Algoritma batching order searah rute
-- [ ] **Pasar Warga**: Flash sale UMKM dengan push notif radius
-- [x] **Pojok Rembug & Live Road Intel**: Laporan jalan live warga & driver (CFD, Banjir, Hajatan) + verifikasi Dishub
-- [ ] **SHU Koperasi**: Kalkulasi pembagian keuntungan tahunan
-- [x] **Demand Heatmap**: Peta panas prediksi keramaian per jam di Solo
+### Pusat Warta Kota (`/services/warta`)
+- **Tujuan**: Kanal siaran resmi 19 Dinas Pemkot Surakarta untuk seluruh warga
+- **Hook**: `useBroadcasts("customer")` | **Filter**: per kategori (info/warning/emergency/program) + full-text search
+- **Publisher**: Semua OPD via tab `broadcast` di Gov Command Center (`/gov`)
 
-### Phase 4 — Anti-Fraud & Scale 🛡️
-- [ ] **Deteksi GPS Palsu (Tuyul)**: Validasi dengan accelerometer
-- [ ] **Liveness Detection**: Verifikasi wajah saat tarik dana
-- [ ] **Demand Heatmap**: Peta panas prediksi keramaian per jam
+### BizConfig Admin Panel (`/admin/bizconfig`)
+- **Tujuan**: Dynamic pricing management — Super Admin dapat mengubah formula tarif tanpa deploy
+- **Firestore**: Collection `bizConfig` dengan versioning
+- **Komponen**: `MidnightReconciliationSimulator` — test midnight cron reconciliation 1-Click
+- **Integration**: Cloud Function `pricing.callable.ts` mengonsumsi config ini saat kalkulasi harga final
+
+### Driver Demand Heatmap & Geofencing (`src/constants/geofencing.ts`)
+- **Constants**: `DemandHotspot` per kelurahan/landmark (Stasiun Balapan, Pasar Legi, UNS, Solo Paragon, dll.)
+- **Komponen Driver**: `DriverHeatmapControls`, `HotspotDemandLeaderboard`, `KecamatanFilterPill`
+- **Tujuan**: Visualisasi demand hotspot real-time per kecamatan — memandu driver ke lokasi berpotensi tinggi
+
+---
+
+## 9. Roadmap Fitur & Status Implementasi
+
+### Phase 1 — MVP Core ✅ (100% Selesai)
+- [x] Auth (Email + Google, multi-role dynamic switcher)
+- [x] Customer: Order ojek motor & mobil dengan Google Places API (New) & Destination-First Stepper
+- [x] Driver: Radar order live listener, auto-accept, dispatch modal dengan timer & Web Audio chime
+- [x] Realtime tracking status order (accepted, in_progress, completed) + live polyline interpolator
+- [x] Poin/Stamp loyalitas ekosistem
+
+### Phase 2 — Monetisasi & Keamanan ✅ (100% Selesai)
+- [x] **Karcis Harian Flat**: Rp 5.000 / 24 jam dengan auto-waive gratis jika online $\ge 6$ jam
+- [x] **Dompet Koperasi Driver**: Mutasi saldo internal, ledger harian, simulasi tutup buku harian
+- [x] **Masking Kontak (DP3A Pattern)**: Privacy masking nama & telepon di dashboard dinas dengan audit log unmasking
+- [x] **KYC Legalitas Mitra**: Pengajuan foto KTP/SIM & approval admin di `/admin`
+- [x] **Geofencing 5 Kecamatan Surakarta**: Banjarsari, Jebres, Laweyan, Pasar Kliwon, Serengan
+
+### Phase 3 — Smart Civic Hub 5 Ekosistem ✅ (100% Selesai)
+- [x] **Dedicated Government OPD Workspace (`/gov`)**: 19 Dinas Pemkot Surakarta dengan command center, antrean berkas, multi-modal output (Digital Certificate, OTP, Surat Izin), dan Civic SLA Analytics Dashboard
+- [x] **Pasar Tradisional 44 Pasar & Multi-Merchant Mixed Cart (`/services/pasar`)**: Belanja gabungan dari multi-los (sayur, daging, bumbu) diantar oleh 1 kurir flat ongkir
+- [x] **Dedicated Merchant & Kitchen POS Kanban (`/merchant`)**: Kanban 4 kolom (Masuk, Dimasak, Siap, Diantar), Product Catalog Manager, dan QR Code Voucher Scanner
+- [x] **Dedicated Industry B2B Cargo Workspace (`/industry`)**: Manajemen Armada Truk/Van, Surat Jalan Digital (Manifest QR Code), dan Kontrak Pasokan Grosir
+- [x] **Zero Commission & Kalkulator Dividen SHU Koperasi**: Simulasi bagi hasil tahunan RAT (45% surplus) + Midnight Cron Simulator
+- [x] **Dynamic Driver Demand Heatmap**: Hotspot lonjakan order Solo (Stasiun Balapan, Pasar Legi, Pasar Gede, Solo Paragon, UNS) + tombol GPS navigasi langsung
+- [x] **Zen-Minimalist Chrome & Role-Tailored Account Management**: Standar icon-only header & modal profil spesifik per role
+
+### Phase 4 — Produksi & Integrasi Nyata ✅ (100% Selesai)
+- [x] **1. Pure Dynamic Data Binding**: Menghapus seluruh array hardcode di `/services/pasar` & `/services/food`, menghubungkan ke live Firestore `merchants` & `products`, serta menambahkan `EmptyStateCard` & onboarding pedagang.
+- [x] **2. Dynamic QRIS & Payment Gateway Koperasi**: Generate kode QRIS dinamis per total tagihan dan webhook top-up dompet koperasi otomatis (`payment.service.ts` + `DynamicQrisModal.tsx`).
+- [x] **3. Anti-Fraud & GPS Spoofing Detection**: Proteksi kecurangan jarak (Velocity Check delta km/detik) dan verifikasi liveness selfie saat driver menarik dana (`fraud.ts` + `DriverCashoutModal.tsx`).
+- [x] **4. Gamelan Sound Synthesis & PWA Offline Resilience**: Notifikasi audio synthesizer gamelan khas Solo (Slendro/Pelog) untuk alert order driver, serah terima kurir, serta detektor `OfflineBanner.tsx` dan `ToastProvider`.
 
 ---
 
@@ -434,3 +672,10 @@ Seluruh pengelolaan mitra UMKM kuliner dan pedagang pasar tradisional Surakarta 
 - Jangan buat state management global selain `AuthProvider` tanpa diskusi arsitektur
 - Jangan deploy ke production tanpa update `firestore.rules`
 - Jangan membuat folder duplikat yang menghasilkan path yang sama (Route Segment Collision) karena ketidaktahuan penggunaan Route Group `(...)`.
+- **Jangan gunakan `alert()`, `confirm()`, atau `prompt()` native browser** untuk feedback user — selalu gunakan toast/modal dari design system (`src/components/ui/`). `alert()` merusak kesan premium aplikasi dan tidak bisa dikustomisasi.
+- Jangan gunakan `any` eksplisit pada data structures atau return types di service layer. `err: any` di catch blocks diperbolehkan. Gunakan komentar `// @gmaps-interop` jika `any` memang tidak terhindarkan untuk interop Maps API.
+- Jangan gunakan Firestore Security Rules fallback `match /{document=**} { allow read, write: if isAuthenticated(); }` di production — terlalu permisif dan mengabaikan prinsip least privilege.
+- **Jangan menjalankan perintah `npm run build` secara mandiri/otomatis** tanpa instruksi eksplisit dari user untuk menghemat sumber daya dan performa PC pengguna. Gunakan ketelitian pengecekan statis TypeScript dan validasi kode, dan hanya jalankan build jika user secara langsung memintanya.
+- **Tunda seluruh fitur berbasis AI/LLM/ML** ke segmen/fase khusus tersendiri. Fokus pengembangan saat ini adalah 100% pada logika deterministik, operasional lapangan, integrasi 5 ekosistem, dan keandalan data.
+
+

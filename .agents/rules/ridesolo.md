@@ -8,10 +8,12 @@ Agent wajib mematuhi semua aturan berikut tanpa pengecualian.
 ## ARSITEKTUR
 
 - Selalu ikuti **4-layer architecture**: Types → Services → Hooks → Components/Pages
+- Halaman `page.tsx` wajib berupa **Thin Page Controller** (koordinator Auth, Role, State, dan delegasi ke komponen Layer 2)
+- Setiap folder core (`src/types/`, `src/services/`, `src/hooks/`, `src/components/[domain]/`) WAJIB mengekspos `index.ts` (Barrel Export)
+- Setiap Route Group domain (`(customer)`, `driver`, `(government)/gov`, `merchant`) WAJIB memiliki `loading.tsx` dan `error.tsx` (Route Group Resiliency)
 - Jangan panggil Firebase (`db`, `auth`) langsung dari komponen React — gunakan service layer
 - Definisikan semua TypeScript type di `src/types/` sebelum implementasi
 - Setiap hook baru harus return `{ data, loading, error }` sebagai standar minimum
-- Hapus `usePendingOrders` dari `useOrder.ts` — pindahkan ke `usePendingOrders.ts` tersendiri
 
 ## FIREBASE & FIRESTORE
 

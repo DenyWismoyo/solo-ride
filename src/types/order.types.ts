@@ -259,6 +259,9 @@ export interface OrderDocument {
   driverId?: string | null;
   driverName?: string;
   driverPhone?: string;
+  driverVehiclePlate?: string;
+  vehiclePlate?: string;
+  vehicleModel?: string;
   merchantId?: string;
   merchantName?: string;
   contractId?: string;

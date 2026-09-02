@@ -75,58 +75,42 @@
 
 ---
 
-### 🔧 Phase 2 — Ekosistem Terintegrasi (BERIKUTNYA)
-> Target: Semua ekosistem saling berbicara melalui Firestore realtime dan notifikasi.
+### ✅ Phase 2 — Ekosistem Terintegrasi & Smart Civic (SELESAI)
+> Target: Semua ekosistem saling berbicara melalui Firestore realtime, notifikasi, dan standarisasi layanan 19 dinas.
 
-#### Prioritas Tertinggi 🔴
-- [ ] **`serviceType` di OrderDocument** — sistem tahu ojek vs kuliner vs kirim
-- [ ] **Notifikasi Realtime** (`notifications` collection) — driver terima order, customer order accepted
-- [ ] **Pesanan Merchant Realtime** — `onSnapshot` pesanan masuk ke dashboard UMKM
-- [ ] **Rating & Review** setelah order selesai (Customer → Driver dan Customer → Merchant)
-- [ ] **Update lokasi driver realtime** ke `drivers` collection (GPS tracking)
-
-#### Prioritas Sedang 🟡
-- [ ] **Government Broadcast** ke Firestore `broadcasts` collection (bukan `alert()`)
-- [ ] **Karcis Berbayar** — deduct dari dompet koperasi driver (bukan hanya free trial)
-- [ ] **Kontrak Distribusi Industry** ke Firestore `contracts` collection
-- [ ] **Menu Merchant dari Firestore** — CRUD ke `menu_items` collection (bukan hardcoded)
-- [ ] **Saved Address** customer (Rumah, Kantor, Favorit)
-- [ ] **Driver earnings summary harian** (bukan hanya total trip)
-
-#### Prioritas Rendah 🟢
-- [ ] **Chat masking** Customer ↔ Driver (nomor tersembunyi)
-- [ ] **Navigasi GPS** saat order in_progress
-- [ ] **Flash Sale Broadcast** ke customer radius 2km (geofence)
-- [ ] **Supply Order** Industry → Merchant UMKM (bahan baku)
+- [x] **`serviceType` di OrderDocument** — ojek, mobil, kirim, kuliner, mart, pasar tradisional, pasar murah, titip, warta
+- [x] **Notifikasi Realtime** (`notifications` collection) — order notification drawer & warta pemkot tab
+- [x] **Pesanan Merchant Realtime** — Kitchen POS Kanban `onSnapshot` pesanan masuk
+- [x] **Saved Address Modal** — Alamat tersimpan Rumah & Kantor dengan Google Maps picker
+- [x] **Pusat Warta & Siaran Resmi Pemkot** — Civic Broadcast Publisher multi-target, Banner, Modal Hub Arsip, rute `/services/warta`
+- [x] **Dinas Perdagangan Surakarta (`gov_disdag`)** — E-Voucher GPM, SIPAHAP Inflasi 44 Pasar, Beras SPHP Bulog, Tera Metrologi
+- [x] **Rejection Flow & Immutable Audit Log** — Sub-collection `orders/{id}/auditLog`, modal tolak berstandar
+- [x] **Emergency Bypass & SLA Rules** — Damkar, BPBD, PSC 119 bypass verification
+- [x] **Zen Ultra-Minimalist Chrome** — Header Icon-Only 38px + Modal Pengaturan Akun Berbasis Kewenangan Role
 
 ---
 
-### 🌱 Phase 3 — Monetisasi Lokal
-> Target: Platform menghasilkan pendapatan komunitas dan sistem ekonomi berputar sendiri.
+### 🔧 Phase 3 — Live Tracking, Rating & Smart Economy ✅ (100% Selesai)
+> Target: Pengalaman pelacakan real-time berkelas dunia, ulasan multi-dimensi, dan optimasi ekonomi pasar lokal.
 
-- [ ] **Dompet Koperasi** — top-up, payout, transfer antar member (semua role)
-- [ ] **SHU Koperasi Calculator** — kalkulasi otomatis bagi hasil tahunan driver
-- [ ] **UMKM Supply Order** — Industry bisa kirim bahan baku ke merchant binaan
-- [ ] **Demand Heatmap Realtime** — peta panas permintaan per jam per kecamatan
-- [ ] **KYC Driver** — upload foto KTP + SIM, approval oleh Super Admin
-- [ ] **Geofencing per Kecamatan** — driver hanya terima order di radius kerja
-- [ ] **Program Pasar Murah** — Government beri subsidi harga ke merchant tertentu
-- [ ] **Statistik Ekonomi Lokal** — dashboard chart perputaran uang, UMKM yang terbantu
-- [ ] **Voucher Stamp Digital** — customer redeem poin ke UMKM mitra langsung
+- [x] **Live Order Tracking Polyline (`/order/[id]`)** — Visualisasi rute Google Maps dengan animasi pergerakan driver jemput & antar
+- [x] **Modal Rating & Review Multi-Dimensi** — Bintang 1-5, keramahan pengemudi, kelezatan kuliner UMKM (`MultiRatingReviewModal.tsx`)
+- [x] **Dynamic Flash Sale Subuh & Sore (`/merchant`)** — Form penjadwalan flash sale jam 05.30-08.00 & 16.30-19.30 (`FlashSaleLauncherModal.tsx`)
+- [x] **Multi-Merchant Mixed Cart (Pasar Tradisional)** — Keranjang gabungan multi-kios Pasar Gede/Legi (`PasarMultiLapakCheckoutModal.tsx`)
+- [x] **Simulasi Kalkulator SHU Koperasi** — Kalkulator proyeksi bagi hasil tahunan mitra driver (`SHUCalculator.tsx`)
 
 ---
 
-### 🛡️ Phase 4 — Anti-Fraud & Smart Civic
+### 🛡️ Phase 4 — Anti-Fraud, B2B Dedicated & Smart Civic ✅ (100% Selesai)
 > Target: Platform aman, dipercaya komunitas, dan memiliki dampak civic nyata.
 
-- [ ] **Deteksi GPS Tuyul** — validasi sinyal GPS dengan pola pergerakan driver
-- [ ] **Liveness Detection** saat tarik dana (selfie verification)
-- [ ] **Forum Driver** — chat komunitas + laporan kondisi jalan real-time
-- [ ] **Pasar Warga** — flash deal lintas merchant dalam radius, batch notifikasi
-- [ ] **Kontrak B2B Berjangka** — Industry bisa buat kontrak distribusi multi-hari
-- [ ] **Laporan Dampak Sosial** — Government lihat berapa warga terbantu per program
-- [ ] **Whitelist/Blacklist Driver** — Super Admin bisa suspend driver fraud
-- [ ] **Titip Tetangga Algorithm** — auto-batching order searah rute driver aktif
+- [x] **Dedicated Industry B2B Workspace (`/industry`)** — Dashboard kargo, surat jalan digital, jadwal kirim pabrik
+- [x] **Civic SLA Analytics Dashboard** — Gauge visual kecepatan respon aparat per OPD (`SLACountdownBadge.tsx` + `GovWorkspaceDispatcher.tsx`)
+- [x] **Deteksi GPS Tuyul & Anti-Fraud** — Validasi pola kecepatan perpindahan koordinat (`fraud.ts` + `DriverCashoutModal.tsx`)
+- [x] **Peta Agregasi Aduan Warga Kota Solo** — Heatmap sebaran insiden jalan & Pojok Rembug (`/community`)
+- [x] **Kontrak B2B Berjangka** — Industry bisa buat kontrak distribusi multi-hari (`useContracts.ts` + `contract.service.ts`)
+- [x] **Titip Tetangga Algorithm & Shared Pooling** — auto-batching order searah rute hemat 40% ongkir (`/services/titip`)
+
 
 ---
 

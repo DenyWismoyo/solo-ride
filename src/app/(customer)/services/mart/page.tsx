@@ -41,7 +41,8 @@ export default function MartServicePage() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.back()}
-            className="p-2 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer transition-colors"
+            className="sg-icon-btn h-9.5 w-9.5 cursor-pointer"
+            title="Kembali"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>

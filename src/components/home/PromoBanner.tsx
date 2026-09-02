@@ -1,29 +1,45 @@
 "use client";
 
 import React from "react";
-import { Sparkles, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Sparkles, ArrowRight, ShieldCheck, Zap, Flame, ShoppingBag } from "lucide-react";
 
 export function PromoBanner() {
+  const router = useRouter();
+
   const promos = [
     {
       id: 1,
+      tag: "⚡ Flash Sale Geofence",
+      title: "Flash Sale Subuh & Sore UMKM Solo",
+      subtitle: "Diskon hingga 40% menu sarapan pagi (05.30-08.00) & kuliner senja (16.30-19.30).",
+      gradient: "from-amber-500/15 via-orange-500/10 to-white dark:from-amber-950/40 dark:via-orange-950/20 dark:to-[#0c1220]",
+      border: "border-amber-500/30",
+      accent: "text-amber-600 dark:text-amber-400",
+      icon: Flame,
+      route: "/services/food"
+    },
+    {
+      id: 2,
+      tag: "🤝 Hemat 40% Ongkir",
+      title: "Titip Tetangga Searah Rute",
+      subtitle: "Titipkan belanjaan pasar atau apotek bersama tetangga satu kelurahan.",
+      gradient: "from-teal-500/15 via-white to-white dark:from-teal-950/40 dark:via-[#0c1220] dark:to-[#0c1220]",
+      border: "border-teal-500/30",
+      accent: "text-teal-600 dark:text-teal-400",
+      icon: ShoppingBag,
+      route: "/services/titip"
+    },
+    {
+      id: 3,
       tag: "Gerakan Lokal",
       title: "100% Bebas Potongan Komisi",
       subtitle: "Setiap rupiah ongkir diterima utuh oleh mitra driver & UMKM warga Solo.",
       gradient: "from-emerald-500/10 via-white to-white dark:from-emerald-950/40 dark:via-[#0c1220] dark:to-[#0c1220]",
       border: "border-emerald-500/30",
       accent: "text-emerald-600 dark:text-emerald-400",
-      icon: ShieldCheck
-    },
-    {
-      id: 2,
-      tag: "Fitur Unggulan",
-      title: "Titip Tetangga Searah Rute",
-      subtitle: "Tumpangkan pesanan Anda pada driver yang sedang mengarah ke titik yang sama.",
-      gradient: "from-amber-500/10 via-white to-white dark:from-amber-950/40 dark:via-[#0c1220] dark:to-[#0c1220]",
-      border: "border-amber-500/30",
-      accent: "text-amber-600 dark:text-amber-400",
-      icon: Zap
+      icon: ShieldCheck,
+      route: "/services/ride"
     }
   ];
 
@@ -42,7 +58,8 @@ export function PromoBanner() {
           return (
             <div
               key={p.id}
-              className={`min-w-[280px] max-w-[320px] p-4.5 rounded-[1.8rem] bg-gradient-to-tr ${p.gradient} shrink-0 snap-start space-y-2.5 flex flex-col justify-between shadow-[0_8px_25px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] cursor-pointer hover:scale-[1.01] transition-transform`}
+              onClick={() => p.route && router.push(p.route)}
+              className={`min-w-[280px] max-w-[320px] p-4.5 rounded-[1.8rem] bg-gradient-to-tr ${p.gradient} shrink-0 snap-start space-y-2.5 flex flex-col justify-between shadow-[0_8px_25px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_12px_32px_-6px_rgba(0,0,0,0.6)] cursor-pointer hover:scale-[1.01] transition-transform border border-slate-200/60 dark:border-white/10`}
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
@@ -58,8 +75,8 @@ export function PromoBanner() {
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-between border-t border-slate-100/80 dark:border-white/[0.06] text-xs font-black text-emerald-600 dark:text-emerald-400">
-                <span>Pelajari Selengkapnya</span>
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100/80 dark:border-white/[0.06] text-xs font-black text-amber-600 dark:text-amber-400">
+                <span>Pesan Sekarang</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </div>
             </div>

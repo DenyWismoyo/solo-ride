@@ -28,8 +28,8 @@ export function CivicTextField({
   mono?: boolean;
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+    <div className="space-y-1.5">
+      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
         {icon}
         <span>{label}</span>
       </label>
@@ -40,7 +40,7 @@ export function CivicTextField({
         placeholder={placeholder}
         required={required}
         maxLength={maxLength}
-        className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 ${mono ? "font-mono font-bold" : ""} ${className}`}
+        className={`sg-input text-xs ${mono ? "font-mono font-bold tracking-wider" : ""} ${className}`}
       />
     </div>
   );
@@ -62,15 +62,15 @@ export function CivicSelectField({
   className?: string;
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+    <div className="space-y-1.5">
+      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
         {icon}
         <span>{label}</span>
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-blue-500 ${className}`}
+        className={`sg-select w-full text-xs font-semibold ${className}`}
       >
         {options.map((opt) => {
           const val = typeof opt === "string" ? opt : opt.value;
@@ -106,8 +106,8 @@ export function CivicTextareaField({
   className?: string;
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+    <div className="space-y-1.5">
+      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
         {icon}
         <span>{label}</span>
       </label>
@@ -117,7 +117,7 @@ export function CivicTextareaField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className={`w-full px-3.5 py-2.5 bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 ${className}`}
+        className={`sg-textarea text-xs ${className}`}
       />
     </div>
   );
@@ -140,7 +140,7 @@ export function CivicRadioField({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+      <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
         {icon}
         <span>{label}</span>
       </label>
@@ -149,16 +149,16 @@ export function CivicRadioField({
           const val = typeof opt === "string" ? opt : opt.value;
           const lbl = typeof opt === "string" ? opt : opt.label;
           return (
-            <label key={val} className="flex items-center gap-1.5 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer">
+            <label key={val} className="flex items-center gap-2 text-xs text-slate-800 dark:text-zinc-200 cursor-pointer select-none">
               <input
                 type="radio"
                 name={label}
                 value={val}
                 checked={value === val}
                 onChange={() => onChange(val)}
-                className="w-3.5 h-3.5 accent-blue-600"
+                className="w-4 h-4 accent-blue-600"
               />
-              <span>{lbl}</span>
+              <span className="font-medium">{lbl}</span>
             </label>
           );
         })}
@@ -181,10 +181,10 @@ export function CivicPriceFooter({
   bgAccent?: string;
 }) {
   return (
-    <div className={`p-3.5 rounded-2xl ${bgAccent} border flex items-center justify-between text-xs`}>
+    <div className={`p-4 rounded-2xl ${bgAccent} border flex items-center justify-between text-xs shadow-xs`}>
       <div className="space-y-0.5">
-        <span className="text-slate-600 dark:text-zinc-300 font-semibold block">{label}</span>
-        {sublabel && <span className="text-[10px] text-slate-500 block">{sublabel}</span>}
+        <span className="text-slate-700 dark:text-zinc-300 font-bold block">{label}</span>
+        {sublabel && <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">{sublabel}</span>}
       </div>
       <span className={`font-black text-sm ${accentColor}`}>{priceText}</span>
     </div>
@@ -212,14 +212,14 @@ export function CivicSubmitButton({
         type="button"
         variant="outline"
         onClick={onCancel}
-        className="w-1/3 py-2.5 rounded-xl text-xs font-bold border-slate-200 dark:border-zinc-700 cursor-pointer"
+        className="w-1/3 h-11 text-xs font-bold cursor-pointer"
       >
         Batal
       </Button>
       <Button
         type="submit"
         disabled={isSubmitting}
-        className={`w-2/3 py-2.5 rounded-xl text-xs font-bold ${buttonBg} text-white flex items-center justify-center gap-2 shadow-lg ${shadowColor} cursor-pointer`}
+        className={`w-2/3 h-11 text-xs font-bold ${buttonBg} text-white flex items-center justify-center gap-2 cursor-pointer shadow-md`}
       >
         {isSubmitting ? (
           <>

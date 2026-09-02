@@ -24,7 +24,7 @@ export function WalletQuickCard({ onOpenRewards }: WalletQuickCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 350, damping: 26 }}
-      className="p-4.5 rounded-[2rem] bg-white dark:bg-[#0c1220] shadow-[0_12px_36px_-6px_rgba(15,23,42,0.05)] dark:shadow-[0_18px_45px_-10px_rgba(0,0,0,0.7)] transition-all relative overflow-hidden group"
+      className="sg-bento-card p-4.5 transition-all relative overflow-hidden group"
     >
       <div className="flex items-center justify-between pb-3.5 border-b border-slate-100/90 dark:border-white/[0.05] relative z-10">
         {/* Saldo Dompet Warga */}
@@ -72,10 +72,10 @@ export function WalletQuickCard({ onOpenRewards }: WalletQuickCardProps) {
           whileTap={{ scale: 0.90 }}
           whileHover={{ y: -2 }}
           onClick={() => alert("Fitur Isi Saldo Dompet Koperasi via Bank Jateng / QRIS.")}
-          className="flex flex-col items-center justify-center p-2.5 rounded-[1.3rem] bg-slate-50/90 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all group cursor-pointer shadow-xs"
+          className="flex flex-col items-center justify-center p-2 rounded-xl bg-transparent hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all group cursor-pointer"
         >
-          <div className="p-2 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
-            <SoloTopupIcon size={18} variant="duotone" />
+          <div className="p-2.5 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
+            <SoloTopupIcon size={20} variant="duotone" />
           </div>
           <span className="text-[10px] font-extrabold text-slate-700 dark:text-zinc-200">Isi Saldo</span>
         </motion.button>
@@ -84,10 +84,10 @@ export function WalletQuickCard({ onOpenRewards }: WalletQuickCardProps) {
           whileTap={{ scale: 0.90 }}
           whileHover={{ y: -2 }}
           onClick={() => alert("Fitur Scan QRIS Standar Koperasi Lokal.")}
-          className="flex flex-col items-center justify-center p-2.5 rounded-[1.3rem] bg-slate-50/90 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all group cursor-pointer shadow-xs"
+          className="flex flex-col items-center justify-center p-2 rounded-xl bg-transparent hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all group cursor-pointer"
         >
-          <div className="p-2 rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
-            <SoloQrisIcon size={18} variant="duotone" />
+          <div className="p-2.5 rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
+            <SoloQrisIcon size={20} variant="duotone" />
           </div>
           <span className="text-[10px] font-extrabold text-slate-700 dark:text-zinc-200">Bayar QRIS</span>
         </motion.button>
@@ -96,10 +96,10 @@ export function WalletQuickCard({ onOpenRewards }: WalletQuickCardProps) {
           whileTap={{ scale: 0.90 }}
           whileHover={{ y: -2 }}
           onClick={onOpenRewards}
-          className="flex flex-col items-center justify-center p-2.5 rounded-[1.3rem] bg-slate-50/90 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all group cursor-pointer shadow-xs"
+          className="flex flex-col items-center justify-center p-2 rounded-xl bg-transparent hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all group cursor-pointer"
         >
-          <div className="p-2 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
-            <SoloMarketIcon size={18} variant="duotone" />
+          <div className="p-2.5 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
+            <SoloMarketIcon size={20} variant="duotone" />
           </div>
           <span className="text-[10px] font-extrabold text-slate-700 dark:text-zinc-200">Kupon UMKM</span>
         </motion.button>
@@ -108,10 +108,10 @@ export function WalletQuickCard({ onOpenRewards }: WalletQuickCardProps) {
           whileTap={{ scale: 0.90 }}
           whileHover={{ y: -2 }}
           onClick={() => alert("Fitur Transfer Sesama Warga Bebas Biaya Admin.")}
-          className="flex flex-col items-center justify-center p-2.5 rounded-[1.3rem] bg-slate-50/90 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all group cursor-pointer shadow-xs"
+          className="flex flex-col items-center justify-center p-2 rounded-xl bg-transparent hover:bg-slate-100/70 dark:hover:bg-white/[0.04] transition-all group cursor-pointer"
         >
-          <div className="p-2 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
-            <SoloTransferIcon size={18} variant="duotone" />
+          <div className="p-2.5 rounded-2xl bg-blue-500/15 text-blue-600 dark:text-blue-400 mb-1.5 group-hover:scale-110 transition-transform shadow-xs">
+            <SoloTransferIcon size={20} variant="duotone" />
           </div>
           <span className="text-[10px] font-extrabold text-slate-700 dark:text-zinc-200">Transfer</span>
         </motion.button>

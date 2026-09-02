@@ -74,7 +74,7 @@ export function RoadIncidentCard({ incident, onVote }: RoadIncidentCardProps) {
   };
 
   return (
-    <div className="p-5 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-xs space-y-3.5 transition-all hover:border-slate-300 dark:hover:border-white/20">
+    <div className="sg-bento-card p-5 space-y-3.5 transition-all hover:border-slate-300 dark:hover:border-white/20">
       {/* Header Badges */}
       <div className="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-white/[0.04] pb-3">
         <div className="flex flex-wrap items-center gap-1.5">

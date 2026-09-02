@@ -40,14 +40,9 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
   const tabs = role === "driver" ? driverTabs : customerTabs;
 
   return (
-    <nav className="fixed bottom-4 inset-x-0 z-30 pb-[env(safe-area-inset-bottom,0px)] px-4 pointer-events-none flex justify-center">
-      <div className="w-full max-w-sm pointer-events-auto">
-        <motion.div 
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 350, damping: 25 }}
-          className="bg-white/80 dark:bg-[#0c1220]/80 backdrop-blur-2xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_12px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/50 dark:border-white/10 rounded-full p-2 grid grid-cols-4 gap-1 relative overflow-hidden"
-        >
+    <nav className="fixed bottom-0 inset-x-0 z-30 pb-[max(env(safe-area-inset-bottom,0px),0.5rem)] pt-1 px-2 bg-white/95 dark:bg-[#0c1220]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.7)]">
+      <div className="max-w-lg mx-auto w-full">
+        <div className="grid grid-cols-4 gap-1.5 relative">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -56,19 +51,19 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
               <motion.button
                 key={tab.id}
                 onClick={tab.onClick}
-                whileTap={{ scale: 0.88 }}
-                className={`relative flex flex-col items-center justify-center h-14 px-1 rounded-full transition-colors cursor-pointer z-10 select-none ${
+                whileTap={{ scale: 0.92 }}
+                className={`relative flex flex-col items-center justify-center h-13 py-1 px-1 rounded-md transition-all cursor-pointer select-none ${
                   isActive 
-                    ? "text-emerald-600 dark:text-emerald-400 font-black" 
+                    ? "text-emerald-600 dark:text-emerald-400 font-bold" 
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-200 font-medium"
                 }`}
               >
-                {/* Active Sliding Capsule Indicator with Spring Physics */}
+                {/* Solid Elegant Active Indicator */}
                 {isActive && (
                   <motion.div
                     layoutId="activeBottomTabPill"
                     transition={{ type: "spring", stiffness: 450, damping: 30 }}
-                    className="absolute inset-0 bg-emerald-500/15 dark:bg-emerald-500/20 rounded-full -z-10 shadow-xs border border-emerald-500/10"
+                    className="absolute inset-0 bg-emerald-500/12 dark:bg-emerald-500/20 rounded-md -z-10 border border-emerald-500/20 shadow-xs"
                   />
                 )}
 
@@ -76,7 +71,7 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
                   animate={{ scale: isActive ? 1.08 : 1, y: isActive ? -1 : 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? "text-emerald-600 dark:text-emerald-400 stroke-[2.5]" : "text-slate-400 dark:text-zinc-500"}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? "text-emerald-600 dark:text-emerald-400 stroke-[2.4]" : "text-slate-400 dark:text-zinc-500"}`} />
                 </motion.div>
                 
                 <span className="text-[11px] mt-0.5 tracking-tight font-semibold">
@@ -85,7 +80,7 @@ export function BottomNav({ role = "customer", activeTab, onTabChange }: BottomN
               </motion.button>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </nav>
   );

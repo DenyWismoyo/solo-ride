@@ -18,7 +18,8 @@ import {
   Truck,
   Hotel,
   Palette,
-  Store
+  Store,
+  Megaphone
 } from "lucide-react";
 
 import {
@@ -125,13 +126,13 @@ export const SUPER_APP_SERVICES: AppService[] = [
   {
     id: "pasar",
     name: "Pasar Warga",
-    shortName: "Flash Sale",
-    description: "Flash sale stok UMKM diskon radius 2 km",
+    shortName: "44 Pasar",
+    description: "Belanja sayur segar & sembako langsung dari 44 pasar Solo",
     icon: SoloMarketIcon,
     color: "text-rose-500",
     bgColor: "bg-rose-500/10 hover:bg-rose-500/20",
     borderColor: "border-rose-500/30",
-    tag: "Diskon",
+    tag: "0% Komisi",
     isAvailable: true,
     category: "merchant"
   },
@@ -246,6 +247,23 @@ export const ALL_ECOSYSTEM_SERVICES: AppService[] = [
     additionalRole: "ind_kargo",
     agencyName: "PT Bengawan Kargo Logistik",
     feeLabel: "Mulai Rp 150.000"
+  },
+  {
+    id: "warta",
+    name: "Warta Resmi & Siaran Pemkot",
+    shortName: "Warta Solo",
+    description: "Kanal informasi, pengumuman agenda kota & peringatan resmi 19 dinas.",
+    icon: Megaphone,
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10 hover:bg-blue-500/20",
+    borderColor: "border-blue-500/30",
+    tag: "Resmi",
+    isAvailable: true,
+    category: "government",
+    subCategory: "gov_public",
+    subCategoryLabel: "Warta & Agenda Kota",
+    targetRole: "government",
+    agencyName: "Pemerintah Kota Surakarta"
   },
 
   // -------------------------------------------------------------
@@ -562,7 +580,28 @@ export const ALL_ECOSYSTEM_SERVICES: AppService[] = [
     feeLabel: "Bunga 0%"
   },
 
-  // --- 5. DINAS KEBUDAYAAN & PARIWISATA ---
+  // --- 5. DINAS PERDAGANGAN & BULOG ---
+  {
+    id: "disdag_pasar_murah",
+    name: "Dinas Perdagangan: Gerakan Pangan Murah (GPM)",
+    shortName: "Pasar Murah",
+    description: "Sembako beras SPHP, Minyakita & gula subsidi APBD bebas tengkulak berbasis NIK KTP Solo.",
+    icon: SoloGovPillarIcon,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20",
+    borderColor: "border-emerald-500/30",
+    tag: "SPHP Bulog",
+    isAvailable: true,
+    category: "government",
+    subCategory: "gov_sosial_ekonomi",
+    subCategoryLabel: "Sosial & Ekonomi Warga",
+    targetRole: "government",
+    additionalRole: "gov_disdag",
+    agencyName: "Dinas Perdagangan Kota Surakarta",
+    feeLabel: "Subsidi Pangan"
+  },
+
+  // --- 6. DINAS KEBUDAYAAN & PARIWISATA ---
   {
     id: "dispar_heritage_tour",
     name: "Dinas Pariwisata: Rute Wisata Heritage Solo",

@@ -41,7 +41,7 @@ export function HotspotDetailDrawer({
 
   return (
     <div className="fixed inset-x-0 bottom-16 sm:bottom-6 z-40 px-4 flex justify-center pointer-events-none">
-      <div className="pointer-events-auto bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/10 rounded-[2rem] p-5 shadow-2xl max-w-lg w-full space-y-4 animate-in slide-in-from-bottom duration-300">
+      <div className="pointer-events-auto sg-bento-card p-5 shadow-2xl max-w-lg w-full space-y-4 animate-in slide-in-from-bottom duration-300">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">

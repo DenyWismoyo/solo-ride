@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { LOCAL_MERCHANTS_SURAKARTA } from "@/constants/merchants";
 import { Merchant } from "@/types/merchant.types";
+import { useFoodMerchants } from "@/hooks/useFoodMerchants";
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -34,11 +36,12 @@ const FOOD_CATEGORIES = [
 
 export default function FoodServicePage() {
   const router = useRouter();
+  const { merchants: liveMerchants, loading: merchantsLoading } = useFoodMerchants();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const filteredMerchants = useMemo(() => {
-    return LOCAL_MERCHANTS_SURAKARTA.filter((m) => {
+    return liveMerchants.filter((m) => {
       // Only culinary / food items on this page
       if (m.category !== "kuliner") return false;
 
@@ -64,7 +67,7 @@ export default function FoodServicePage() {
 
       return matchSearch && matchCat;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [liveMerchants, searchQuery, selectedCategory]);
 
   const handleOpenMerchant = (merchant: Merchant) => {
     router.push(`/store/${merchant.storeSlug || merchant.id}`);
@@ -80,9 +83,10 @@ export default function FoodServicePage() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => router.back()}
-              className="p-2.5 rounded-2xl bg-white dark:bg-[#0c1220] shadow-[0_4px_15px_-3px_rgba(0,0,0,0.06)] text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer transition-all"
+              className="sg-icon-btn h-9.5 w-9.5 cursor-pointer"
+              title="Kembali"
             >
-              <ArrowLeft className="h-4 w-4 stroke-[2.5]" />
+              <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-[1.1rem] bg-gradient-to-tr from-orange-500/25 to-amber-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center shadow-xs">
@@ -163,11 +167,16 @@ export default function FoodServicePage() {
           </div>
 
           {filteredMerchants.length === 0 ? (
-            <div className="text-center p-8 bg-white dark:bg-[#0c1220] rounded-[2rem] shadow-sm space-y-2">
-              <Store className="h-10 w-10 text-slate-400 mx-auto" />
-              <p className="text-xs font-bold text-slate-800 dark:text-zinc-200">Warung Kuliner Tidak Ditemukan</p>
-              <p className="text-[10px] text-slate-500">Coba ketik kata kunci lain seperti sate, liwet, soto, atau serabi.</p>
-            </div>
+            <EmptyStateCard
+              icon="🍲"
+              title="Warung Kuliner Tidak Ditemukan"
+              description={`Belum ada warung kuliner yang cocok dengan kata kunci '${searchQuery}' atau kategori ini. Coba pilih menu kuliner khas Solo lainnya.`}
+              actionLabel="Lihat Semua Warung Solo"
+              onAction={() => {
+                setSelectedCategory("all");
+                setSearchQuery("");
+              }}
+            />
           ) : (
             filteredMerchants.map((merchant) => (
               <motion.div 

@@ -138,7 +138,8 @@ export default function SendPackagePage() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.back()}
-            className="p-2 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white cursor-pointer transition-colors"
+            className="sg-icon-btn h-9.5 w-9.5 cursor-pointer"
+            title="Kembali"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
@@ -241,7 +242,7 @@ export default function SendPackagePage() {
                     setItemWeight(e.target.value);
                     setPrice(0);
                   }}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-blue-500 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none transition-colors appearance-none cursor-pointer"
+                  className="sg-select w-full text-xs font-semibold"
                 >
                   <option value="Ringan (< 5kg)">Ringan (&lt; 5kg) - Dokumen, Baju</option>
                   <option value="Sedang (5-10kg)">Sedang (5-10kg) - Makanan, Dus Kecil</option>

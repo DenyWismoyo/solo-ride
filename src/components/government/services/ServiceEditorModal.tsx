@@ -196,7 +196,7 @@ export function ServiceEditorModal({
             <select
               value={outputMode}
               onChange={(e) => setOutputMode(e.target.value as CivicOutputMode)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-teal-500"
+              className="sg-select w-full text-xs font-semibold"
             >
               <option value="delivery">🛵 Pengantaran Fisik Berkas / Obat (Mitra Driver + PIN OTP)</option>
               <option value="digital_issuance">📄 Dokumen / E-Certificate Digital Resmi (Ber-QR Code & PDF)</option>

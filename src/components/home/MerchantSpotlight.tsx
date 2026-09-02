@@ -41,7 +41,7 @@ export function MerchantSpotlight({ onSelectMerchant }: MerchantSpotlightProps) 
           <div
             key={merchant.id}
             onClick={() => onSelectMerchant?.(merchant)}
-            className="p-4 rounded-[1.8rem] bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-[#11192e] transition-all space-y-3.5 cursor-pointer shadow-[0_8px_25px_-4px_rgba(15,23,42,0.05)] dark:shadow-[0_14px_35px_-8px_rgba(0,0,0,0.7)] group relative overflow-hidden"
+            className="p-4 sg-bento-card hover:bg-slate-50 dark:hover:bg-[#11192e] transition-all space-y-3.5 cursor-pointer group relative overflow-hidden"
           >
             <div className="flex gap-3.5">
               <div className="w-20 h-20 rounded-[1.3rem] bg-slate-100 dark:bg-white/[0.04] overflow-hidden shrink-0 relative shadow-xs">

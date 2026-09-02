@@ -4,23 +4,49 @@ import React, { useState } from "react";
 import { OrderDocument } from "@/types/order.types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, CheckCircle2, Loader2, MapPin, Phone , XCircle} from "lucide-react";
+import { 
+  Megaphone, 
+  CheckCircle2, 
+  Loader2, 
+  MapPin, 
+  Phone, 
+  XCircle, 
+  Forward, 
+  Building2, 
+  X,
+  Sparkles,
+  ShieldAlert
+} from "lucide-react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { RejectionModal } from "@/components/government/shared/RejectionModal";
+import { SLACountdownBadge } from "@/components/government/shared/SLACountdownBadge";
 import { useAuthContext } from "@/components/AuthProvider";
 import { writeAuditLog } from "@/lib/auditLog";
+import { toast } from "@/components/ui/toast";
+import { motion, AnimatePresence } from "motion/react";
 
 interface GovWorkspaceProps {
   orders: OrderDocument[];
   loading: boolean;
 }
 
+const FORWARD_OPD_OPTIONS = [
+  { id: "gov_dishub", name: "Dinas Perhubungan (DISHUB)", desc: "Lalu lintas, APILL/lampu merah, rambu, parkir", icon: "🚦" },
+  { id: "gov_satpolpp", name: "Satpol PP Kota Surakarta", desc: "Ketertiban umum, PKL liar, kebisingan, patroli", icon: "🛡️" },
+  { id: "gov_dlh", name: "Dinas Lingkungan Hidup (DLH)", desc: "Tumpukan sampah, pohon rawan tumbang, kebersihan", icon: "♻️" },
+  { id: "gov_pupr", name: "DPUPR Kota Surakarta", desc: "Jalan berlubang, saluran drainase, trotoar rusak", icon: "🏗️" },
+  { id: "gov_disdag", name: "Dinas Perdagangan (DISDAG)", desc: "Tera timbangan los pasar, stabilitas harga sembako", icon: "🏪" },
+  { id: "gov_dinkes", name: "Dinas Kesehatan (DINKES)", desc: "Faskes Puskesmas, jentik nyamuk DBD, sanitasi", icon: "🏥" }
+];
+
 export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
   const { user, userData } = useAuthContext();
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
   const [rejectionTarget, setRejectionTarget] = useState<OrderDocument | null>(null);
+  const [forwardTarget, setForwardTarget] = useState<OrderDocument | null>(null);
+  const [selectedOpd, setSelectedOpd] = useState<string>("gov_dishub");
 
   const handleReject = async (reason: string) => {
     if (!rejectionTarget?.id) return;
@@ -47,14 +73,19 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
         });
       }
       
-      alert("Permohonan berhasil ditolak.");
+      toast.success("Aduan Berhasil Ditolak", {
+        description: `Alasan: ${reason}`
+      });
     } catch (err: any) {
-      alert(`Gagal menolak: ${err.message || err}`);
+      toast.error("Gagal Menolak Aduan", {
+        description: err.message || "Terjadi kesalahan."
+      });
     } finally {
       setDispatchingId(null);
       setRejectionTarget(null);
     }
   };
+
   const ulasOrders = orders.filter(o => o.serviceType?.includes("ulas") || o.serviceType?.includes("diskominfo"));
 
   const handleResolveUlas = async (orderId: string) => {
@@ -73,52 +104,61 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
           action: "completed",
           actorId: user.uid,
           actorName: userData?.displayName || "Petugas Diskominfo",
-          actorRole: userData?.additionalRole || "government"
+          actorRole: userData?.additionalRole || "government",
+          notes: "Aduan warga ULAS ditindaklanjuti secara tuntas oleh Diskominfo."
         });
       }
 
-      alert("✅ Aduan ULAS Berhasil Ditindaklanjuti secara Mandiri!");
+      toast.success("Aduan ULAS Selesai", {
+        description: "Laporan warga telah ditandai terselesaikan secara mandiri."
+      });
     } catch (err: any) {
-      alert(`Gagal: ${err.message || err}`);
+      toast.error("Gagal Menyelesaikan Aduan", {
+        description: err.message || "Terjadi kesalahan."
+      });
     } finally {
       setDispatchingId(null);
     }
   };
 
-  const handleForwardUlas = async (orderId: string, currentTitle: string) => {
-    const targetOpd = prompt(`Teruskan "${currentTitle}" ke Dinas mana?\nContoh: gov_dishub, gov_dlh, gov_pupr`, "gov_dishub");
-    if (!targetOpd) return;
+  const handleConfirmForward = async () => {
+    if (!forwardTarget?.id) return;
+    const orderId = forwardTarget.id;
+    const targetOpdInfo = FORWARD_OPD_OPTIONS.find(o => o.id === selectedOpd);
 
     setDispatchingId(orderId);
     try {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
-        additionalRole: targetOpd,
+        additionalRole: selectedOpd,
+        agencyName: targetOpdInfo?.name || "Dinas Teknis Pemkot",
+        forwardedFrom: "gov_diskominfo",
+        forwardedAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
       
       if (user) {
         await writeAuditLog({
           orderId,
-          action: "verified",
+          action: "order_forwarded" as any,
           actorId: user.uid,
           actorName: userData?.displayName || "Petugas Diskominfo",
           actorRole: userData?.additionalRole || "government",
-          notes: `Diteruskan ke: ${targetOpd}`
+          notes: `Aduan diteruskan ke: ${targetOpdInfo?.name} (${selectedOpd})`
         });
       }
 
-      alert(`✅ Aduan berhasil diteruskan ke ${targetOpd}!`);
+      toast.success("Aduan Diteruskan ke OPD Teknis!", {
+        description: `Laporan warga kini masuk ke dashboard ${targetOpdInfo?.name}.`
+      });
+
+      setForwardTarget(null);
     } catch (err: any) {
-      alert(`Gagal: ${err.message || err}`);
+      toast.error("Gagal Meneruskan Aduan", {
+        description: err.message || "Terjadi kesalahan."
+      });
     } finally {
       setDispatchingId(null);
     }
-  };
-
-  const getElapsedHours = (createdAt: any) => {
-    if (!createdAt) return 0;
-    const created = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
-    return (Date.now() - created.getTime()) / (1000 * 60 * 60);
   };
 
   return (
@@ -131,24 +171,30 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
             <div className="p-2 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400">
               <Megaphone className="h-5 w-5" />
             </div>
-            <span className="text-xs text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider">Aduan Masuk ULAS</span>
+            <span className="text-xs text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider">
+              Aduan Warga Portal ULAS
+            </span>
           </div>
-          <div className="text-4xl sm:text-5xl font-black text-cyan-600 dark:text-cyan-400 mt-3">{ulasOrders.length}</div>
+          <div className="text-4xl sm:text-5xl font-black text-cyan-600 dark:text-cyan-400 mt-3">
+            {ulasOrders.length}
+          </div>
         </div>
         
         {/* Secondary Bento Cells */}
         <div className="flex flex-col gap-3">
           <div className="p-4 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider w-1/2">Terselesaikan</span>
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider w-1/2">
+              Terselesaikan
+            </span>
             <div className="text-lg font-black text-emerald-600 dark:text-emerald-400">96.8%</div>
           </div>
           <div className="grid grid-cols-2 gap-3 flex-1">
             <div className="p-3 rounded-3xl bg-teal-500/10 border border-teal-500/20 flex flex-col justify-center items-center text-center">
-              <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider mb-1">Respon</span>
+              <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider mb-1">Target SLA</span>
               <div className="text-sm font-black text-teal-600 dark:text-teal-400">&lt; 24 Jam</div>
             </div>
             <div className="p-3 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex flex-col justify-center items-center text-center">
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider mb-1">CCTV</span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider mb-1">Integrasi CCTV</span>
               <div className="text-sm font-black text-blue-600 dark:text-blue-400">320 Unit</div>
             </div>
           </div>
@@ -170,7 +216,7 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
           {ulasOrders.map((order) => {
             const details = order.citizenDetails || {};
             const isPending = order.status !== "completed";
-            const elapsed = getElapsedHours(order.createdAt);
+
             return (
               <div
                 key={order.id}
@@ -189,30 +235,32 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
                     <div className="text-[11px] text-slate-500 flex items-center gap-2">
                       <span>Pelapor: {details.citizenName || order.customerName}</span>
                       <span>•</span>
-                      <span>Lokasi: {details.locationName || order.pickupLocation?.address}</span>
-                      {isPending && (
-                        <>
-                          <span>•</span>
-                          <span className={`font-medium flex items-center gap-1 ${elapsed > 24 ? "text-red-600 animate-pulse" : elapsed > 18 ? "text-amber-500" : "text-emerald-600"}`}>
-                            ⏱️ {elapsed > 24 ? "LEWAT SLA 1x24 JAM!" : `Sisa SLA: ${Math.max(0, Math.floor(24 - elapsed))} Jam`}
-                          </span>
-                        </>
-                      )}
+                      <span>Lokasi: {details.locationName || order.pickupLocation?.address || "Solo"}</span>
                     </div>
                   </div>
 
-                  <Badge variant={isPending ? "amber" : "emerald"} size="sm">
-                    {order.status}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <Badge variant={isPending ? "amber" : "emerald"} size="sm">
+                      {order.status}
+                    </Badge>
+
+                    {isPending && (
+                      <SLACountdownBadge
+                        createdAt={order.createdAt}
+                        serviceType={order.serviceType}
+                        additionalRole="gov_diskominfo"
+                        status={order.status}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="text-xs text-slate-600 dark:text-zinc-300 bg-slate-50 dark:bg-white/[0.02] p-2.5 rounded-xl">
-                  {details.description || "Tidak ada deskripsi rinci."}
+                  {details.description || "Tidak ada deskripsi rinci aduan."}
                 </div>
 
                 {isPending && (
                   <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.04]">
-                    
                     <Button
                       size="sm"
                       variant="outline"
@@ -223,15 +271,18 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
                       <XCircle className="h-3.5 w-3.5 mr-1" />
                       Tolak
                     </Button>
-<Button
+
+                    <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => order.id && handleForwardUlas(order.id, details.ulasTitle || "")}
+                      onClick={() => setForwardTarget(order)}
                       disabled={dispatchingId === order.id}
-                      className="rounded-xl text-xs font-bold h-8 px-3 cursor-pointer shadow-xs border-slate-200 dark:border-zinc-700"
+                      className="rounded-xl text-xs font-bold h-8 px-3 cursor-pointer shadow-xs border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/20"
                     >
+                      <Forward className="h-3.5 w-3.5 mr-1" />
                       Teruskan ke OPD
                     </Button>
+
                     <Button
                       size="sm"
                       onClick={() => order.id && handleResolveUlas(order.id)}
@@ -243,7 +294,7 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
                       ) : (
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                       )}
-                      <span>Selesai Sendiri</span>
+                      <span>Selesai Mandiri</span>
                     </Button>
                   </div>
                 )}
@@ -253,6 +304,7 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
         </div>
       )}
 
+      {/* Rejection Modal */}
       <RejectionModal
         isOpen={!!rejectionTarget}
         onClose={() => setRejectionTarget(null)}
@@ -263,6 +315,97 @@ export function DiskominfoWorkspace({ orders, loading }: GovWorkspaceProps) {
           orderId: rejectionTarget?.id
         }}
       />
+
+      {/* Multi-Agency Forwarding Modal */}
+      <AnimatePresence>
+        {forwardTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-md bg-white dark:bg-[#0c1220] rounded-[2rem] shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden"
+            >
+              <div className="p-4 border-b border-slate-100 dark:border-white/[0.08] flex items-center justify-between bg-cyan-500/10">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-xl bg-cyan-500/20 text-cyan-600 dark:text-cyan-400">
+                    <Forward className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                      Teruskan Aduan Warga ke OPD
+                    </h3>
+                    <p className="text-[10px] text-slate-500">
+                      Disposisi resmi tindak lanjut ke dinas teknis terkait
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setForwardTarget(null)}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/80 text-xs">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Judul Aduan:</span>
+                  <p className="font-bold text-slate-800 dark:text-zinc-100">
+                    {forwardTarget.citizenDetails?.ulasTitle || forwardTarget.serviceTitle}
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-zinc-300 block">
+                    Pilih Dinas Teknis Tujuan:
+                  </label>
+                  <div className="space-y-2">
+                    {FORWARD_OPD_OPTIONS.map((opd) => {
+                      const isSelected = selectedOpd === opd.id;
+                      return (
+                        <div
+                          key={opd.id}
+                          onClick={() => setSelectedOpd(opd.id)}
+                          className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex items-start gap-3 ${
+                            isSelected
+                              ? "border-cyan-500 bg-cyan-500/10 text-cyan-900 dark:text-cyan-200 font-bold shadow-xs"
+                              : "border-slate-200 dark:border-white/10 text-slate-600 dark:text-zinc-400 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="text-xl">{opd.icon}</span>
+                          <div className="space-y-0.5 flex-1">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">{opd.name}</div>
+                            <div className="text-[10px] text-slate-500 dark:text-zinc-400 leading-tight">{opd.desc}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleConfirmForward}
+                  disabled={dispatchingId === forwardTarget.id}
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs py-3 rounded-xl shadow-md cursor-pointer"
+                >
+                  {dispatchingId === forwardTarget.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                      <span>Mendisposisikan Aduan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Forward className="w-4 h-4 mr-1.5" />
+                      <span>Kirim Disposisi ke Dinas Terpilih</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

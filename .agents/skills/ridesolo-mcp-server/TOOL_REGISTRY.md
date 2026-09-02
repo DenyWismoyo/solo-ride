@@ -132,3 +132,20 @@
 ### `get_user_detail` ✅
 - **Deskripsi**: Profil detail pengguna dengan enkapsulasi data privasi.
 - **Input**: `{ uid: string }`
+
+---
+
+## 🚀 UPCOMING TOOLS (Phase 3 Roadmap):
+
+### `get_market_inflation_prices` ⏳
+- **Deskripsi**: Mengambil data komoditas pangan dan inflasi dari SIPAHAP Disdag Solo untuk 44 pasar tradisional.
+- **Input**: `{ commodityName?: string, marketLocation?: string }`
+
+### `verify_sphp_quota` ⏳
+- **Deskripsi**: Memverifikasi kuota penebusan beras murah SPHP Bulog (maks 2 pack/KK/minggu) berbasis NIK 16 digit.
+- **Input**: `{ nik: string, quantityPacks: number }`
+
+### `schedule_flash_sale` ⏳
+- **Deskripsi**: Mengaktifkan jadwal flash sale otomatis lapak pasar/kuliner pada jam tertentu (05-07 / 16-18 WIB).
+- **Input**: `{ merchantId: string, discountPercent: number, startHour: number, endHour: number }`
+

@@ -10,10 +10,12 @@ import { MapLocationPickerModal } from "@/components/map/MapLocationPickerModal"
 import { LocationPoint } from "@/types/order.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, MapPin, Loader2, ArrowRight, Navigation, Clock, MessageSquare, Utensils } from "lucide-react";
+import { X, MapPin, Loader2, ArrowRight, Navigation, Clock, MessageSquare, Utensils, CreditCard, Banknote } from "lucide-react";
 import { calculateFare } from "@/lib/pricing";
 import { calculateDistanceKm } from "@/lib/geo";
 import { merchantService } from "@/services/merchant.service";
+import { toast } from "@/components/ui/toast";
+import { DynamicQrisModal } from "@/components/payment/DynamicQrisModal";
 
 interface CartCheckoutSheetProps {
   isOpen: boolean;
@@ -32,6 +34,9 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"reguler" | "titip">("reguler");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "qris">("cash");
+  const [isQrisModalOpen, setIsQrisModalOpen] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string>("");
 
   // Calculate distance & fare
   const distance = useMemo(() => {
@@ -80,16 +85,20 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
           qty: c.qty
         })),
         customerNote: notes,
+        paymentMethod: paymentMethod,
       }, "pending_merchant");
 
-      // Titip and kuliner/pasar orders start as pending_merchant so the merchant can prepare first
-      // We pass "pending_merchant" to the initialStatus of createOrder
-      // So no need to update status separately!
+      setCreatedOrderId(orderId);
 
-      onClose();
-      router.push(`/order/${orderId}`);
+      if (paymentMethod === "qris") {
+        setIsQrisModalOpen(true);
+      } else {
+        toast.success("Pesanan berhasil diteruskan ke dapur UMKM!", "Sukses");
+        onClose();
+        router.push(`/order/${orderId}`);
+      }
     } catch (err: any) {
-      alert("Gagal membuat pesanan: " + err.message);
+      toast.error("Gagal membuat pesanan: " + err.message, "Error");
     } finally {
       setIsSubmitting(false);
     }
@@ -252,6 +261,46 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
                 </div>
               )}
             </div>
+
+            {/* Payment Method Selector */}
+            <div className="p-4 border-t border-slate-100 dark:border-zinc-800/80 space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Metode Pembayaran
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("cash")}
+                  className={`p-2.5 rounded-2xl border text-left cursor-pointer transition-all flex items-center gap-2 ${
+                    paymentMethod === "cash"
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold"
+                      : "border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                  }`}
+                >
+                  <Banknote className="h-4 w-4 shrink-0" />
+                  <div>
+                    <div className="text-xs font-black">Tunai</div>
+                    <div className="text-[9px] opacity-75">Bayar saat tiba</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("qris")}
+                  className={`p-2.5 rounded-2xl border text-left cursor-pointer transition-all flex items-center gap-2 ${
+                    paymentMethod === "qris"
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold"
+                      : "border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400"
+                  }`}
+                >
+                  <CreditCard className="h-4 w-4 shrink-0" />
+                  <div>
+                    <div className="text-xs font-black">QRIS Koperasi</div>
+                    <div className="text-[9px] opacity-75">0% Admin Fee</div>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -265,14 +314,14 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
               </div>
             </div>
             <Badge variant="emerald" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 px-2.5 py-1">
-              Tunai
+              {paymentMethod === "qris" ? "QRIS Koperasi" : "Tunai"}
             </Badge>
           </div>
           
           <Button
             onClick={handleCheckout}
             disabled={!deliveryLocation || isSubmitting}
-            className="w-full h-12 bg-gradient-to-r from-orange-600 to-rose-600 hover:from-orange-500 hover:to-rose-500 text-white rounded-2xl font-bold shadow-lg shadow-orange-600/20 text-sm flex items-center justify-center gap-2"
+            className="w-full h-12 bg-gradient-to-r from-orange-600 to-rose-600 hover:from-orange-500 hover:to-rose-500 text-white rounded-2xl font-bold shadow-lg shadow-orange-600/20 text-sm flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -296,6 +345,27 @@ export function CartCheckoutSheet({ isOpen, onClose, merchant, cart, total }: Ca
           initialLocation={deliveryLocation || (merchant.location ? { ...merchant.location, address: merchant.address || "" } : undefined)}
         />
       )}
+
+      {createdOrderId && (
+        <DynamicQrisModal
+          isOpen={isQrisModalOpen}
+          onClose={() => {
+            setIsQrisModalOpen(false);
+            onClose();
+            router.push(`/order/${createdOrderId}`);
+          }}
+          orderId={createdOrderId}
+          amount={finalTotal}
+          merchantName={merchant.name}
+          serviceType="kuliner"
+          onPaymentSuccess={() => {
+            setIsQrisModalOpen(false);
+            onClose();
+            router.push(`/order/${createdOrderId}`);
+          }}
+        />
+      )}
     </>
   );
 }
+

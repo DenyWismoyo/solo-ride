@@ -22,6 +22,7 @@ import { DisnakerWorkspace } from "./disnaker/DisnakerWorkspace";
 import { DiskominfoWorkspace } from "./diskominfo/DiskominfoWorkspace";
 import { SatpolppWorkspace } from "./satpolpp/SatpolppWorkspace";
 import { DpmptspWorkspace } from "./dpmptsp/DpmptspWorkspace";
+import { DisdagWorkspace } from "./disdag/DisdagWorkspace";
 
 interface GovWorkspaceDispatcherProps {
   dinasId: string;
@@ -45,6 +46,8 @@ export function GovWorkspaceDispatcher({
       return <DinkesWorkspace orders={orders} loading={loading} />;
     case "gov_diskop":
       return <DiskopWorkspace orders={orders} loading={loading} />;
+    case "gov_disdag":
+      return <DisdagWorkspace orders={orders} loading={loading} />;
     case "gov_dispar":
       return <DisparWorkspace orders={orders} loading={loading} />;
     case "gov_dishub":

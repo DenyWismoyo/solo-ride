@@ -81,8 +81,8 @@ export function ProductEditorModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-[#0c1220] rounded-[2rem] max-w-md w-full p-6 shadow-2xl border border-slate-200/80 dark:border-white/10 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+      <div className="sg-bento-card max-w-md w-full p-6 shadow-2xl space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export function ProductEditorModal({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500"
+                className="sg-select w-full text-xs font-semibold"
               >
                 <option value="Makanan Utama">🍲 Makanan Utama</option>
                 <option value="Minuman">🥤 Minuman Segar</option>

@@ -361,10 +361,9 @@ export default function RideBookingPage() {
           <div className="relative z-20 max-w-lg w-full mx-auto px-3.5 pt-3 space-y-2 pointer-events-none">
             {/* Header Bar */}
             <div className="flex items-center justify-between pointer-events-auto">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="rounded-full shadow-lg bg-white/95 dark:bg-[#0c1220]/95 border border-slate-200/80 dark:border-white/[0.08] backdrop-blur-md cursor-pointer text-slate-800 dark:text-zinc-200 h-9 w-9 hover:scale-105 transition-transform"
+              <button
+                type="button"
+                className="sg-floating-btn h-9.5 w-9.5 shadow-lg"
                 onClick={() => {
                   if (price > 0) {
                     handleResetRoute();
@@ -372,9 +371,10 @@ export default function RideBookingPage() {
                     router.back();
                   }
                 }}
+                title="Kembali"
               >
                 <ArrowLeft className="h-4 w-4" />
-              </Button>
+              </button>
 
               <div className="flex items-center gap-1.5">
                 <button

@@ -210,3 +210,40 @@ Nilai-nilai tarif di atas TIDAK di-hardcode. Mereka dibaca dari Firestore:
 
 Admin Super dapat mengubah nilai ini melalui **BizConfig Panel** di dashboard admin.
 Setiap perubahan masuk ke history log untuk audit trail.
+
+---
+
+## 6. Formula Subsidi Pasar Murah & Beras SPHP Bulog
+
+```typescript
+export const SPHP_CONFIG = {
+  PACK_WEIGHT_KG: 5,
+  SUBSIDIZED_PRICE: 54000,    // Rp 54.000 / pack 5kg
+  REGULAR_HET_PRICE: 69500,   // HET Pasar Biasa
+  MAX_PACKS_PER_WEEK: 2,       // Maksimal 2 pack (10kg) per KK/NIK per 7 hari
+  SAVINGS_PER_PACK: 15500      // Penghematan warga Rp 15.500/pack
+};
+
+export function validateSphpQuota(userOrdersPast7Days: number, requestedPacks: number): boolean {
+  return (userOrdersPast7Days + requestedPacks) <= SPHP_CONFIG.MAX_PACKS_PER_WEEK;
+}
+```
+
+---
+
+## 7. Dynamic Flash Sale Scheduler (Pasar Subuh & Kuliner Sore)
+
+```typescript
+export function getFlashSaleDiscount(hour: number, category: "vegetable" | "culinary"): number {
+  // Flash Sale Sayur Segar Subuh (05:00 - 07:00 WIB)
+  if (category === "vegetable" && hour >= 5 && hour < 7) {
+    return 0.25; // Diskon 25% sayur subuh
+  }
+  // Flash Sale Kuliner Sore (16:00 - 18:00 WIB)
+  if (category === "culinary" && hour >= 16 && hour < 18) {
+    return 0.20; // Diskon 20% kuliner sore
+  }
+  return 0.0;
+}
+```
+

@@ -59,7 +59,7 @@ export function KitchenOrderCard({ order }: KitchenOrderCardProps) {
 
   return (
     <>
-      <div className="p-4 sm:p-5 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-xs space-y-3.5 transition-all">
+      <div className="sg-bento-card p-4 sm:p-5 space-y-3.5 transition-all">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-white/[0.06] pb-3">
           <div>

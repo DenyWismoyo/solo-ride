@@ -8,7 +8,7 @@ import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { OrderDocument } from "@/types/order.types";
 
-export type GovTab = "workspace" | "orders" | "catalog" | "broadcast" | "audit";
+export type GovTab = "workspace" | "orders" | "catalog" | "broadcast" | "audit" | "analytics";
 
 interface GovWorkspaceContextType {
   selectedDinasId: string;

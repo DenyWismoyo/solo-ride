@@ -222,7 +222,7 @@ export function DeliveryAddressPickerModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="bg-white dark:bg-[#0c1220] border-t md:border border-slate-200 dark:border-white/[0.1] rounded-t-3xl md:rounded-3xl max-w-lg w-full max-h-[85dvh] flex flex-col shadow-2xl overflow-hidden"
+            className="sg-card border-t md:border rounded-t-3xl md:rounded-3xl max-w-lg w-full max-h-[85dvh] flex flex-col shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">

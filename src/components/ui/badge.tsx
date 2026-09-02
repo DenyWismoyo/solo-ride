@@ -18,15 +18,15 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const variantStyles = {
-    emerald: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 shadow-xs",
-    amber: "bg-amber-500/15 text-amber-800 dark:text-amber-300 shadow-xs",
-    orange: "bg-orange-500/15 text-orange-800 dark:text-orange-300 shadow-xs",
-    teal: "bg-teal-500/15 text-teal-800 dark:text-teal-300 shadow-xs",
-    rose: "bg-rose-500/15 text-rose-700 dark:text-rose-300 shadow-xs",
-    blue: "bg-blue-500/15 text-blue-800 dark:text-blue-300 shadow-xs",
-    purple: "bg-purple-500/15 text-purple-800 dark:text-purple-300 shadow-xs",
-    neutral: "bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-zinc-300 shadow-xs",
-    outline: "bg-white/60 dark:bg-white/[0.03] text-slate-700 dark:text-zinc-300 shadow-xs",
+    emerald: "sg-badge-emerald shadow-xs",
+    amber: "sg-badge-amber shadow-xs",
+    orange: "sg-badge-amber shadow-xs",
+    teal: "sg-badge-teal shadow-xs",
+    rose: "sg-badge-rose shadow-xs",
+    blue: "sg-badge-blue shadow-xs",
+    purple: "bg-purple-500/15 text-purple-800 dark:text-purple-300 border-purple-500/25 shadow-xs",
+    neutral: "sg-badge-neutral shadow-xs",
+    outline: "bg-white/60 dark:bg-white/[0.03] text-slate-700 dark:text-zinc-300 border-border shadow-xs",
   };
 
   const dotColors = {
@@ -50,7 +50,7 @@ export function Badge({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border transition-colors select-none uppercase",
+        "sg-badge",
         variantStyles[variant],
         sizeStyles[size],
         className

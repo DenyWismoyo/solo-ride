@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Sparkles,
   Radio,
-  FileCheck2
+  FileCheck2,
+  Activity
 } from "lucide-react";
 import { SoloAppLogoIcon } from "@/components/icons";
 import { GovTab } from "./GovWorkspaceContext";
@@ -74,6 +75,11 @@ export function GovSidebar({
       id: "audit",
       label: "Buku Ekspedisi & Audit",
       icon: History,
+    },
+    {
+      id: "analytics",
+      label: "Analitik SLA Kota",
+      icon: Activity,
     }
   ];
 

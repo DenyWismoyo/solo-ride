@@ -293,3 +293,98 @@ Sebelum commit, pastikan:
 - [ ] Fitur yang menyentuh lebih dari 1 ekosistem menggunakan `writeBatch` (atomic)
 - [ ] `serviceType` selalu ada di setiap order baru yang dibuat
 - [ ] Cek `ECOSYSTEM_ROLES.md` untuk memastikan fitur sesuai scope role yang tepat
+- [ ] **DILARANG** menggunakan `alert()`, `confirm()`, atau `prompt()` — gunakan toast/modal dari `src/components/ui/`
+- [ ] Untuk fitur laporan jalan/incident: gunakan `traffic.service.ts` + `useRoadIncidents` (jangan buat service baru)
+- [ ] Firestore Security Rules tidak boleh menggunakan fallback `/{document=**}` yang terlalu permisif
+
+---
+
+## 🌾 Domain Separation: Pasar Murah (Civic SPHP) vs. Pasar Warga (Traditional Market)
+
+### 1. Program Pasar Murah Pemkot (`/services/pasar-murah`)
+- **Pengelola**: Dinas Perdagangan (Disdag) Surakarta & Perum BULOG KC Surakarta / Dispangtan.
+- **Tujuan**: Stabilisasi Pasokan dan Harga Pangan (SPHP), pengendalian inflasi, sembako subsidi APBD.
+- **Komoditas**: Beras SPHP 5kg (HET Rp 62.500), Minyakita (Rp 15.700/L), Gula Maniskita (Rp 17.000), Telur Subsidi (Rp 24.000).
+- **Aturan Akses**: Wajib NIK KTP Solo, kuota maksimal 2 pack/KK/bulan (anti-tengkulak).
+- **Mekanisme Luaran**: Voucher Digital Barcode QR / PIN Tebus untuk diambil di titik tebus kelurahan atau diantar Mitra Ojek (Civic Delivery).
+
+### 2. Pasar Warga Hyperlocal (`/services/pasar`)
+- **Pengelola**: 44 Pasar Tradisional Kota Surakarta (Pasar Gede, Pasar Legi, Pasar Klewer, Pasar Nusukan, Pasar Jongke, Pasar Harjodaksino, Pasar Nongko, dll.) & UMKM Pedagang Los/Kios.
+- **Tujuan**: Digitalisasi pasar basah/kering dengan 0% potongan komisi untuk pedagang.
+- **Komoditas**: Sayur mayur segar, bumbu dapur racikan giling, daging sapi/ayam segar harian, ikan segar, buah lokal, jajanan legendaris pasar (Dawet Telasih, Lenjongan, Brambang Asem).
+- **Aturan Akses**: Terbuka untuk umum (Warga, Wisatawan, Warung Makan).
+- **Mekanisme**: Keranjang multi-item per pasar + catatan belanja titipan los + pengiriman kilat driver lokal.
+
+---
+
+## 🛣️ Pojok Rembug Solo (Community Road Intelligence)
+
+Fitur crowdsourced laporan kejadian jalan real-time dari warga & driver Solo.
+
+### Stack Teknis
+- **Service**: `traffic.service.ts` — submit, fetch, upvote road incidents
+- **Hook**: `useRoadIncidents(filter?)` — realtime listener dengan filter (type, kecamatan, radius)
+- **Types**: `src/types/traffic.types.ts` — `RoadIncidentDocument`, `IncidentType`, `IncidentStatus`
+- **Komponen**: `src/components/community/` — `RoadIncidentFeed`, `RoadIncidentCard`, `CreateIncidentModal`
+- **Route**: `/community` (dalam route group `(customer)`)
+
+### Aturan Domain
+```typescript
+// Tipe laporan yang valid
+type IncidentType = "accident" | "flood" | "traffic" | "construction" | "pothole" | "other";
+
+// Status life-cycle laporan
+type IncidentStatus = "active" | "resolved" | "duplicate";
+```
+- Laporan harus login untuk submit (cegah spam), tapi viewing publik
+- Jangan buat koleksi Firestore baru untuk road incidents — gunakan `traffic_incidents` via `traffic.service.ts`
+- Integrasi dengan DriverRadarTab untuk tampilkan incident di hotspot area driver
+
+---
+
+## 🏪 BizConfig Admin — Dynamic Pricing Management
+
+Admin Super dapat mengkonfigurasi formula harga secara real-time dari `/admin/bizconfig`
+tanpa perlu deploy ulang aplikasi.
+
+### Stack Teknis
+- **Firestore**: Collection `bizConfig/{configId}` dengan versioning + `updatedAt`
+- **Route Admin**: `/admin/bizconfig` — `MidnightReconciliationSimulator` untuk test cron
+- **Cloud Function**: `pricing.callable.ts` mengonsumsi config ini saat kalkulasi harga final
+- **Komponen Admin**: `src/components/admin/` — BizConfig tab dalam admin panel
+
+### Pola Konsumsi BizConfig
+```typescript
+// BENAR — Kalkulasi harga HARUS melalui Cloud Function (bukan di client)
+// karena harga final adalah server-side truth untuk mencegah manipulasi
+const result = await functionsService.calculatePrice({
+  serviceType: "ojek",
+  distanceKm: 5.2,
+  surgeMultiplier: 1.0
+});
+
+// SALAH — jangan hitung harga di client langsung dari bizConfig document
+const config = await getDoc(doc(db, "bizConfig", "ojek"));
+const price = config.data().baseFare + distanceKm * config.data().perKmRate; // ❌
+```
+
+---
+
+## 📢 Civic Broadcast Engine (Kanal Siaran Resmi Pemkot Terpadu)
+
+### 1. Arsitektur Multi-Target & Kategori
+- **Publisher**: `GovBroadcastTab.tsx` di Command Center `/gov` (19 Dinas OPD).
+- **Target Penerima**: `all` (Semua Warga), `customer` (Pelanggan), `driver` (Mitra Ojek/Mobil), `merchant` (Mitra UMKM & Pasar Tradisional).
+- **Kategori Siaran**:
+  - 📢 `info` (Warta / Pengumuman Kota - Blue/Teal)
+  - ⚠️ `warning` (Peringatan Rekayasa Lalin / Cuaca - Amber)
+  - 🚨 `emergency` (Siaga Darurat / Bencana - Rose/Red Alert)
+  - 🌾 `program` (Program Pangan Murah SPHP / Pajak / Subsidi - Emerald)
+
+### 2. Komponen Display Standard
+- **Komponen Reusable**: `CivicBroadcastBanner.tsx` (`src/components/civic/broadcast/CivicBroadcastBanner.tsx`).
+- **Dashboard Integrasi**:
+  - `HomeExploreTab.tsx` (Customer)
+  - `DriverRadarTab.tsx` (Driver)
+  - `MerchantDashboardPage` (Merchant UMKM)
+- **Fitur Interaktif**: Dialog "Baca Detail Siaran", badge instansi terverifikasi, tautan langsung ke layanan terkait (`actionUrl`), dan dismissal per session.

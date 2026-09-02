@@ -13,14 +13,20 @@ import {
   CheckCircle2, 
   MapPin, 
   Phone, 
-  Hospital 
-, XCircle} from "lucide-react";
+  Hospital,
+  XCircle,
+  Pill,
+  ShieldCheck,
+  Check
+} from "lucide-react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS } from "@/constants/collections";
 import { RejectionModal } from "@/components/government/shared/RejectionModal";
+import { SLACountdownBadge } from "@/components/government/shared/SLACountdownBadge";
 import { useAuthContext } from "@/components/AuthProvider";
 import { writeAuditLog } from "@/lib/auditLog";
+import { toast } from "@/components/ui/toast";
 
 interface GovWorkspaceProps {
   orders: OrderDocument[];
@@ -32,6 +38,7 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
   const [activeTab, setActiveTab] = useState<"resep" | "prolanis" | "darah">("resep");
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
   const [rejectionTarget, setRejectionTarget] = useState<OrderDocument | null>(null);
+  const [preparingOrders, setPreparingOrders] = useState<Record<string, boolean>>({});
 
   const handleReject = async (reason: string) => {
     if (!rejectionTarget?.id) return;
@@ -43,7 +50,7 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
         status: "rejected",
         rejectionReason: reason,
         rejectedByDinasAt: serverTimestamp(),
-        rejectedByDinasName: userData?.displayName || "Petugas Dinas",
+        rejectedByDinasName: userData?.displayName || "Petugas Dinkes/Puskesmas",
         updatedAt: serverTimestamp()
       });
       
@@ -52,15 +59,19 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
           orderId,
           action: "rejected",
           actorId: user.uid,
-          actorName: userData?.displayName || "Petugas Dinas",
+          actorName: userData?.displayName || "Petugas Dinkes/Puskesmas",
           actorRole: userData?.additionalRole || "government",
           notes: reason
         });
       }
       
-      alert("Permohonan berhasil ditolak.");
+      toast.success("Permohonan Berhasil Ditolak", {
+        description: `Alasan: ${reason}`
+      });
     } catch (err: any) {
-      alert(`Gagal menolak: ${err.message || err}`);
+      toast.error("Gagal Menolak Permohonan", {
+        description: err.message || "Terjadi kesalahan sistem."
+      });
     } finally {
       setDispatchingId(null);
       setRejectionTarget(null);
@@ -72,15 +83,45 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
   const darahOrders = orders.filter(o => o.serviceType?.includes("darah") || o.serviceType?.includes("donor"));
 
   const pendingOrders = orders.filter(o => o.status === "pending_verification");
-  const activeTrips = orders.filter(o => o.status === "in_progress" || o.status === "accepted" || o.status === "pending");
 
-  const handleApprovePrescription = async (orderId: string) => {
+  const handleTogglePharmacyPreparation = async (orderId: string, currentStatus?: boolean) => {
+    const nextStatus = !currentStatus;
+    setPreparingOrders(prev => ({ ...prev, [orderId]: nextStatus }));
+
+    try {
+      await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
+        "citizenDetails.isPreparedByPharmacy": nextStatus,
+        "citizenDetails.preparedAt": nextStatus ? serverTimestamp() : null,
+        "citizenDetails.pharmacistName": userData?.displayName || "Apoteker Puskesmas",
+        updatedAt: serverTimestamp()
+      });
+
+      if (nextStatus) {
+        toast.success("Obat Siap & Tersegel", {
+          description: "Apoteker telah meracik obat. Silakan panggil kurir medis."
+        });
+      } else {
+        toast.info("Status Persiapan Dibatalkan", {
+          description: "Obat kembali ke tahap peracikan farmasi."
+        });
+      }
+    } catch (err: any) {
+      toast.error("Gagal Mengubah Status Persiapan", {
+        description: err.message || "Terjadi kesalahan jaringan."
+      });
+    }
+  };
+
+  const handleApprovePrescription = async (order: OrderDocument) => {
+    const orderId = order.id;
+    if (!orderId) return;
+
     setDispatchingId(orderId);
     try {
       await updateDoc(doc(db, COLLECTIONS.ORDERS, orderId), {
         status: "pending",
         verifiedByDinasAt: serverTimestamp(),
-        verifiedByDinasName: userData?.displayName || "Petugas Dinas",
+        verifiedByDinasName: userData?.displayName || "Apoteker Faskes",
         updatedAt: serverTimestamp()
       });
       
@@ -89,14 +130,19 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
           orderId,
           action: "verified",
           actorId: user.uid,
-          actorName: userData?.displayName || "Petugas Dinas",
-          actorRole: userData?.additionalRole || "government"
+          actorName: userData?.displayName || "Apoteker Faskes",
+          actorRole: userData?.additionalRole || "government",
+          notes: "Obat selesai diracik farmasi & kurir medis dipanggil."
         });
       }
 
-      alert("✅ Resep Farmasi Berhasil Diverifikasi! Kurir Medis dipanggil ke Loket Puskesmas.");
+      toast.success("Kurir Medis Dikerahkan!", {
+        description: "Pesanan masuk ke radar driver mitra untuk penjemputan obat di loket Puskesmas."
+      });
     } catch (err: any) {
-      alert(`Gagal: ${err.message || err}`);
+      toast.error("Gagal Memverifikasi Resep", {
+        description: err.message || "Terjadi kesalahan."
+      });
     } finally {
       setDispatchingId(null);
     }
@@ -121,7 +167,7 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
           <div className="text-xl font-black text-red-600 dark:text-red-400">{darahOrders.length}</div>
         </div>
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-0.5">
-          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Verifikasi Apotek</span>
+          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Triage Apotek</span>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400">{pendingOrders.length}</div>
         </div>
       </div>
@@ -137,7 +183,7 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
           }`}
         >
           <Stethoscope className="h-4 w-4" />
-          <span>Resep Puskesmas ({resepOrders.length})</span>
+          <span>Resep Obat ({resepOrders.length})</span>
         </button>
 
         <button
@@ -149,7 +195,7 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
           }`}
         >
           <Heart className="h-4 w-4" />
-          <span>Prolanis BPJS ({prolanisOrders.length})</span>
+          <span>Prolanis ({prolanisOrders.length})</span>
         </button>
 
         <button
@@ -161,7 +207,7 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
           }`}
         >
           <Droplet className="h-4 w-4 text-red-500" />
-          <span>Kurir Darah PMI ({darahOrders.length})</span>
+          <span>Darah PMI ({darahOrders.length})</span>
         </button>
       </div>
 
@@ -169,17 +215,19 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
       {loading ? (
         <div className="p-8 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Memuat data layanan kesehatan...</span>
+          <span>Memuat antrean resep farmasi & faskes...</span>
         </div>
       ) : currentList.length === 0 ? (
         <div className="p-8 text-center text-xs text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800">
-          Tidak ada antrean resep / permintaan darah pada tab ini.
+          Tidak ada antrean permohonan medis pada tab ini.
         </div>
       ) : (
         <div className="space-y-3">
           {currentList.map((order) => {
             const details = order.citizenDetails || {};
             const isPendingVerification = order.status === "pending_verification";
+            const isPrepared = details.isPreparedByPharmacy || preparingOrders[order.id || ""] || false;
+
             return (
               <div
                 key={order.id}
@@ -195,31 +243,43 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
                         {details.serviceName || order.serviceTitle}
                       </Badge>
                     </div>
-                    <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                    <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
                       {details.medRecordNo && <span>No RM: {details.medRecordNo}</span>}
                       {details.bpjsNo && <span>BPJS: {details.bpjsNo}</span>}
                       {details.bloodType && <span>Gol Darah: {details.bloodType} ({details.bloodBagsCount || 1} Kantong)</span>}
+                      {details.puskesmasOrigin && <span>Faskes: {details.puskesmasOrigin}</span>}
                     </div>
                   </div>
 
-                  <Badge
-                    variant={
-                      isPendingVerification
-                        ? "amber"
-                        : order.status === "completed"
-                        ? "emerald"
-                        : "teal"
-                    }
-                    size="sm"
-                  >
-                    {order.status}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <Badge
+                      variant={
+                        isPendingVerification
+                          ? "amber"
+                          : order.status === "completed"
+                          ? "emerald"
+                          : "teal"
+                      }
+                      size="sm"
+                    >
+                      {order.status}
+                    </Badge>
+
+                    {isPendingVerification && (
+                      <SLACountdownBadge
+                        createdAt={order.createdAt}
+                        serviceType={order.serviceType}
+                        additionalRole="gov_dinkes"
+                        status={order.status}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-zinc-300 bg-slate-50 dark:bg-white/[0.02] p-2.5 rounded-xl">
                   <div className="flex items-center gap-1.5 truncate">
                     <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{order.dropoffLocation?.address || "Alamat pasien/RS"}</span>
+                    <span className="truncate">{order.dropoffLocation?.address || "Alamat Pasien / RS"}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
@@ -227,9 +287,37 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
                   </div>
                 </div>
 
+                {/* Triage Apotek / Farmasi Check for Resep Orders */}
+                {isPendingVerification && activeTab === "resep" && (
+                  <div className="p-3 rounded-xl bg-teal-500/5 dark:bg-teal-500/10 border border-teal-500/20 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Pill className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 dark:text-zinc-100">
+                          {isPrepared ? "Obat Telah Diramu & Tersegel" : "Tahap Peracikan Farmasi Puskesmas"}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-zinc-400">
+                          {isPrepared ? "Apoteker telah memverifikasi dosis dan menyegel paket obat." : "Pastikan obat selesai diramu sebelum memanggil kurir."}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => order.id && handleTogglePharmacyPreparation(order.id, isPrepared)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                        isPrepared
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {isPrepared ? <Check className="w-3.5 h-3.5" /> : null}
+                      <span>{isPrepared ? "Selesai Diramu" : "Tandai Siap"}</span>
+                    </button>
+                  </div>
+                )}
+
                 {isPendingVerification && (
                   <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-white/[0.04]">
-                    
                     <Button
                       size="sm"
                       variant="outline"
@@ -240,18 +328,21 @@ export function DinkesWorkspace({ orders, loading }: GovWorkspaceProps) {
                       <XCircle className="h-3.5 w-3.5 mr-1" />
                       Tolak
                     </Button>
-<Button
+
+                    <Button
                       size="sm"
-                      onClick={() => order.id && handleApprovePrescription(order.id)}
-                      disabled={dispatchingId === order.id}
-                      className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer shadow-xs"
+                      onClick={() => handleApprovePrescription(order)}
+                      disabled={dispatchingId === order.id || (activeTab === "resep" && !isPrepared)}
+                      className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold h-8 px-3 cursor-pointer shadow-xs disabled:opacity-50"
                     >
                       {dispatchingId === order.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                       ) : (
                         <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                       )}
-                      <span>Verifikasi Apotek & Dispatch</span>
+                      <span>
+                        {activeTab === "resep" && !isPrepared ? "Menunggu Racikan Selesai" : "Panggil Kurir Medis (Dispatch)"}
+                      </span>
                     </Button>
                   </div>
                 )}

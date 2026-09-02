@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useMerchantContext } from "../layout/MerchantContext";
 import { ProductEditorModal } from "./ProductEditorModal";
+import { FlashSaleLauncherModal } from "../flashsale/FlashSaleLauncherModal";
 import { ProductItem } from "@/services/merchant.service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,16 +18,20 @@ import {
   Sparkles,
   Tag,
   Coins,
-  Loader2
+  Loader2,
+  Zap,
+  Flame
 } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 export function ProductCatalogManager() {
-  const { products, saveProduct, deleteProduct, loading } = useMerchantContext();
+  const { products, saveProduct, deleteProduct, loading, merchant } = useMerchantContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFlashSaleModalOpen, setIsFlashSaleModalOpen] = useState(false);
 
   // Extract unique categories
   const categories = useMemo(() => {
@@ -54,24 +59,32 @@ export function ProductCatalogManager() {
         ...product,
         isAvailable: !product.isAvailable
       });
+      toast.success(product.isAvailable ? "Stok Dinonaktifkan" : "Stok Siap Dijual", {
+        description: `${product.name} diperbarui.`
+      });
     } catch (err: any) {
-      alert(`Gagal mengubah stok: ${err.message || err}`);
+      toast.error("Gagal Mengubah Stok", {
+        description: err.message || "Terjadi kesalahan."
+      });
     }
   };
 
   const handleDelete = async (productId: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus menu ini?")) return;
     try {
       await deleteProduct(productId);
+      toast.success("Menu Berhasil Dihapus");
     } catch (err: any) {
-      alert(`Gagal menghapus: ${err.message || err}`);
+      toast.error("Gagal Menghapus Menu", {
+        description: err.message || "Terjadi kesalahan."
+      });
     }
   };
+
 
   return (
     <div className="space-y-6">
       {/* Header & Add Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 sg-bento-card">
         <div className="flex items-center gap-3.5">
           <div className="w-12 h-12 rounded-2xl bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-2xl shrink-0">
             📦
@@ -98,8 +111,60 @@ export function ProductCatalogManager() {
         </Button>
       </div>
 
+      {/* Dynamic Flash Sale Scheduler Card */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-orange-500/20 text-orange-600 dark:text-orange-400">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xs font-black text-slate-900 dark:text-white">
+                  Flash Sale Dinamis (Subuh & Sore)
+                </h3>
+                {merchant?.activeFlashSale?.isActive && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black animate-pulse">
+                    🟢 AKTIF ({merchant.activeFlashSale.remainingQuota || 0} PORSI)
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-500">
+                Tingkatkan penjualan dengan diskon otomatis pada jam sibuk warga Solo
+              </p>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => setIsFlashSaleModalOpen(true)}
+            className="rounded-xl text-xs font-black bg-orange-600 hover:bg-orange-500 text-white shadow-xs gap-1.5 cursor-pointer"
+          >
+            <Zap className="w-3.5 h-3.5 fill-white" />
+            <span>Atur Flash Sale</span>
+          </Button>
+        </div>
+
+        {merchant?.activeFlashSale?.isActive && (
+          <div className="p-3 rounded-2xl bg-white/60 dark:bg-white/[0.04] border border-orange-500/20 flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-slate-800 dark:text-zinc-200">
+                {merchant.activeFlashSale.shiftTitle || "Flash Sale Aktif"}
+              </span>
+              <p className="text-[10px] text-slate-500">
+                Menu: {merchant.activeFlashSale.targetItemName || "Menu Pilihan"} • Sisa: {merchant.activeFlashSale.remainingQuota} dari {merchant.activeFlashSale.totalQuota} porsi
+              </p>
+            </div>
+            <Badge variant="orange" size="sm" className="font-black">
+              Diskon {merchant.activeFlashSale.discountPercent}%
+            </Badge>
+          </div>
+        )}
+      </div>
+
       {/* Search & Category Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0c1220] p-3.5 rounded-2xl border border-slate-200/80 dark:border-white/[0.06]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sg-bento-card p-3.5">
+
         <div className="relative flex-1">
           <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -248,6 +313,12 @@ export function ProductCatalogManager() {
           onSave={saveProduct}
         />
       )}
+
+      {/* Flash Sale Launcher Modal */}
+      <FlashSaleLauncherModal
+        isOpen={isFlashSaleModalOpen}
+        onClose={() => setIsFlashSaleModalOpen(false)}
+      />
     </div>
   );
 }

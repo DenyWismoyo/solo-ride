@@ -429,6 +429,23 @@ export const CIVIC_SERVICES_CATALOG: Record<string, CivicServiceDefinition> = {
     requiresAttachments: false,
     isEmergency: false,
   },
+
+  // 19. DISDAG (Output: subsidy_voucher / delivery)
+  disdag_pasar_murah: {
+    id: "disdag_pasar_murah",
+    name: "Gerakan Pangan Murah (GPM) & Sembako Subsidi SPHP",
+    shortName: "Pasar Murah SPHP",
+    agencyId: "gov_disdag",
+    agencyName: "Dinas Perdagangan",
+    outputMode: "subsidy_voucher",
+    slaMinutes: 60,
+    feeLabel: "Subsidi APBD & BULOG",
+    price: 0,
+    description: "Penebusan paket sembako beras SPHP, minyakita, dan gula pasir harga HET bersubsidi untuk warga KTP Solo.",
+    requiresDeliveryAddress: true,
+    requiresAttachments: false,
+    isEmergency: false,
+  },
 };
 
 /**

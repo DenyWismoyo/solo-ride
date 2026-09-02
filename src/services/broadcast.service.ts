@@ -4,18 +4,7 @@ import { COLLECTIONS } from "../constants/collections";
 import { BroadcastDocument, BroadcastTarget } from "../types/notification.types";
 
 export const broadcastService = {
-  createBroadcast: async (data: {
-    authorId: string;
-    institutionName: string;
-    title: string;
-    body: string;
-    target: BroadcastTarget;
-    geofence?: {
-      center: { lat: number; lng: number };
-      radiusKm: number;
-      areaName?: string;
-    };
-  }): Promise<string> => {
+  createBroadcast: async (data: Omit<BroadcastDocument, "id" | "createdAt">): Promise<string> => {
     try {
       const docRef = await addDoc(collection(db, COLLECTIONS.BROADCASTS), {
         ...data,

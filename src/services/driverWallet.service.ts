@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp, increment, runTransaction } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, serverTimestamp, increment, runTransaction } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DriverWalletDocument, WalletTransaction } from "@/types/wallet.types";
 
@@ -77,5 +77,44 @@ export const driverWalletService = {
     } catch (err: any) {
       throw new Error(`Gagal memotong karcis: ${err.message}`);
     }
+  },
+
+  topUp: async (driverId: string, amount: number, description?: string): Promise<void> => {
+    try {
+      const walletRef = doc(db, "driverWallet", driverId);
+      const snap = await getDoc(walletRef);
+
+      if (snap.exists()) {
+        await updateDoc(walletRef, {
+          balance: increment(amount),
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await setDoc(walletRef, {
+          driverId,
+          balance: amount,
+          totalEarned: 0,
+          totalKarcis: 0,
+          totalKarcisGratis: 0,
+          pendingWithdrawal: 0,
+          lastWithdrawalAt: null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      // Record transaction
+      const txRef = doc(collection(db, "walletTransactions"));
+      await setDoc(txRef, {
+        driverId,
+        type: amount >= 0 ? "topup" : "withdrawal",
+        amount,
+        description: description || (amount >= 0 ? "Top-Up Saldo Dompet Koperasi" : "Penarikan Saldo Dompet Koperasi"),
+        createdAt: serverTimestamp(),
+      });
+    } catch (err: any) {
+      throw new Error(`Gagal memproses mutasi saldo: ${err.message}`);
+    }
   }
 };
+

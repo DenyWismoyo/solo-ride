@@ -30,7 +30,8 @@ export const DINAS_SLA_CONFIG: Record<string, SLAConfig> = {
   gov_diskop:   { pendingVerificationHours: 72, pendingHours: 8, inProgressHours: 24 },
   gov_dpmptsp:  { pendingVerificationHours: 72, pendingHours: 8, inProgressHours: 24 },
 
-  // Booking/Reservasi
+  // Booking/Reservasi & Pangan
+  gov_disdag:    { pendingVerificationHours: 24, pendingHours: 4, inProgressHours: 8 },
   gov_dispar:    { pendingVerificationHours: 48, pendingHours: 4, inProgressHours: 4 },
   gov_dispertan: { pendingVerificationHours: 48, pendingHours: 8, inProgressHours: 4 },
 };

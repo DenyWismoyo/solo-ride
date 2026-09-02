@@ -4,8 +4,12 @@ import React, { useEffect, useState } from "react";
 import { driverWalletService } from "@/services/driverWallet.service";
 import { driverLedgerService } from "@/services/driverLedger.service";
 import { DriverWalletDocument, DriverDailyLedger } from "@/types/wallet.types";
-import { Wallet, ArrowDownToLine, Loader2, Play } from "lucide-react";
+import { Wallet, ArrowDownToLine, Loader2, Play, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DriverSHUCalculatorModal } from "./DriverSHUCalculatorModal";
+
+import { toast } from "@/components/ui/toast";
+import { DriverCashoutModal } from "./DriverCashoutModal";
 
 export function formatRupiah(amount: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -21,6 +25,8 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
   const [ledger, setLedger] = useState<DriverDailyLedger | null>(null);
   const [loading, setLoading] = useState(true);
   const [simulating, setSimulating] = useState(false);
+  const [isSHUModalOpen, setIsSHUModalOpen] = useState(false);
+  const [isCashoutModalOpen, setIsCashoutModalOpen] = useState(false);
 
   const fetchWalletAndLedger = async () => {
     try {
@@ -46,11 +52,11 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
     setSimulating(true);
     try {
       const dateStr = new Date().toISOString().split("T")[0];
-      // Simulate adding 1 hour (60 mins) per click
       const updated = await driverLedgerService.addOnlineMinutes(driverId, dateStr, 60);
       setLedger(updated);
-    } catch (err) {
-      alert("Gagal update menit: " + err);
+      toast.success("Menit online berhasil ditambahkan +60m", "Simulasi Online");
+    } catch (err: any) {
+      toast.error("Gagal update menit: " + err.message, "Error");
     } finally {
       setSimulating(false);
     }
@@ -63,12 +69,22 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
       const dateStr = new Date().toISOString().split("T")[0];
       await driverWalletService.simulateManualKarcisDeduction(driverId, ledger.karcisAmount, dateStr);
       await fetchWalletAndLedger();
-      alert(`Berhasil memotong karcis sebesar ${formatRupiah(ledger.karcisAmount)}`);
-    } catch (err) {
-      alert("Gagal memotong karcis: " + err);
+      toast.success(`Berhasil memotong karcis flat harian ${formatRupiah(ledger.karcisAmount)}`, "Tutup Hari");
+    } catch (err: any) {
+      toast.error("Gagal memotong karcis: " + err.message, "Error");
     } finally {
       setSimulating(false);
     }
+  };
+
+  const handleExecuteCashout = async (amount: number, bankInfo: { bank: string; accountNumber: string }) => {
+    // Deduct balance from wallet
+    if (!wallet || wallet.balance < amount) {
+      throw new Error("Saldo tidak mencukupi untuk penarikan.");
+    }
+
+    await driverWalletService.topUp(driverId, -amount);
+    await fetchWalletAndLedger();
   };
 
   if (loading) {
@@ -86,17 +102,22 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         {/* Balance Card */}
-        <div className="col-span-2 sg-card p-5 rounded-[2rem] bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl relative overflow-hidden">
+        <div className="col-span-2 sg-bento-card p-5 bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl relative overflow-hidden">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 flex flex-col h-full justify-between gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-xs">
                   <Wallet className="h-5 w-5 text-white" />
                 </div>
                 <span className="text-xs font-bold text-emerald-50">Dompet Koperasi</span>
               </div>
-              <Button size="sm" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-8 rounded-xl text-[10px]">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setIsCashoutModalOpen(true)}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 h-8 rounded-xl text-[10px] cursor-pointer"
+              >
                 <ArrowDownToLine className="h-3 w-3 mr-1" />
                 Tarik
               </Button>
@@ -110,7 +131,7 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
         </div>
 
         {/* Karcis Harian Status */}
-        <div className="col-span-2 sg-card p-4 rounded-3xl bg-white/95 dark:bg-zinc-900/95 border border-slate-200 dark:border-zinc-800 space-y-3">
+        <div className="col-span-2 sg-bento-card p-4 space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200">Karcis Harian</h4>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -137,7 +158,7 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
           </div>
 
           {/* Dev Simulators */}
-          <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800">
+          <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/[0.04]">
             <Button 
               size="sm" 
               variant="outline" 
@@ -158,7 +179,43 @@ export function DriverWalletBento({ driverId }: { driverId: string }) {
             </Button>
           </div>
         </div>
+
+        {/* SHU Koperasi Calculator Banner */}
+        <div className="col-span-2 p-4 rounded-3xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <Calculator className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-900 dark:text-white">Simulasi Dividen SHU Koperasi</p>
+              <p className="text-[10px] text-slate-500">Hitung bagi hasil & hemat 25% tanpa komisi</p>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={() => setIsSHUModalOpen(true)}
+            className="h-8.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] cursor-pointer shadow-xs"
+          >
+            Hitung SHU
+          </Button>
+        </div>
       </div>
+
+      {/* Driver SHU Calculator Modal */}
+      <DriverSHUCalculatorModal
+        isOpen={isSHUModalOpen}
+        onClose={() => setIsSHUModalOpen(false)}
+      />
+
+      {/* Driver Cashout Anti-Fraud Liveness Modal */}
+      <DriverCashoutModal
+        isOpen={isCashoutModalOpen}
+        onClose={() => setIsCashoutModalOpen(false)}
+        walletBalance={wallet?.balance || 0}
+        onConfirmWithdrawal={handleExecuteCashout}
+      />
     </div>
   );
 }
+

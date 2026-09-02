@@ -121,7 +121,7 @@ export default function GovAgencyDetailPage({ params }: PageProps) {
             <button
               type="button"
               onClick={() => router.back()}
-              className="p-1.5 rounded-xl bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1"
+              className="sg-icon-btn px-2.5 py-1.5 rounded-xl cursor-pointer flex items-center gap-1"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span className="font-bold text-[10px]">Kembali</span>

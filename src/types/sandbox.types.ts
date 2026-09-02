@@ -417,5 +417,19 @@ export const SANDBOX_PERSONAS: SandboxPersona[] = [
     badgeVariant: "blue",
     description: "Pendaftaran NIB untuk mitra pedagang Ride-Solo.",
     attributes: { agencyName: "DPMPTSP Surakarta" }
+  },
+  {
+    id: "sandbox-gov-disdag",
+    role: "government",
+    additionalRole: "gov_disdag",
+    category: "Pemerintahan (Dinas)",
+    name: "Dinas Perdagangan",
+    subtitle: "Pasar Tradisional & SPHP",
+    avatar: "🏪",
+    targetPath: "/gov",
+    badge: "Disdag Solo",
+    badgeVariant: "emerald",
+    description: "Verifikasi E-Voucher GPM, kuota Beras SPHP Bulog & Tera 44 Pasar.",
+    attributes: { agencyName: "Dinas Perdagangan Kota Surakarta" }
   }
 ];

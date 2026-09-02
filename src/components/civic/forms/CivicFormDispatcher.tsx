@@ -72,6 +72,9 @@ import { DisparHeritageTourForm } from "./dispar/DisparHeritageTourForm";
 // 18. BPBD Forms
 import { BpbdLaporBanjirForm } from "./bpbd/BpbdLaporBanjirForm";
 
+// Shared Dynamic Form Fallback
+import { DynamicCivicServiceForm } from "./shared/DynamicCivicServiceForm";
+
 interface CivicFormDispatcherProps {
   agency: SectorDefinition;
   service: AppService;
@@ -126,6 +129,11 @@ export function CivicFormDispatcher({
   }
   if (serviceId === "diskop_dana_bergulir") {
     return <DiskopDanaBergulirForm agency={agency} service={service} onSuccess={onSuccess} onCancel={onCancel} />;
+  }
+
+  // 4b. Disdag (Gerakan Pangan Murah / SPHP)
+  if (serviceId.includes("disdag") || serviceId.includes("gpm") || serviceId.includes("pasar_murah")) {
+    return <DynamicCivicServiceForm agency={agency} service={service} onSuccess={onSuccess} onCancel={onCancel} />;
   }
 
   // 5. Dishub
@@ -219,6 +227,6 @@ export function CivicFormDispatcher({
     return <BpbdLaporBanjirForm agency={agency} service={service} onSuccess={onSuccess} onCancel={onCancel} />;
   }
 
-  // Fallback to Dukcapil Antar KTP Form as safe default
-  return <DukcapilAntarKtpForm agency={agency} service={service} onSuccess={onSuccess} onCancel={onCancel} />;
+  // Dynamic Custom OPD Service Form fallback
+  return <DynamicCivicServiceForm agency={agency} service={service} onSuccess={onSuccess} onCancel={onCancel} />;
 }

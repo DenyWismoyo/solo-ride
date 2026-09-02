@@ -42,28 +42,37 @@ Dokumen ini memetakan alur, komponen, dan skema URL untuk 8 layanan utama warga 
   - `serviceType: "titip"`
   - Tambahan Field Order: `errandNotes` (catatan belanjaan), `estimatedItemPrice` (maksimum harga barang talangan).
 
-## 6. Pasar Warga (Flash Sale Marketplace)
-- **Fungsi**: Etalase produk bahan pokok atau barang UMKM lokal yang sedang menggelar *Flash Sale* atau disubsidi oleh Pemerintah/Koperasi.
-- **URL Flow**: `/` -> Klik Menu -> `/services/pasar` -> Cart -> Checkout -> `/order/[id]`
-- **Komponen Utama (Baru)**:
-  - Halaman Khusus: `app/(customer)/services/pasar/page.tsx`
-  - Tampilan Katalog: `<FlashSaleCountdown>`, `<SubsidizedProductCard>` (menampilkan harga coret/diskon).
+## 6. Pasar Warga (Hyperlocal Traditional Market 0% Komisi)
+- **Fungsi**: Digitalisasi belanja sayur mayur segar, bumbu giling, daging segar, dan jajanan dari 44 Pasar Tradisional Kota Surakarta tanpa potongan komisi ke pedagang.
+- **URL Flow**: `/` -> Klik Menu Pasar Warga -> `/services/pasar` -> Pilih Pasar & Multi-Los Cart -> Checkout -> `/order/[id]`
+- **Fitur Visioner**:
+  - *Multi-Lapak Single-Trip Checkout*: Menggabungkan belanjaan dari beberapa los (Los Sayur, Lapak Daging, Kios Bumbu) di pasar yang sama dalam 1 pesanan tunggal & 1 tarif pengantaran driver.
+  - *Interactive Custom Request*: Opsi bumbu racik giling (Halus/Kasar/Pedas) & variasi potong daging (Utuh/Potong 8/Fillet/Giling).
+  - *Subuh-Fresh Time Slots*: Pilihan jadwal pengantaran subuh (05.30 - 08.00 WIB) untuk persiapan masak keluarga.
+  - *E-Tera Guarantee*: Sertifikasi timbangan jujur binaan Disdag Solo.
 - **Data Contract**: 
   - `serviceType: "pasar"`
-  - Field: mirip seperti `kuliner` dengan penekanan pada status promo dari merchant/pemerintah.
+  - Field: `marketId`, `items` (termasuk `kiosName`, `note`, `customOption`), `deliverySlot: "now" | "subuh"`.
 
 ## 7. Apotek & Mart (Daily Needs)
-- **Fungsi**: Belanja kebutuhan harian, sembako, atau obat-obatan (mirip Kuliner tapi beda kategori merchant).
+- **Fungsi**: Belanja kebutuhan harian, sembako, atau obat-obatan dari warung tetangga dan apotek lokal.
 - **URL Flow**: `/` -> Klik Menu -> `/services/mart` -> Cart -> Checkout -> `/order/[id]`
-- **Komponen Utama (Baru)**:
-  - Halaman Khusus: `app/(customer)/services/mart/page.tsx`
-  - Modifikasi `MerchantDetailDrawer.tsx` dengan filter `category: "mart" | "apotek"`.
 - **Data Contract**: 
   - `serviceType: "mart"`
-  - Field: array `items` seperti pemesanan kuliner.
+  - Field: array `items`.
 
 ## 8. Semua Layanan (All Services Grid)
-- **Fungsi**: Halaman atau drawer tambahan jika layanan bertambah melebihi grid utama di Home.
-- **URL Flow**: `/` -> Klik Semua Layanan -> Menampilkan modal/page grid lengkap.
-- **Komponen Utama**:
-  - Modal: `AllServicesDrawer.tsx` atau Page: `app/(customer)/services/page.tsx`
+- **Fungsi**: Katalog menyeluruh seluruh 16+ modul ekosistem warga, mitra industri, dan dinas kota.
+- **URL Flow**: `/` -> Klik Semua Layanan -> `/services/more`
+
+## 9. Program Pasar Murah Pemkot (Gerakan Pangan Murah - GPM & SPHP Bulog)
+- **Fungsi**: Penyaluran sembako subsidi dan beras SPHP Bulog harga HET resmi pemerintah untuk warga KTP Solo terdaftar.
+- **URL Flow**: `/` -> Klik Banner Pasar Murah -> `/services/pasar-murah` -> Verifikasi NIK & Kuota KK -> Terbitkan E-Voucher -> `/order/[id]`
+- **Fitur Visioner**:
+  - *SIPAHAP Live Inflation Tracker*: Komparasi harga pasar vs HET subsidi.
+  - *Family NIK Vault & DTKS Smart Subsidy*: Kuota maksimal per KK per bulan anti-tengkulak.
+  - *Dynamic QR Security Token*: Barcode e-voucher dengan countdown 24 jam & token keamanan.
+  - *Titip Tebus Driver Carpooling*: Opsi serah terima kuasa tebus sembako ke Mitra Driver Ride-Solo.
+- **Data Contract**:
+  - `serviceType: "pasar"`
+  - Field: `isSubsidizedGpm: true`, `nikKtp`, `voucherCode`, `pin`, `deliveryMethod: "pickup" | "delivery"`.

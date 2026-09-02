@@ -53,7 +53,7 @@ export function MerchantFinancialSummary() {
       {/* Financial Bento Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Omzet */}
-        <div className="p-5 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-xs space-y-2">
+        <div className="sg-bento-card p-5 space-y-2">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
             TOTAL OMZET BERSIH
           </span>
@@ -82,7 +82,7 @@ export function MerchantFinancialSummary() {
         </div>
 
         {/* Cooperative Wallet Info */}
-        <div className="p-5 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-xs space-y-2">
+        <div className="sg-bento-card p-5 space-y-2">
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
             STATUS DOMPET KOPERASI
           </span>
@@ -96,7 +96,7 @@ export function MerchantFinancialSummary() {
       </div>
 
       {/* Transaction History Table */}
-      <div className="p-5 sm:p-6 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-xs space-y-4">
+      <div className="sg-bento-card p-5 sm:p-6 space-y-4">
         <h3 className="text-sm font-black text-slate-900 dark:text-white">
           Riwayat Transaksi Penjualan Selesai
         </h3>

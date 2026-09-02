@@ -1,6 +1,7 @@
 /**
  * Web Audio API synthesizer for driver alerts and notifications.
- * Self-contained without external audio asset dependencies.
+ * Includes authentic Surakarta Gamelan instrument sound synthesis
+ * (Bonang Barung, Kenong, Slendro/Pelog scales) without external audio asset dependencies.
  */
 
 let activeAudioContext: AudioContext | null = null;
@@ -20,10 +21,75 @@ function getAudioContext(): AudioContext | null {
   return activeAudioContext;
 }
 
+// Surakarta Gamelan Tuning Frequencies (Slendro & Pelog)
+export const GAMELAN_SCALES = {
+  // Slendro Scale (Equidistant 5 tones)
+  slendro: {
+    panunggal: 560, // 1 (Ji)
+    gulu: 630,      // 2 (Ro)
+    dada: 720,      // 3 (Lu)
+    lima: 840,      // 5 (Ma)
+    nem: 960,       // 6 (Nem)
+    barang: 1120    // 1 tinggi (Ji Tinggi)
+  },
+  // Pelog Scale (7 tones with distinct harmonic intervals)
+  pelog: {
+    panunggal: 520,
+    gulu: 580,
+    dada: 670,
+    pelog: 760,
+    lima: 820,
+    nem: 910,
+    barang: 1040
+  }
+};
+
 /**
- * Plays an attention-grabbing dual-tone chime for incoming orders.
+ * Synthesizes a metallic bronze Bonang Barung bell note with decaying harmonics.
  */
-export function playOrderAlertSound(repeat = true) {
+export function playGamelanBonang(frequency: number, startTime: number, ctx: AudioContext, gainAmount = 0.3) {
+  // Fundamental metallic tone (Sine + Overtones)
+  const oscFundamental = ctx.createOscillator();
+  const oscHarmonic1 = ctx.createOscillator();
+  const oscHarmonic2 = ctx.createOscillator();
+
+  const gainNode = ctx.createGain();
+
+  oscFundamental.type = "sine";
+  oscFundamental.frequency.setValueAtTime(frequency, startTime);
+
+  // Inharmonic bell-like partials typical of bronze gamelan kettle
+  oscHarmonic1.type = "sine";
+  oscHarmonic1.frequency.setValueAtTime(frequency * 2.02, startTime);
+
+  oscHarmonic2.type = "triangle";
+  oscHarmonic2.frequency.setValueAtTime(frequency * 3.48, startTime);
+
+  // Metallic attack and exponential ring decay
+  gainNode.gain.setValueAtTime(0.001, startTime);
+  gainNode.gain.linearRampToValueAtTime(gainAmount, startTime + 0.015);
+  gainNode.gain.exponentialRampToValueAtTime(gainAmount * 0.4, startTime + 0.1);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.9);
+
+  oscFundamental.connect(gainNode);
+  oscHarmonic1.connect(gainNode);
+  oscHarmonic2.connect(gainNode);
+  gainNode.connect(ctx.destination);
+
+  oscFundamental.start(startTime);
+  oscHarmonic1.start(startTime);
+  oscHarmonic2.start(startTime);
+
+  oscFundamental.stop(startTime + 0.9);
+  oscHarmonic1.stop(startTime + 0.9);
+  oscHarmonic2.stop(startTime + 0.9);
+}
+
+/**
+ * Plays an authentic Solo Gamelan Slendro alert sequence for incoming orders.
+ * Pattern: Dada (3) -> Lima (5) -> Nem (6) -> Barang (1 Tinggi)
+ */
+export function playGamelanAlertSound(repeat = true) {
   stopOrderAlertSound();
 
   const playChime = () => {
@@ -32,53 +98,39 @@ export function playOrderAlertSound(repeat = true) {
       if (!ctx) return;
 
       const now = ctx.currentTime;
-      
-      // Tone 1 (High note)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(880, now); // A5 note
-      osc1.frequency.exponentialRampToValueAtTime(1174.66, now + 0.15); // D6 note
+      const notes = [
+        GAMELAN_SCALES.slendro.dada,
+        GAMELAN_SCALES.slendro.lima,
+        GAMELAN_SCALES.slendro.nem,
+        GAMELAN_SCALES.slendro.barang
+      ];
 
-      gain1.gain.setValueAtTime(0.3, now);
-      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      notes.forEach((freq, idx) => {
+        playGamelanBonang(freq, now + idx * 0.14, ctx, 0.28);
+      });
 
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-
-      osc1.start(now);
-      osc1.stop(now + 0.3);
-
-      // Tone 2 (Harmonic follow-up)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(1318.51, now + 0.18); // E6 note
-      osc2.frequency.exponentialRampToValueAtTime(1760, now + 0.35); // A6 note
-
-      gain2.gain.setValueAtTime(0.35, now + 0.18);
-      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-
-      osc2.start(now + 0.18);
-      osc2.stop(now + 0.5);
-
-      // Trigger mobile vibration if supported
+      // Mobile vibration pattern
       if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([200, 100, 200]);
+        navigator.vibrate([150, 80, 150, 80, 250]);
       }
     } catch (err) {
-      console.warn("Web Audio alert sound prevented or unsupported:", err);
+      console.warn("Gamelan Web Audio synthesis prevented:", err);
     }
   };
 
   playChime();
 
   if (repeat) {
-    activeIntervalId = setInterval(playChime, 1800);
+    activeIntervalId = setInterval(playChime, 2200);
   }
+}
+
+/**
+ * Plays an attention-grabbing dual-tone chime for incoming orders (Standard Synthesizer).
+ */
+export function playOrderAlertSound(repeat = true) {
+  // Delegate to Gamelan alert by default for Surakarta cultural touch
+  playGamelanAlertSound(repeat);
 }
 
 /**
@@ -92,38 +144,58 @@ export function stopOrderAlertSound() {
 }
 
 /**
- * Plays an upbeat success chime (e.g. order accepted or completed).
+ * Plays a resonant Kenong gong tone for order completion / milestone.
  */
-export function playSuccessChime() {
+export function playGamelanKenongChime() {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    
+    // Kenong tone (deep resonant brass bell)
+    const fundamentalFreq = 360; // G4 / Kenong tone
 
-    notes.forEach((freq, index) => {
-      const startTime = now + index * 0.08;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+    const osc = ctx.createOscillator();
+    const oscPartial = ctx.createOscillator();
+    const gainNode = ctx.createGain();
 
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(freq, startTime);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(fundamentalFreq, now);
 
-      gain.gain.setValueAtTime(0.25, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
+    oscPartial.type = "triangle";
+    oscPartial.frequency.setValueAtTime(fundamentalFreq * 2.01, now);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.15, now + 0.4);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
 
-      osc.start(startTime);
-      osc.stop(startTime + 0.25);
-    });
+    osc.connect(gainNode);
+    oscPartial.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc.start(now);
+    oscPartial.start(now);
+    osc.stop(now + 1.6);
+    oscPartial.stop(now + 1.6);
 
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([100, 50, 150]);
+      navigator.vibrate([200, 100, 300]);
     }
+  } catch (err) {
+    console.warn("Kenong sound prevented:", err);
+  }
+}
+
+/**
+ * Plays an upbeat success chime (e.g. order accepted or completed).
+ */
+export function playSuccessChime() {
+  try {
+    playGamelanKenongChime();
   } catch (err) {
     console.warn("Web Audio success chime prevented:", err);
   }
 }
+

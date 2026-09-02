@@ -2,25 +2,20 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { useAuthContext } from "@/components/AuthProvider";
-import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, CheckCircle2, KeyRound, ExternalLink, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, KeyRound, ExternalLink, ChevronRight } from "lucide-react";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { AdminImpersonationBar } from "@/components/admin/AdminImpersonationBar";
-import { cn } from "@/lib/utils";
 
-export interface CivicPageLayoutProps {
+interface CivicPageLayoutProps {
   agencyId: string;
   agencyName: string;
-  agencyAvatar?: string;
+  agencyAvatar: string;
   serviceTitle: string;
   serviceDescription?: string;
   feeLabel?: string;
-  createdOrderId?: string | null;
+  createdOrderId: string | null;
   otpCode?: string | null;
+  successTitle?: string;
   successDescription?: string;
   onReset?: () => void;
   children: React.ReactNode;
@@ -29,58 +24,54 @@ export interface CivicPageLayoutProps {
 export function CivicPageLayout({
   agencyId,
   agencyName,
-  agencyAvatar = "🏛️",
+  agencyAvatar,
   serviceTitle,
   serviceDescription,
-  feeLabel = "Resmi Pemkot Solo",
+  feeLabel,
   createdOrderId,
   otpCode,
+  successTitle,
   successDescription,
   onReset,
   children
 }: CivicPageLayoutProps) {
   const router = useRouter();
-  const { isImpersonating } = useAuthContext();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-white pb-24">
-      {/* Fixed Impersonation bar */}
-      <AdminImpersonationBar />
-
-      {/* Fixed App Header */}
-      <AppHeader onOpenProfile={() => router.push("/")} />
-
-      {/* Main Content Container with proper top offset */}
-      <main className={cn(
-        "max-w-2xl mx-auto px-4 space-y-4 transition-all duration-200",
-        isImpersonating ? "pt-28 sm:pt-28" : "pt-20 sm:pt-20"
-      )}>
-        {/* Minimalist Top Breadcrumbs */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400 overflow-x-auto no-scrollbar py-0.5">
-            <Link href="/services/more?tab=government" className="hover:text-blue-600 transition-colors shrink-0 font-medium">
-              Katalog
-            </Link>
-            <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
-            <Link href={`/services/gov/${agencyId}`} className="hover:text-blue-600 transition-colors shrink-0 font-medium truncate max-w-[140px]">
-              {agencyName}
-            </Link>
-            <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
-            <span className="text-slate-900 dark:text-white font-bold truncate max-w-[150px]">
-              {serviceTitle}
-            </span>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col justify-between pb-16">
+      {/* Top Fixed Floating Header Bar */}
+      <header className="fixed top-0 inset-x-0 z-30 px-4 py-3 sg-glass-panel border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2 max-w-lg w-full mx-auto justify-between">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => router.push(`/services/gov/${agencyId}`)}
+              className="p-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            <div className="leading-tight">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                Portal Pelayanan Publik
+              </span>
+              <span className="text-xs font-black text-slate-900 dark:text-white truncate max-w-[200px] block">
+                {agencyName}
+              </span>
+            </div>
           </div>
 
-          <Badge variant="blue" size="sm" className="text-[10px] shrink-0 font-bold">
-            {feeLabel}
-          </Badge>
+          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20">
+            {feeLabel || "Resmi Pemkot"}
+          </span>
         </div>
+      </header>
 
-        {/* Minimalist Service Title Card */}
+      {/* Main Content Area */}
+      <main className="pt-20 px-4 max-w-lg w-full mx-auto space-y-4 flex-1">
+        {/* Service Header Info Card */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 sm:p-5 rounded-[1.75rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.4)] flex items-start gap-3.5"
+          className="sg-card p-4 sm:p-5 flex items-start gap-3.5"
         >
           <button
             type="button"
@@ -120,7 +111,7 @@ export function CivicPageLayout({
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
-              className="p-6 sm:p-7 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-sm text-center space-y-4"
+              className="sg-bento-card p-6 sm:p-7 text-center space-y-4"
             >
               <div className="w-14 h-14 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-7 w-7" />
@@ -183,7 +174,7 @@ export function CivicPageLayout({
               key="form"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 sm:p-6 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] shadow-sm space-y-4"
+              className="sg-bento-card p-4 sm:p-6 space-y-4"
             >
               {children}
             </motion.div>

@@ -122,7 +122,7 @@ export function CivicAddressSelector({
             required={required && useManual}
             placeholder="Ketik alamat lengkap Anda di sini..."
             rows={3}
-            className="w-full text-sm p-3.5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#0c1220] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all placeholder:text-slate-400 resize-none"
+            className="w-full text-sm p-3.5 sg-textarea resize-none"
           />
         </div>
       )}
