@@ -160,7 +160,18 @@ Setiap sub-layanan dari 18 dinas wajib didefinisikan ke dalam salah satu dari 6 
 - **Crowdsourced Verification**: Tombol voting warga/driver (*"Masih Macet"* & *"Sudah Lancar"*).
 - **Integrasi Resmi Dishub**: Laporan yang divalidasi petugas Dishub/BPBD memiliki badge resmi *"Diverifikasi Dishub"*.
 
+---
 
-
-
+## 🎨 UI Design System & Arsitektur Komponen 5-Layer
+- **Skill Referensi**: `.agents/skills/ridesolo-ui-design-system/SKILL.md`
+- **Pola "Thin Page Controller" (`src/app/**/page.tsx`)**: File halaman hanya bertindak sebagai orkestrator alur bisnis (Guard Auth/Role, hooks data connection, active tabs, passing props). Dilarang menulis ratusan baris markup JSX mentah di `page.tsx`.
+- **Pemisahan 3 Lapisan Komponen**:
+  1. `src/components/ui/`: Atom & Primitives murni (Button, Badge, Card, Modal, Input, Switch).
+  2. `src/components/layout/`: Shared Shell & Navigasi (AppHeader, Dynamic Island BottomNav, Sidebar 260px).
+  3. `src/components/[domain]/`: Feature Presentational Modules (`driver/`, `merchant/`, `government/`, `civic/`, `community/`, `map/`).
+- **Prinsip Estetika "Borderless Tactile Obsidian Glass"**:
+  - Gantikan border 1px solid kaku dengan **Inner Specular Lighting** (`shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)]` / `dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]`) dan **Ambient Drop Shadows**.
+  - **Continuous Squircle Radius**: `rounded-[1.75rem]` hingga `rounded-[2.5rem]`.
+  - **Tactile Spring Physics**: `whileTap={{ scale: 0.96 }}`, spring stiffness 400, damping 25.
+  - **Card List Vertikal**: Utamakan card list lebar penuh daripada grid sempit berdempetan untuk keterbacaan data maksimal di HP.
 

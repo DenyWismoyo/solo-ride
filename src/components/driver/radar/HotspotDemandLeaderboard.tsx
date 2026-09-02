@@ -10,9 +10,14 @@ import {
   Clock, 
   Navigation, 
   Sparkles, 
-  ChevronRight,
-  TrendingUp,
-  Compass
+  ChevronRight, 
+  TrendingUp, 
+  Compass, 
+  Building2, 
+  Store, 
+  Train, 
+  GraduationCap, 
+  Hospital 
 } from "lucide-react";
 
 interface HotspotDemandLeaderboardProps {
@@ -45,6 +50,24 @@ export function HotspotDemandLeaderboard({
     return list.sort((a, b) => b.weight - a.weight);
   }, [driverLocation, selectedDistrictId]);
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "transport":
+        return "🚉";
+      case "campus":
+        return "🎓";
+      case "market":
+        return "🏪";
+      case "mall":
+        return "🏬";
+      case "hospital":
+        return "🏥";
+      case "tourism":
+      default:
+        return "🏟️";
+    }
+  };
+
   return (
     <div className="space-y-3.5">
       {/* Header Banner */}
@@ -61,72 +84,97 @@ export function HotspotDemandLeaderboard({
         </span>
       </div>
 
-      {/* Hotspots Card Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {sortedHotspots.slice(0, 6).map((hotspot, idx) => {
+      {/* Vertical Card List */}
+      <div className="flex flex-col gap-3">
+        {sortedHotspots.map((hotspot, idx) => {
           const distanceKm = driverLocation 
             ? calculateDistanceKm(driverLocation.lat, driverLocation.lng, hotspot.lat, hotspot.lng)
             : null;
+          
+          const district = SOLO_DISTRICTS.find(d => d.id === hotspot.districtId);
+          const isTopRank = idx < 3;
 
           return (
             <div
               key={hotspot.id}
               onClick={() => onFocusHotspot(hotspot)}
-              className="p-4 rounded-[1.75rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 shadow-xs transition-all duration-200 cursor-pointer space-y-3 group hover:scale-[1.01]"
+              className="p-4 sm:p-5 rounded-[2rem] bg-white dark:bg-[#0c1220] border border-slate-200/80 dark:border-white/[0.08] hover:border-emerald-500/50 dark:hover:border-emerald-500/40 shadow-xs transition-all duration-200 cursor-pointer space-y-3 group hover:scale-[1.01]"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className={`w-6 h-6 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
-                    idx === 0 ? "bg-rose-500/15 text-rose-600 border border-rose-500/30" :
-                    idx === 1 ? "bg-amber-500/15 text-amber-600 border border-amber-500/30" :
-                    "bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400"
+              {/* Top Row: Rank Number, Title, and Demand Badge */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  {/* Rank Badge + Category Emoji */}
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
+                    idx === 0 
+                      ? "bg-rose-500/15 text-rose-600 border border-rose-500/30 dark:bg-rose-950/40" 
+                      : idx === 1 
+                      ? "bg-amber-500/15 text-amber-600 border border-amber-500/30 dark:bg-amber-950/40" 
+                      : idx === 2
+                      ? "bg-blue-500/15 text-blue-600 border border-blue-500/30 dark:bg-blue-950/40"
+                      : "bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400 border border-slate-200/60 dark:border-white/[0.04]"
                   }`}>
-                    #{idx + 1}
-                  </span>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                      {hotspot.name}
-                    </h4>
-                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">
-                      Kecamatan {SOLO_DISTRICTS.find(d => d.id === hotspot.districtId)?.shortName}
-                    </span>
+                    <span>{getCategoryIcon(hotspot.category)}</span>
+                  </div>
+
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-md ${
+                        idx === 0 ? "bg-rose-500 text-white" :
+                        idx === 1 ? "bg-amber-500 text-white" :
+                        idx === 2 ? "bg-blue-600 text-white" :
+                        "bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300"
+                      }`}>
+                        #{idx + 1}
+                      </span>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug">
+                        {hotspot.name}
+                      </h4>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+                      <span>Kecamatan {district?.shortName || "Solo"}</span>
+                      <span>•</span>
+                      <span className="truncate max-w-[180px] sm:max-w-none text-slate-600 dark:text-zinc-300">
+                        📍 {hotspot.recommendedBasecamp}
+                      </span>
+                    </p>
                   </div>
                 </div>
 
                 <Badge 
                   variant={hotspot.demandLevel === "Sangat Tinggi" ? "rose" : "amber"} 
                   size="sm"
-                  className="font-bold text-[9px] shrink-0"
+                  className="font-black text-[10px] shrink-0 gap-1"
                 >
-                  {hotspot.demandLevel === "Sangat Tinggi" ? "🔥 Ramai" : "⚡ Sedang"}
+                  <span>{hotspot.demandLevel === "Sangat Tinggi" ? "🔥" : "⚡"}</span>
+                  <span>{hotspot.demandLevel}</span>
                 </Badge>
               </div>
 
-              {/* Stats Bar */}
-              <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04] text-[11px]">
-                <div>
-                  <span className="text-[9px] text-slate-400 block font-semibold">Estimasi Order:</span>
-                  <span className="font-bold text-slate-800 dark:text-zinc-200">
-                    ~{hotspot.ordersPerHour} order/jam
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[9px] text-slate-400 block font-semibold">Jarak dari GPS:</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    {distanceKm !== null ? formatDistance(distanceKm) : "Aktifkan GPS"}
-                  </span>
-                </div>
-              </div>
+              {/* Bottom Row: Metric Stats + Focus Action */}
+              <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-100 dark:border-white/[0.04]">
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  {/* Estimated Orders */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/[0.04]">
+                    <span className="text-[10px] text-slate-400 font-semibold">Estimasi:</span>
+                    <span className="font-bold text-slate-800 dark:text-zinc-200 text-[11px]">
+                      ~{hotspot.ordersPerHour} order/jam
+                    </span>
+                  </div>
 
-              {/* Basecamp info & CTA */}
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400 pt-1">
-                <span className="truncate max-w-[190px] text-[10px]">
-                  📍 {hotspot.recommendedBasecamp}
-                </span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform shrink-0">
-                  <span>Fokus</span>
-                  <ChevronRight className="h-3 w-3" />
-                </span>
+                  {/* GPS Distance */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/20">
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">Jarak:</span>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">
+                      {distanceKm !== null ? formatDistance(distanceKm) : "Cek GPS"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold text-xs group-hover:translate-x-1 transition-transform shrink-0">
+                  <span className="hidden sm:inline">Fokus Peta</span>
+                  <ChevronRight className="h-4 w-4" />
+                </div>
               </div>
             </div>
           );

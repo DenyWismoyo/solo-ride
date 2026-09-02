@@ -148,11 +148,24 @@ export function useOrder(orderId?: string) {
 }
 ```
 
+### Page Controller & Orchestrator Layer (`src/app/**/page.tsx`)
+- **Thin Page Controller**: File `page.tsx` bertindak sebagai *assembly hub* dan koordinator alur proses bisnis.
+- **Tanggung Jawab**:
+  1. Melakukan Guard Auth & Role (`userData.role`).
+  2. Memanggil data hooks (`useAuth`, `useOrder`, `useOpdServices`, `useMerchant`).
+  3. Mengoordinasikan state aktif (tab aktif, filter, dialog open/close).
+  4. Mengoper data dan action handler ke komponen presentasional (Layer 2).
+- **DILARANG**: Menumpuk ratusan baris markup HTML mentah (> 300 baris) di `page.tsx`. Semua tampilan wajib didelegasikan ke komponen terpisah di `src/components/`.
+
 ### Component Layer (`src/components/`)
-- Komponen presentational (UI murni): tidak boleh panggil service langsung, hanya terima props
-- Komponen container (halaman): boleh gunakan hooks, koordinasi logika
-- Pisahkan logika kompleks ke custom hook, komponen harus "tipis"
-- Gunakan `"use client"` hanya jika memang butuh interaktivitas browser
+- **Pemisahan 3 Kategori Komponen**:
+  1. **`src/components/ui/` (Layer 1 - Atom Primitives)**: Komponen murni presentasional (`button`, `badge`, `card`, `modal`, `input`, `switch`).
+  2. **`src/components/layout/` (Layer 2 - Shell & Chrome)**: Kerangka navigasi global (`AppHeader`, `BottomNav`, `ProfileDrawer`, `Sidebar`).
+  3. **`src/components/[domain]/` (Layer 3 - Domain Feature Organisms)**: Modul spesifik per domain (`driver/`, `merchant/`, `government/`, `civic/`, `community/`, `map/`).
+- Komponen presentational (UI murni): tidak boleh panggil service Firestore langsung, hanya menerima props dan callback.
+- Pisahkan logika kompleks ke custom hook (`src/hooks/`), komponen harus "tipis" dan modular.
+- Gunakan `"use client"` hanya jika memang butuh interaktivitas browser.
+- **Panduan Desain Lengkap**: Wajib merujuk ke Skill `ridesolo-ui-design-system`.
 
 ### Pengisian Alamat & Lokasi
 - **Wajib "Saved Address First"**: Untuk setiap layanan yang membutuhkan alamat pengiriman/penjemputan (mis. Kurir, Dokumen, Bantuan), form wajib menampilkan opsi untuk memilih dari `user.savedAddresses` (Rumah/Kantor).
